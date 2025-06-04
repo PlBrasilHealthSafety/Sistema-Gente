@@ -1,0 +1,64 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Business Management Project People
+
+## Important Information
+
+- **Environment**: Windows PowerShell - ALWAYS USE COMMANDS AIMED AT POWERSHELL
+- **Shadcn Command**: `npx shadcn@latest add`
+
+- **The configuration of the business management system that we will develop will be in**:
+
+- **Frontend**
+
+- **Next.js**
+- **TypeScript**
+- **Tailwind with ShadcnUI**
+
+- **Backend**
+
+- **Node.js with Express using Rest API to integrate with a PostgreSQL database**
+
+## Color Palette
+
+### Light Mode
+```css
+:root.light {
+--primary: #009688; /* Blue-green logo */
+--secondary: #F5F5F5; /* Light gray */
+--accent: #EDE4D0; /* Light beige logo text */
+--text: #333333; /* Dark gray */
+--background: #FFFFFF; /* White */
+}
+```
+
+## Frontend (Next.js) - `frontend` folder
+
+### Installed Packages
+- `tailwindcss@3.4.17`, `postcss`, `autoprefixer`: Utility styling. Initialize with:
+```bash
+npx tailwindcss init -p
+```
+- `shadcn/ui`: Components styled with Tailwind. Initialize with:
+```bash
+npx shadcn@latest init
+```
+Add components:
+```bash
+npx shadcn@latest add <component>
+```
+Example: `npx shadcn@latest add toast`
+
+### Creation
+```bash
+npx create-next-app@latest sistema_gente
+```
+
+## Backend (Node.js with Express) - `backend` folder
+
+### Creation
+
+Integrate the backend with a PostgreSQL database using the Rest API.
