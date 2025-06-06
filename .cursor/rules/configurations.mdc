@@ -22,16 +22,18 @@ alwaysApply: true
 
 - **Node.js with Express using Rest API to integrate with a PostgreSQL database**
 
+- **Always analyze the Pull Request and see if it has the potential to break the code, always adjust the code to receive the pull request and integrate in the best way to merge into main**
+
 ## Color Palette
 
 ### Light Mode
 ```css
 :root.light {
---primary: #009688; /* Blue-green logo */
---secondary: #F5F5F5; /* Light gray */
---accent: #EDE4D0; /* Light beige logo text */
---text: #333333; /* Dark gray */
---background: #FFFFFF; /* White */
+--primary: #00A298; /* Verde PLBrasil Health&Safety - cor vibrante para elementos principais */
+--secondary: #1D3C44; /* Verde Escuro PLBrasil - para contraste e hierarquia */
+--accent: #AECECB; /* Verde Água PLBrasil - para destaques suaves */
+--text: #1D3C44; /* Verde Escuro PLBrasil - melhor legibilidade que #333333 */
+--background: #FFFFFF; /* Mantém o branco para máximo contraste */
 }
 ```
 
