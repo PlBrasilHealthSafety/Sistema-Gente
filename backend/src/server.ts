@@ -5,8 +5,8 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { testConnection, query } from './config/database';
 
-// Configurar dotenv
-dotenv.config();
+// Configurar dotenv para usar local.env
+dotenv.config({ path: 'local.env' });
 
 const app = express();
 const PORT = process.env.PORT || 3001;

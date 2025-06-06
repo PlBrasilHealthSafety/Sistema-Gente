@@ -1,4 +1,8 @@
 import { Pool, PoolConfig } from 'pg';
+import dotenv from 'dotenv';
+
+// Configurar dotenv para usar local.env
+dotenv.config({ path: 'local.env' });
 
 // Configuração do pool de conexões
 const dbConfig: PoolConfig = {

@@ -24,6 +24,8 @@ alwaysApply: true
 
 - **Always analyze the Pull Request and see if it has the potential to break the code, always adjust the code to receive the pull request and integrate in the best way to merge into main**
 
+- **Always use local.env as the main .env file**
+
 ## Color Palette
 
 ### Light Mode
