@@ -1,57 +1,47 @@
 import nodemailer from 'nodemailer';
 
-// Configuração do transporter de email
+// Configuração do transporter de email - MODO PRODUÇÃO
 const createTransporter = async () => {
-  // Para desenvolvimento, vamos priorizar um fallback sempre funcional
-  if (process.env.NODE_ENV !== 'production') {
-    try {
-      console.log('🔧 Tentando criar conta de teste Ethereal...');
-      // Para desenvolvimento, criar uma conta Ethereal automaticamente
-      const testAccount = await nodemailer.createTestAccount();
-      
-      console.log('✅ Conta Ethereal criada:', {
-        user: testAccount.user,
-        pass: '***hidden***'
-      });
-      
-      return nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass
-        }
-      });
-    } catch (error) {
-      console.warn('⚠️ Erro ao criar conta Ethereal:', error);
-      console.log('🔄 Usando modo de simulação para desenvolvimento...');
-      // Retornar um transporter "dummy" que não vai falhar
-      return {
-        sendMail: async (mailOptions: any) => {
-          console.log('📧 SIMULAÇÃO DE ENVIO DE EMAIL:');
-          console.log('📮 Para:', mailOptions.to);
-          console.log('📋 Assunto:', mailOptions.subject);
-          return {
-            messageId: `simulation-${Date.now()}`,
-            response: 'Email simulado com sucesso'
-          };
-        }
-      } as any;
-    }
-  } else {
-    // Configuração para produção
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      throw new Error('Configurações de email não encontradas. Configure EMAIL_USER e EMAIL_PASSWORD.');
-    }
-    
-    return nodemailer.createTransport({
+  // Verificar se temos configurações Gmail válidas
+  const hasGmailConfig = process.env.EMAIL_USER && 
+                        process.env.EMAIL_PASSWORD && 
+                        process.env.EMAIL_PASSWORD !== 'INSIRA_AQUI_A_SENHA_DE_APP_DO_GMAIL';
+  
+  if (!hasGmailConfig) {
+    console.error('❌ CONFIGURAÇÃO GMAIL OBRIGATÓRIA!');
+    console.log('💡 Para enviar emails reais:');
+    console.log('   1. Acesse myaccount.google.com');
+    console.log('   2. Ative verificação em duas etapas');
+    console.log('   3. Gere uma "senha de app" para Email');
+    console.log('   4. Coloque a senha no EMAIL_PASSWORD do local.env');
+    throw new Error('Gmail SMTP não configurado. Configure EMAIL_PASSWORD no local.env');
+  }
+
+  console.log('📧 Configurando Gmail SMTP para PRODUÇÃO...');
+  
+  try {
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD
       }
     });
+    
+    // Verificar a configuração
+    await transporter.verify();
+    console.log('✅ Gmail SMTP configurado com sucesso!');
+    console.log('📮 Enviando emails reais de:', process.env.EMAIL_USER);
+    console.log('🎯 MODO PRODUÇÃO - Emails serão enviados para usuários reais');
+    
+    return transporter;
+  } catch (error) {
+    console.error('❌ Erro na configuração Gmail SMTP:', error);
+    console.log('💡 Verifique se:');
+    console.log('   1. EMAIL_USER e EMAIL_PASSWORD estão corretos no local.env');
+    console.log('   2. Você está usando uma "senha de app" do Gmail (não sua senha normal)');
+    console.log('   3. A verificação em duas etapas está ativada na conta Gmail');
+    throw error; // Falhar completamente se não conseguir configurar
   }
 };
 
@@ -64,77 +54,59 @@ export interface EmailOptions {
 
 export class EmailService {
   
-  // Enviar email
+  // Enviar email - MODO PRODUÇÃO
   static async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
-      console.log(`📤 Iniciando envio de email para: ${options.to}`);
+      console.log(`📤 ENVIANDO EMAIL REAL para: ${options.to}`);
       
       const transporter = await createTransporter();
       
       const mailOptions = {
-        from: `"Sistema GENTE" <${process.env.EMAIL_FROM || 'noreply@sistema-gente.com'}>`,
+        from: `"Sistema GENTE" <${process.env.EMAIL_FROM}>`,
         to: options.to,
         subject: options.subject,
         html: options.html,
         text: options.text || ''
       };
 
+      console.log('📮 Remetente:', mailOptions.from);
+      console.log('📧 Destinatário:', options.to);
+      console.log('📋 Assunto:', options.subject);
+
       const info = await transporter.sendMail(mailOptions);
       
-      console.log('✅ Email processado com sucesso!');
-      console.log('📧 Para:', options.to);
-      console.log('📋 Assunto:', options.subject);
+      console.log('✅ EMAIL REAL ENVIADO COM SUCESSO!');
+      console.log('🎯 Email enviado para:', options.to);
       console.log('🆔 Message ID:', info.messageId);
+      console.log('📬 VERIFIQUE A CAIXA DE ENTRADA (inclusive spam)');
       
-      // Verificar se é ambiente de desenvolvimento e mostrar preview
-      if (process.env.NODE_ENV !== 'production') {
-        const previewUrl = nodemailer.getTestMessageUrl(info);
-        if (previewUrl) {
-          console.log('🔗 Preview do email (Ethereal):', previewUrl);
-        }
-        
-        // Extrair token do HTML para facilitar teste
-        const tokenMatch = options.html.match(/token=([a-f0-9-]+)/);
-        if (tokenMatch) {
-          const token = tokenMatch[1];
-          const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
-          console.log('🔗 Link de recuperação para teste:');
-          console.log(resetUrl);
-          console.log('='.repeat(80));
-        }
+      // Extrair token apenas para logs de segurança
+      const tokenMatch = options.html.match(/token=([a-f0-9-]+)/);
+      if (tokenMatch) {
+        const token = tokenMatch[1];
+        console.log('🔐 Token de recuperação gerado:', token.substring(0, 8) + '...');
       }
+      
+      console.log('='.repeat(80));
 
       return true;
     } catch (error: any) {
-      console.error('❌ Erro ao processar email:', error);
+      console.error('❌ ERRO CRÍTICO ao enviar email:', error);
       console.error('📋 Detalhes do erro:', {
         message: error?.message || 'Erro desconhecido',
         code: error?.code || 'N/A',
-        command: error?.command || 'N/A'
+        command: error?.command || 'N/A',
+        para: options.to,
+        assunto: options.subject
       });
       
-      // Em desenvolvimento, sempre simular sucesso com informações úteis
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('⚠️ MODO FALLBACK - Simulando envio de email para desenvolvimento:');
-        console.log('📧 Para:', options.to);
-        console.log('📋 Assunto:', options.subject);
-        
-        // Extrair token do HTML para facilitar teste
-        const tokenMatch = options.html.match(/token=([a-f0-9-]+)/);
-        if (tokenMatch) {
-          const token = tokenMatch[1];
-          const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
-          console.log('🔗 Link de recuperação para teste (FALLBACK):');
-          console.log(resetUrl);
-          console.log('='.repeat(80));
-          console.log('👆 COPIE E COLE ESTE LINK NO NAVEGADOR PARA TESTAR');
-          console.log('='.repeat(80));
-        }
-        
-        return true; // Sempre retornar sucesso em desenvolvimento
-      }
+      console.log('💡 Verifique:');
+      console.log('   1. Configuração Gmail SMTP no local.env');
+      console.log('   2. Conexão com internet');
+      console.log('   3. Senha de app válida');
       
-      return false; // Falha real apenas em produção
+      // Em modo produção, sempre falhar se não conseguir enviar
+      throw error;
     }
   }
 
