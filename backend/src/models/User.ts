@@ -103,6 +103,14 @@ export class UserModel {
     return result.rows;
   }
 
+  // Atualizar senha
+  static async updatePassword(id: number, passwordHash: string): Promise<void> {
+    await query(
+      'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [passwordHash, id]
+    );
+  }
+
   // Deletar usuário (soft delete - desativar)
   static async delete(id: number): Promise<boolean> {
     const result = await query(

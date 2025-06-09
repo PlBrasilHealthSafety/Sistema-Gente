@@ -8,13 +8,33 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui será implementada a lógica de recuperação de senha
-    console.log('Recuperar senha para:', email);
     
-    // Simula envio do email de recuperação
-    setIsSubmitted(true);
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+             if (response.ok) {
+         console.log('✅ Email de recuperação enviado para:', email);
+         setIsSubmitted(true);
+       } else {
+         console.error('❌ Erro ao enviar email:', data.message);
+         // Mesmo com erro, mostramos sucesso por segurança (para não revelar se email existe)
+         setIsSubmitted(true);
+       }
+         } catch (error) {
+       console.error('❌ Erro na requisição:', error);
+       // Mesmo com erro, mostramos sucesso por segurança (para não revelar se email existe)
+       setIsSubmitted(true);
+     }
   };
 
   const handleBackToLogin = () => {

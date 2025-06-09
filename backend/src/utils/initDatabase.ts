@@ -1,4 +1,5 @@
 import { UserModel } from '../models/User';
+import { PasswordResetModel } from '../models/PasswordReset';
 import { UserRole } from '../types/user';
 
 export const initializeDatabase = async (): Promise<void> => {
@@ -8,6 +9,10 @@ export const initializeDatabase = async (): Promise<void> => {
     // Criar tabela de usuários
     await UserModel.createTable();
     console.log('✅ Tabela de usuários criada/verificada');
+    
+    // Criar tabela de tokens de recuperação de senha
+    await PasswordResetModel.createTable();
+    console.log('✅ Tabela de tokens de recuperação criada/verificada');
     
     // Verificar se já existem usuários
     const existingUsers = await UserModel.findAll();

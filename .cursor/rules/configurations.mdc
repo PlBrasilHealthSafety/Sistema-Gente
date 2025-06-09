@@ -26,6 +26,8 @@ alwaysApply: true
 
 - **Always use local.env as the main .env file**
 
+- **Always use npm run dev in the correct directory**
+
 ## Color Palette
 
 ### Light Mode
