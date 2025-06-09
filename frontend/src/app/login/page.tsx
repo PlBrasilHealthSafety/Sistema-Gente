@@ -5,6 +5,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+interface Notification {
+  type: 'success' | 'error' | 'info';
+  message: string;
+  show: boolean;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -17,11 +23,34 @@ export default function LoginPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [notification, setNotification] = useState<Notification>({
+    type: 'info',
+    message: '',
+    show: false
+  });
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({
+      type,
+      message,
+      show: true
+    });
+    
+    // Auto hide after 5 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 5000);
+  };
+
+  const hideNotification = () => {
+    setNotification(prev => ({ ...prev, show: false }));
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    hideNotification();
 
     try {
       const response = await fetch('http://localhost:3001/api/auth/login', {
@@ -39,14 +68,22 @@ export default function LoginPage() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redireciona para a página home
-        router.push('/home');
+        // Mostra notificação de sucesso
+        showNotification('success', `Bem-vindo, ${data.user.first_name}! Redirecionando...`);
+        
+        // Pequeno delay para mostrar a mensagem antes de redirecionar
+        setTimeout(() => {
+          router.push('/home');
+        }, 1500);
       } else {
         setError(data.message || 'Erro ao fazer login');
+        showNotification('error', data.message || 'Erro ao fazer login');
       }
     } catch (error) {
       console.error('Erro na requisição:', error);
-      setError('Erro de conexão. Verifique se o servidor está rodando.');
+      const errorMessage = 'Erro de conexão. Verifique se o servidor está rodando.';
+      setError(errorMessage);
+      showNotification('error', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -56,10 +93,13 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    hideNotification();
     
     // Verifica se as senhas coincidem
     if (password !== confirmPassword) {
-      setError('As senhas não coincidem!');
+      const errorMessage = 'As senhas não coincidem!';
+      setError(errorMessage);
+      showNotification('error', errorMessage);
       setIsLoading(false);
       return;
     }
@@ -81,27 +121,83 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        alert('Conta criada com sucesso! Faça login para continuar.');
-        setShowCreateAccount(false);
-        // Limpa os campos
-        setFirstName('');
-        setLastName('');
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
+        // Mostra notificação de sucesso
+        showNotification('success', `Conta criada com sucesso, ${firstName}! Agora você pode fazer login.`);
+        
+        // Aguarda um pouco e então volta para o login
+        setTimeout(() => {
+          setShowCreateAccount(false);
+          // Limpa os campos
+          setFirstName('');
+          setLastName('');
+          setEmail('');
+          setPassword('');
+          setConfirmPassword('');
+          
+          showNotification('info', 'Agora faça login com suas credenciais.');
+        }, 2000);
       } else {
         setError(data.message || 'Erro ao criar conta');
+        showNotification('error', data.message || 'Erro ao criar conta');
       }
     } catch (error) {
       console.error('Erro na requisição:', error);
-      setError('Erro de conexão. Verifique se o servidor está rodando.');
+      const errorMessage = 'Erro de conexão. Verifique se o servidor está rodando.';
+      setError(errorMessage);
+      showNotification('error', errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const getNotificationStyles = (type: 'success' | 'error' | 'info') => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-50 border-green-200 text-green-800';
+      case 'error':
+        return 'bg-red-50 border-red-200 text-red-800';
+      case 'info':
+        return 'bg-blue-50 border-blue-200 text-blue-800';
+    }
+  };
+
+  const getNotificationIcon = (type: 'success' | 'error' | 'info') => {
+    switch (type) {
+      case 'success':
+        return '✅';
+      case 'error':
+        return '❌';
+      case 'info':
+        return 'ℹ️';
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Notificação Toast */}
+      {notification.show && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300">
+          <div className={`border rounded-lg p-4 shadow-lg max-w-md ${getNotificationStyles(notification.type)}`}>
+            <div className="flex items-start">
+              <span className="text-xl mr-3 mt-0.5">
+                {getNotificationIcon(notification.type)}
+              </span>
+              <div className="flex-1">
+                <p className="font-medium">{notification.message}</p>
+              </div>
+              <button
+                onClick={hideNotification}
+                className="ml-3 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Background com imagem da PLBrasil */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#00A298]/90 to-[#1D3C44]/50 z-0">
         <div className="absolute inset-0 bg-[url('/plbrasil-background.png')] bg-cover bg-center opacity-30"></div>
@@ -144,8 +240,11 @@ export default function LoginPage() {
 
           {/* Exibir erro se houver */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-              {error}
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 animate-in slide-in-from-top duration-300">
+              <div className="flex items-center">
+                <span className="text-lg mr-2">⚠️</span>
+                {error}
+              </div>
             </div>
           )}
 
