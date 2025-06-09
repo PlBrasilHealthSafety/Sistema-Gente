@@ -3,8 +3,10 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -13,36 +15,89 @@ export default function LoginPage() {
   const [showCreateAccount, setShowCreateAccount] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui será implementada a lógica de login
-    console.log('Login:', { email, password });
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Salva o token no localStorage
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Redireciona para a página home
+        router.push('/home');
+      } else {
+        setError(data.message || 'Erro ao fazer login');
+      }
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+      setError('Erro de conexão. Verifique se o servidor está rodando.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleCreateAccount = (e: React.FormEvent) => {
+  const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
     
     // Verifica se as senhas coincidem
     if (password !== confirmPassword) {
-      alert('As senhas não coincidem!');
+      setError('As senhas não coincidem!');
+      setIsLoading(false);
       return;
     }
     
-    // Aqui será implementada a lógica de criação de conta
-    console.log('Criar conta:', { firstName, lastName, email, password });
-    
-    // Simula criação de conta e volta para login
-    alert('Conta criada com sucesso! Faça login para continuar.');
-    setShowCreateAccount(false);
-    // Limpa os campos
-    setFirstName('');
-    setLastName('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          first_name: firstName,
+          last_name: lastName,
+          email, 
+          password 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Conta criada com sucesso! Faça login para continuar.');
+        setShowCreateAccount(false);
+        // Limpa os campos
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+      } else {
+        setError(data.message || 'Erro ao criar conta');
+      }
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+      setError('Erro de conexão. Verifique se o servidor está rodando.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,8 +111,6 @@ export default function LoginPage() {
         <div className="absolute bottom-20 left-1/4 w-16 h-16 bg-white/10 rounded-full blur-md"></div>
         <div className="absolute bottom-1/3 right-1/3 w-20 h-20 bg-[#AECECB]/15 rounded-full blur-lg"></div>
       </div>
-
-
 
       {/* Container principal */}
       <div className="relative z-10 w-full max-w-md mx-4">
@@ -88,6 +141,13 @@ export default function LoginPage() {
             </div>
             <div className="flex-1 h-px bg-gray-200"></div>
           </div>
+
+          {/* Exibir erro se houver */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
 
           {/* Formulário */}
           <form onSubmit={showCreateAccount ? handleCreateAccount : handleLogin} className="space-y-4">
@@ -157,7 +217,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-[#00A298] transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-[#00A298] transition-all duration-200 hover:scale-110 cursor-pointer"
                 >
                   {showPassword ? (
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
@@ -193,7 +253,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-[#00A298] transition-colors"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-[#00A298] transition-all duration-200 hover:scale-110 cursor-pointer"
                   >
                     {showConfirmPassword ? (
                       <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
@@ -216,7 +276,7 @@ export default function LoginPage() {
                <div className="text-center">
                  <Link 
                    href="/forgot-password" 
-                   className="text-sm text-[#00A298] hover:text-[#1D3C44] transition-colors"
+                   className="text-sm text-[#00A298] hover:text-[#1D3C44] transition-all duration-200 hover:underline hover:scale-105 cursor-pointer inline-block"
                  >
                    Esqueci minha Senha
                  </Link>
@@ -225,9 +285,20 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-[#00A298] hover:bg-[#1D3C44] text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-[#00A298]/20 outline-none"
+              disabled={isLoading}
+              className="w-full bg-[#00A298] hover:bg-[#1D3C44] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg focus:ring-2 focus:ring-[#00A298]/20 outline-none flex items-center justify-center cursor-pointer"
             >
-              {showCreateAccount ? 'CRIAR CONTA' : 'ENTRAR'}
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {showCreateAccount ? 'CRIANDO...' : 'ENTRANDO...'}
+                </>
+              ) : (
+                showCreateAccount ? 'CRIAR CONTA' : 'ENTRAR'
+              )}
             </button>
           </form>
 
@@ -235,7 +306,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <button
               onClick={() => setShowCreateAccount(!showCreateAccount)}
-              className="text-sm text-[#00A298] hover:text-[#1D3C44] transition-colors font-medium"
+              className="text-sm text-[#00A298] hover:text-[#1D3C44] transition-all duration-200 font-medium hover:underline hover:scale-105 cursor-pointer"
             >
               {showCreateAccount 
                 ? 'Já tem uma conta? Faça login' 
@@ -255,7 +326,7 @@ export default function LoginPage() {
 
       {/* Botão de suporte */}
       <div className="fixed bottom-6 right-6 z-30">
-        <button className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-4 py-2 rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center space-x-2">
+        <button className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-4 py-2 rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 hover:shadow-xl cursor-pointer flex items-center space-x-2">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
             <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>

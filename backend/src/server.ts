@@ -4,6 +4,9 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { testConnection, query } from './config/database';
+import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
+import { initializeDatabase } from './utils/initDatabase';
 
 // Configurar dotenv para usar local.env
 dotenv.config({ path: 'local.env' });
@@ -18,12 +21,22 @@ app.use(morgan('combined')); // Logging
 app.use(express.json()); // Parser JSON
 app.use(express.urlencoded({ extended: true })); // Parser URL
 
+// Rotas
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+
 // Rota de teste
 app.get('/', (req, res) => {
   res.json({
     message: 'Sistema GENTE - Backend API',
     version: '1.0.0',
-    status: 'running'
+    status: 'running',
+    endpoints: {
+      auth: '/api/auth',
+      users: '/api/users',
+      health: '/health',
+      db_test: '/db-test'
+    }
   });
 });
 
@@ -138,7 +151,13 @@ app.use('*', (req, res) => {
 app.listen(PORT, async () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`📍 Acesse: http://localhost:${PORT}`);
+  console.log(`🔐 API Auth: http://localhost:${PORT}/api/auth`);
   
   // Testar conexão com banco na inicialização
-  await testConnection();
+  const dbConnected = await testConnection();
+  
+  if (dbConnected) {
+    // Inicializar banco de dados e criar usuários iniciais
+    await initializeDatabase();
+  }
 }); 
