@@ -287,10 +287,13 @@ export default function HomePage() {
               <div key={item.id}>
                 <button
                   onClick={() => {
-                    if (item.id === 'cadastros') {
-                      toggleMenuExpansion('cadastros');
-                    }
-                    setActiveMenu(item.id);
+                                         if (item.id === 'cadastros') {
+                       toggleMenuExpansion('cadastros');
+                     } else {
+                       // Redirecionar para a página específica
+                       router.push(`/home/${item.id}`);
+                     }
+                     setActiveMenu(item.id);
                   }}
                   className={`w-full flex items-center justify-between p-3 mb-1 rounded-lg transition-all duration-200 hover:bg-gray-100 cursor-pointer ${
                     activeMenu === item.id 
@@ -318,12 +321,15 @@ export default function HomePage() {
                     {cadastroSubItems.map((subItem) => (
                       <div key={subItem.id}>
                         <button
-                          onClick={() => {
-                            if (subItem.id === 'tabelas-basicas') {
-                              toggleMenuExpansion('tabelas-basicas');
-                            }
-                            setActiveMenu(subItem.id);
-                          }}
+                                                     onClick={() => {
+                             if (subItem.id === 'tabelas-basicas') {
+                               toggleMenuExpansion('tabelas-basicas');
+                             } else {
+                               // Redirecionar para a página específica
+                               router.push(`/home/cadastros/${subItem.id}`);
+                             }
+                             setActiveMenu(subItem.id);
+                           }}
                           className={`w-full flex items-center justify-between p-2 rounded-lg transition-all duration-200 hover:bg-gray-50 cursor-pointer ${
                             activeMenu === subItem.id 
                               ? 'bg-[#00A298]/10 text-[#00A298]' 
@@ -346,7 +352,10 @@ export default function HomePage() {
                             {tabelasBasicasItems.map((tabelaItem) => (
                               <button
                                 key={tabelaItem.id}
-                                onClick={() => setActiveMenu(tabelaItem.id)}
+                                                                 onClick={() => {
+                                   router.push(`/home/cadastros/tabelas-basicas/${tabelaItem.id}`);
+                                   setActiveMenu(tabelaItem.id);
+                                 }}
                                 className={`w-full flex items-center p-2 rounded-lg transition-all duration-200 hover:bg-gray-50 cursor-pointer ${
                                   activeMenu === tabelaItem.id 
                                     ? 'bg-[#00A298]/10 text-[#00A298]' 
