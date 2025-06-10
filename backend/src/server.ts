@@ -6,7 +6,9 @@ import dotenv from 'dotenv';
 import { testConnection, query } from './config/database';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
+import organizationRoutes from './routes/organization';
 import { initializeDatabase } from './utils/initDatabase';
+import { testSequelizeConnection } from './config/sequelize';
 
 // Configurar dotenv para usar local.env
 dotenv.config({ path: 'local.env' });
@@ -24,6 +26,7 @@ app.use(express.urlencoded({ extended: true })); // Parser URL
 // Rotas
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/organization', organizationRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {
@@ -155,8 +158,9 @@ app.listen(PORT, async () => {
   
   // Testar conexão com banco na inicialização
   const dbConnected = await testConnection();
+  const sequelizeConnected = await testSequelizeConnection();
   
-  if (dbConnected) {
+  if (dbConnected && sequelizeConnected) {
     // Inicializar banco de dados e criar usuários iniciais
     await initializeDatabase();
   }

@@ -145,28 +145,202 @@ export default function EmpresaPage() {
 
         {/* Conteúdo Principal */}
         <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto">
-            {/* Título da página */}
+          <div className="max-w-7xl mx-auto">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-[#1D3C44] mb-2">
-                Empresa
-              </h1>
-              <p className="text-gray-600">
-                Dados da empresa contratante
-              </p>
+              <h1 className="text-3xl font-bold text-[#1D3C44] mb-2">Empresa</h1>
+              <p className="text-gray-600">Gestão de dados empresariais</p>
             </div>
 
-            {/* Conteúdo em desenvolvimento */}
-            <div className="col-span-full bg-white rounded-2xl shadow-xl p-8 text-center">
-              <div className="text-6xl mb-4">🏢</div>
-              <h3 className="text-2xl font-bold text-[#1D3C44] mb-4">
-                Gestão Empresarial
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Esta funcionalidade está em desenvolvimento. Em breve estará disponível!
-              </p>
-              <div className="bg-[#00A298]/10 rounded-lg p-4 inline-block">
-                <span className="text-[#00A298] text-sm font-medium">🚧 Em construção</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Informações da Empresa */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h2 className="text-xl font-semibold text-[#1D3C44] mb-4">Informações da Empresa</h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Razão Social</label>
+                    <input
+                      type="text"
+                      defaultValue="PLBrasil Health & Safety Ltda"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nome Fantasia</label>
+                    <input
+                      type="text"
+                      defaultValue="PLBrasil Health & Safety"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
+                      <input
+                        type="text"
+                        defaultValue="12.345.678/0001-90"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Inscrição Estadual</label>
+                      <input
+                        type="text"
+                        defaultValue="123.456.789"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      defaultValue="contato@plbrasil.com.br"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                      <input
+                        type="text"
+                        defaultValue="(11) 3456-7890"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp</label>
+                      <input
+                        type="text"
+                        defaultValue="(11) 99876-5432"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <button className="bg-[#00A298] text-white px-6 py-2 rounded-lg hover:bg-[#00A298]/90 transition-colors">
+                    Salvar Alterações
+                  </button>
+                </div>
+              </div>
+
+              {/* Endereço */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h2 className="text-xl font-semibold text-[#1D3C44] mb-4">Endereço</h2>
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Logradouro</label>
+                      <input
+                        type="text"
+                        defaultValue="Rua das Flores, 123"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                      <input
+                        type="text"
+                        defaultValue="123"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
+                    <input
+                      type="text"
+                      defaultValue="Sala 456"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
+                      <input
+                        type="text"
+                        defaultValue="Centro"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
+                      <input
+                        type="text"
+                        defaultValue="01234-567"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+                      <input
+                        type="text"
+                        defaultValue="São Paulo"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">UF</label>
+                      <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
+                        <option value="SP">SP</option>
+                        <option value="RJ">RJ</option>
+                        <option value="MG">MG</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <button className="bg-[#00A298] text-white px-6 py-2 rounded-lg hover:bg-[#00A298]/90 transition-colors">
+                    Atualizar Endereço
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Configurações Adicionais */}
+            <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-semibold text-[#1D3C44] mb-4">Configurações Adicionais</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center p-4 border border-gray-200 rounded-lg">
+                  <div className="text-3xl mb-2">📄</div>
+                  <h3 className="font-semibold text-[#1D3C44] mb-2">Documentos</h3>
+                  <p className="text-sm text-gray-600 mb-3">Gerencie documentos da empresa</p>
+                  <button className="text-[#00A298] hover:text-[#00A298]/80 text-sm font-medium">
+                    Acessar
+                  </button>
+                </div>
+                
+                <div className="text-center p-4 border border-gray-200 rounded-lg">
+                  <div className="text-3xl mb-2">🏛️</div>
+                  <h3 className="font-semibold text-[#1D3C44] mb-2">Filiais</h3>
+                  <p className="text-sm text-gray-600 mb-3">Cadastre e gerencie filiais</p>
+                  <button className="text-[#00A298] hover:text-[#00A298]/80 text-sm font-medium">
+                    Gerenciar
+                  </button>
+                </div>
+                
+                <div className="text-center p-4 border border-gray-200 rounded-lg">
+                  <div className="text-3xl mb-2">⚙️</div>
+                  <h3 className="font-semibold text-[#1D3C44] mb-2">Configurações</h3>
+                  <p className="text-sm text-gray-600 mb-3">Parâmetros do sistema</p>
+                  <button className="text-[#00A298] hover:text-[#00A298]/80 text-sm font-medium">
+                    Configurar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
