@@ -172,8 +172,8 @@ export default function ForgotPasswordPage() {
         </div>
 
         {/* Copyright */}
-        <div className="text-center mt-6">
-          <p className="text-sm text-white/80">
+        <div className="text-center mt-4">
+          <p className="text-xs text-white/70">
             Sistema GENTE © 2025 | Versão 1.0
           </p>
         </div>

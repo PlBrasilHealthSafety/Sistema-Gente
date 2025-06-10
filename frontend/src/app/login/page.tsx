@@ -28,6 +28,10 @@ export default function LoginPage() {
     message: '',
     show: false
   });
+  const [passwordValidation, setPasswordValidation] = useState({
+    length: false,
+    specialChar: false
+  });
 
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
     setNotification({
@@ -218,19 +222,19 @@ export default function LoginPage() {
               <span className="text-2xl font-bold text-[#00A298] ml-2">GENTE</span>
             </div>
             
-            <div className="flex items-center justify-center mb-6">
+            <div className="flex items-center justify-center mb-4">
               <Image
                 src="/logo.png"
                 alt="PLBrasil Health&Safety"
-                width={120}
-                height={60}
+                width={100}
+                height={50}
                 className="object-contain"
               />
             </div>
           </div>
 
           {/* Título da seção */}
-          <div className="flex items-center mb-6">
+          <div className="flex items-center mb-4">
             <div className="flex-1 h-px bg-gray-200"></div>
             <div className="px-4 text-gray-500 text-sm font-medium">
               {showCreateAccount ? 'CRIAR CONTA' : 'ACESSO AO SISTEMA'}
@@ -249,7 +253,7 @@ export default function LoginPage() {
           )}
 
           {/* Formulário */}
-          <form onSubmit={showCreateAccount ? handleCreateAccount : handleLogin} className="space-y-4">
+          <form onSubmit={showCreateAccount ? handleCreateAccount : handleLogin} className="space-y-3">
             {showCreateAccount && (
               <>
                 <div>
@@ -308,7 +312,18 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   id="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    const newPassword = e.target.value;
+                    setPassword(newPassword);
+                    
+                    // Validação em tempo real
+                    if (showCreateAccount) {
+                      setPasswordValidation({
+                        length: newPassword.length >= 6,
+                        specialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(newPassword)
+                      });
+                    }
+                  }}
                   className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-200 focus:border-[#00A298] focus:ring-2 focus:ring-[#00A298]/20 outline-none transition-all"
                   placeholder="••••••••"
                   required
@@ -332,6 +347,35 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              
+              {/* Indicadores de validação da senha (apenas no cadastro) */}
+              {showCreateAccount && password && (
+                <div className="mt-1.5 p-2.5 bg-gray-50 rounded-md border border-gray-200">
+                  <p className="text-xs font-medium text-gray-600 mb-1.5">Requisitos da senha:</p>
+                  <div className="space-y-0.5">
+                    <div className={`flex items-center text-xs ${
+                      passwordValidation.length 
+                        ? 'text-green-600' 
+                        : 'text-gray-500'
+                    }`}>
+                      <span className="mr-1.5 text-[10px]">
+                        {passwordValidation.length ? '✅' : '⚪'}
+                      </span>
+                      Pelo menos 6 caracteres
+                    </div>
+                    <div className={`flex items-center text-xs ${
+                      passwordValidation.specialChar 
+                        ? 'text-green-600' 
+                        : 'text-gray-500'
+                    }`}>
+                      <span className="mr-1.5 text-[10px]">
+                        {passwordValidation.specialChar ? '✅' : '⚪'}
+                      </span>
+                      Pelo menos um caractere especial (!@#$%^&*)
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {showCreateAccount && (
@@ -402,7 +446,7 @@ export default function LoginPage() {
           </form>
 
           {/* Toggle entre login e criar conta */}
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center">
             <button
               onClick={() => setShowCreateAccount(!showCreateAccount)}
               className="text-sm text-[#00A298] hover:text-[#1D3C44] transition-all duration-200 font-medium hover:underline hover:scale-105 cursor-pointer"
@@ -416,8 +460,8 @@ export default function LoginPage() {
         </div>
 
         {/* Copyright */}
-        <div className="text-center mt-6">
-          <p className="text-sm text-white/80">
+        <div className="text-center mt-4">
+          <p className="text-xs text-white/70">
             Sistema GENTE © 2025 | Versão 1.0
           </p>
         </div>

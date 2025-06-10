@@ -107,6 +107,15 @@ export class AuthController {
         });
       }
 
+      // Validar se possui pelo menos um caractere especial
+      const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+      if (!specialCharRegex.test(password)) {
+        return res.status(400).json({
+          message: 'Senha deve conter pelo menos um caractere especial (!@#$%^&*)',
+          error: 'PASSWORD_MISSING_SPECIAL_CHAR'
+        });
+      }
+
       // Verificar se já existe usuário com este email
       const existingUser = await UserModel.findByEmail(email.toLowerCase());
       
@@ -241,6 +250,15 @@ export class AuthController {
         return res.status(400).json({
           message: 'Senha deve ter pelo menos 6 caracteres',
           error: 'WEAK_PASSWORD'
+        });
+      }
+
+      // Validar se possui pelo menos um caractere especial
+      const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+      if (!specialCharRegex.test(newPassword)) {
+        return res.status(400).json({
+          message: 'Senha deve conter pelo menos um caractere especial (!@#$%^&*)',
+          error: 'PASSWORD_MISSING_SPECIAL_CHAR'
         });
       }
 
