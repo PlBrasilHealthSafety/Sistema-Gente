@@ -3,11 +3,12 @@ description:
 globs: 
 alwaysApply: true
 ---
-# Business Management Project People
+# Business Management Sistema GENTE
 
 ## Important Information
 
-- **Environment**: Windows PowerShell - ALWAYS USE COMMANDS AIMED AT POWERSHELL
+- **Environment: Windows PowerShell - ALWAYS USE COMMANDS AIMED AT POWERSHELL**
+
 - **Shadcn Command**: `npx shadcn@latest add`
 
 - **The configuration of the business management system that we will develop will be in**:
@@ -24,7 +25,7 @@ alwaysApply: true
 
 - **Always analyze the Pull Request and see if it has the potential to break the code, always adjust the code to receive the pull request and integrate in the best way to merge into main**
 
-- **Always use local.env as the main .env file**
+- **Always use local.env as the main .env file for configuration in development**
 
 - **Always use npm run dev in the correct directory**
 

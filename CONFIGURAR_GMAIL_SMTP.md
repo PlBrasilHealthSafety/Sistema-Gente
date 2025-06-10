@@ -22,7 +22,7 @@ O sistema está agora configurado para **ENVIAR EMAILS REAIS** diretamente do Gm
    - App: **Email** ou **Other (Custom)**
    - Nome: **Sistema GENTE**
 7. **Clique**: Gerar
-8. **COPIE** a senha de 16 caracteres (exemplo: `abcd efgh ijkl mnop`)
+8. **COPIE** a senha de 16 caracteres (exemplo: `lnul xkoq idfk xgai`)
 
 ### 📝 PASSO 2: Atualizar local.env
 
