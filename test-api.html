@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste API Sistema GENTE</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #00A298;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #1D3C44;
+        }
+        .result {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste API Sistema GENTE</h1>
+    
+    <div class="test-container">
+        <h2>🔍 Teste de Conectividade</h2>
+        <button onclick="testBackendConnection()">Testar Conexão Backend</button>
+        <button onclick="testHealth()">Testar Health Check</button>
+        <div id="connection-result" class="result"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>🔐 Teste de Login</h2>
+        <div>
+            <label>E-mail:</label>
+            <select id="email-select" onchange="updatePassword()">
+                <option value="superadmin@sistemagente.com">Super Admin</option>
+                <option value="admin@sistemagente.com">Admin</option>
+                <option value="usuario@sistemagente.com">Usuário</option>
+            </select>
+        </div>
+        <div>
+            <label>Senha:</label>
+            <input type="password" id="password" value="SuperAdmin@2025">
+        </div>
+        <button onclick="testLogin()">Testar Login</button>
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>👥 Teste de Usuários (necessário estar logado)</h2>
+        <button onclick="testListUsers()">Listar Usuários</button>
+        <button onclick="testCreateUser()">Criar Usuário de Teste</button>
+        <div id="users-result" class="result"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        function updatePassword() {
+            const email = document.getElementById('email-select').value;
+            const passwordField = document.getElementById('password');
+            
+            if (email === 'superadmin@sistemagente.com') {
+                passwordField.value = 'SuperAdmin@2025';
+            } else if (email === 'admin@sistemagente.com') {
+                passwordField.value = 'Admin@2025';
+            } else if (email === 'usuario@sistemagente.com') {
+                passwordField.value = 'Usuario@2025';
+            }
+        }
+
+        async function testBackendConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.textContent = 'Testando conexão...';
+            
+            try {
+                const response = await fetch('http://localhost:3001/', {
+                    method: 'GET',
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.textContent = '✅ SUCESSO: Backend conectado!\n\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = '❌ ERRO: Status ' + response.status + '\n\n' + await response.text();
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ ERRO de conexão: ' + error.message + '\n\nVerifique se o backend está rodando na porta 3001';
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.textContent = 'Testando health check...';
+            
+            try {
+                const response = await fetch('http://localhost:3001/health', {
+                    method: 'GET',
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.textContent = '✅ SUCESSO: Health check OK!\n\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = '❌ ERRO: Status ' + response.status + '\n\n' + await response.text();
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ ERRO de conexão: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            const email = document.getElementById('email-select').value;
+            const password = document.getElementById('password').value;
+            
+            resultDiv.textContent = 'Testando login...';
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    resultDiv.textContent = '✅ LOGIN REALIZADO COM SUCESSO!\n\n' + 
+                        'Token: ' + data.token.substring(0, 50) + '...\n\n' +
+                        'Dados do usuário:\n' + JSON.stringify(data.user, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = '❌ ERRO DE LOGIN: ' + data.message + '\n\nStatus: ' + response.status;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ ERRO de conexão: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testListUsers() {
+            const resultDiv = document.getElementById('users-result');
+            
+            if (!authToken) {
+                resultDiv.textContent = '❌ Faça login primeiro para obter um token de autenticação';
+                resultDiv.className = 'result error';
+                return;
+            }
+            
+            resultDiv.textContent = 'Listando usuários...';
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/users', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = '✅ USUÁRIOS LISTADOS COM SUCESSO!\n\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = '❌ ERRO: ' + data.message + '\n\nStatus: ' + response.status;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ ERRO de conexão: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testCreateUser() {
+            const resultDiv = document.getElementById('users-result');
+            
+            if (!authToken) {
+                resultDiv.textContent = '❌ Faça login primeiro para obter um token de autenticação';
+                resultDiv.className = 'result error';
+                return;
+            }
+            
+            resultDiv.textContent = 'Criando usuário de teste...';
+            
+            const testUser = {
+                first_name: 'Teste',
+                last_name: 'Sistema',
+                email: 'teste' + Date.now() + '@sistemagente.com',
+                password: 'Teste@123',
+                role: 'USER'
+            };
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/users', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testUser),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = '✅ USUÁRIO CRIADO COM SUCESSO!\n\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = '❌ ERRO: ' + data.message + '\n\nStatus: ' + response.status;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ ERRO de conexão: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Testar conexão automaticamente ao carregar a página
+        window.onload = function() {
+            testBackendConnection();
+        }
+    </script>
+</body>
+</html> 
