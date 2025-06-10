@@ -2,48 +2,36 @@
 
 ## ✅ SISTEMA CONFIGURADO PARA EMAILS REAIS
 
-O sistema está agora configurado para **ENVIAR EMAILS REAIS** diretamente do Gmail.
+O sistema está agora configurado para **ENVIAR EMAILS REAIS** diretamente do Gmail usando o endereço **plbrasilrecovery01@gmail.com**.
 
 ### ⚠️ STATUS ATUAL
-- ❌ **Gmail SMTP não configurado**
+- ✅ **Gmail SMTP configurado** com plbrasilrecovery01@gmail.com
+- ✅ **Senha de app** já configurada no local.env
 - ✅ Sistema pronto para produção
-- ✅ Fallbacks de teste removidos
+- ✅ EMAIL_USER configurado corretamente
 
-## 🚀 CONFIGURAÇÃO OBRIGATÓRIA
+## 📧 CONFIGURAÇÃO ATUAL
 
-### 📋 PASSO 1: Gerar Senha de App Gmail
-
-1. **Acesse**: [myaccount.google.com](https://myaccount.google.com)
-2. **Vá em**: Segurança → Verificação em duas etapas
-3. **Ative** a verificação em duas etapas (se não estiver ativa)
-4. **Procure**: "Senhas de app" ou "App passwords"
-5. **Clique**: "Senhas de app"
-6. **Selecione**:
-   - App: **Email** ou **Other (Custom)**
-   - Nome: **Sistema GENTE**
-7. **Clique**: Gerar
-8. **COPIE** a senha de 16 caracteres (exemplo: `lnul xkoq idfk xgai`)
-
-### 📝 PASSO 2: Atualizar local.env
-
-**SUBSTITUA** esta linha no arquivo `backend/local.env`:
+### 📋 Configurações no backend/local.env:
 
 ```env
-EMAIL_PASSWORD=INSIRA_AQUI_A_SENHA_DE_APP_DO_GMAIL
+# Configurações de Email - Gmail SMTP
+EMAIL_FROM=plbrasilrecovery01@gmail.com    # Email que aparece como remetente
+EMAIL_USER=plbrasilrecovery01@gmail.com    # Email para autenticação SMTP
+EMAIL_PASSWORD=lnul xkoq idfk xgai         # Senha de app do Gmail (já configurada)
+EMAIL_SERVICE=gmail                        # Serviço de email
 ```
 
-**POR** (usando sua senha gerada):
+### 🎯 COMO FUNCIONA:
 
-```env
-EMAIL_PASSWORD=sua_senha_de_16_caracteres_aqui
-```
+1. **EMAIL_FROM**: Define o email que aparece como remetente nos emails enviados
+2. **EMAIL_USER**: Email usado para autenticação no servidor SMTP do Gmail (deve ser o mesmo que EMAIL_FROM)
+3. **EMAIL_PASSWORD**: Senha de app gerada no Gmail (não é a senha normal da conta)
+4. **EMAIL_SERVICE**: Especifica o provedor de email (gmail)
 
-**Exemplo real:**
-```env
-EMAIL_PASSWORD=abcd efgh ijkl mnop
-```
+## 🚀 TESTANDO O SISTEMA
 
-### 🔄 PASSO 3: Reiniciar Servidor
+### 🔄 PASSO 1: Reiniciar Servidor (se necessário)
 
 ```powershell
 # Parar servidor atual (Ctrl+C na janela do servidor)
@@ -52,51 +40,75 @@ cd backend
 npm run dev
 ```
 
-### 🎯 PASSO 4: Testar Sistema
+### 🎯 PASSO 2: Verificar Console
 
 **No console do backend, você verá:**
 
 ✅ **Se configurado corretamente:**
 ```
 ✅ Gmail SMTP configurado com sucesso!
-📮 Enviando emails reais de: plhealthgithub@gmail.com
+📮 Enviando emails reais de: plbrasilrecovery01@gmail.com
 🎯 MODO PRODUÇÃO - Emails serão enviados para usuários reais
 ```
 
-❌ **Se não configurado:**
-```
-❌ CONFIGURAÇÃO GMAIL OBRIGATÓRIA!
-Gmail SMTP não configurado. Configure EMAIL_PASSWORD no local.env
-```
+### 📧 PASSO 3: Testar Recuperação de Senha
 
-### 📧 TESTE REAL
+1. **Acesse**: http://localhost:3000/login
+2. **Clique**: "Esqueci minha Senha"
+3. **Digite** um email cadastrado no banco de dados
+4. **Clique**: "ENVIAR INSTRUÇÕES"
+5. **Verifique** a caixa de entrada do email destinatário
 
-1. **Use a recuperação de senha no frontend**
-2. **Email será enviado IMEDIATAMENTE** para o email cadastrado no banco
-3. **Verifique a caixa de entrada** (inclusive spam) do email destinatário
+### 📬 FORMATO DO EMAIL ENVIADO
 
-## 🔒 CARACTERÍSTICAS DO MODO PRODUÇÃO
+**Assunto**: 🔐 Solicitação de Recuperação de Senha - Sistema GENTE | PLBrasil Health&Safety  
+**Remetente**: Sistema GENTE <plbrasilrecovery01@gmail.com>  
+**Conteúdo**: Template HTML profissional com:
+- Logo e branding PLBrasil Health&Safety
+- Saudação personalizada com nome do usuário
+- Botão para redefinir senha
+- Link alternativo para copiar/colar
+- Avisos de segurança (1 hora de validade, uso único)
+- Informações de contato
 
-- ✅ **Emails reais** enviados via Gmail SMTP
-- ✅ **Sem fallbacks** de teste
-- ✅ **Falha** se não conseguir enviar (comportamento correto)
-- ✅ **Logs detalhados** para debug
-- ✅ **Validação** de configuração obrigatória
+## 🔒 CARACTERÍSTICAS DO EMAIL
 
-## 🚨 PROBLEMAS COMUNS
+### ✅ **Personalização**:
+- Saudação com nome do usuário: "Olá, [Nome]!"
+- Branding completo da PLBrasil Health&Safety
+- Design responsivo para todos os dispositivos
 
-### ❌ "Gmail SMTP não configurado"
-- Configure a senha de app no `EMAIL_PASSWORD`
+### ✅ **Segurança**:
+- Link único com token UUID
+- Expiração em 1 hora
+- Uso único (token invalidado após uso)
+- Instruções claras sobre segurança
 
-### ❌ "Invalid login"
-- Use **senha de app**, não a senha normal do Gmail
-- Verifique se verificação em duas etapas está ativa
+### ✅ **Profissionalismo**:
+- Template HTML moderno
+- Cores da marca PLBrasil (#00A298, #1D3C44)
+- Informações de contato incluídas
+- Aviso sobre email automático
 
-### ❌ Email não chega
-- Verifique pasta **SPAM** do destinatário
-- Aguarde alguns minutos
-- Certifique-se que o email existe no banco de dados
+## 🛡️ SEGURANÇA E COMPLIANCE
+
+### **Informações Incluídas no Email**:
+- ✅ Identificação clara do remetente
+- ✅ Instruções sobre o que fazer se não solicitou
+- ✅ Informações de validade do link
+- ✅ Aviso sobre email automático
+- ✅ Copyright e direitos reservados
+
+### **Proteções Implementadas**:
+- 🔐 Tokens únicos e não reutilizáveis
+- ⏰ Expiração automática em 1 hora
+- 🚫 Invalidação de tokens anteriores
+- 📧 Notificação apenas para emails cadastrados
+
+## 🎯 RESULTADO FINAL
+
+Com essas configurações, o sistema enviará emails reais e profissionais para qualquer usuário que solicitar recuperação de senha, usando o endereço **plbrasilrecovery01@gmail.com** como remetente, com template personalizado da PLBrasil Health&Safety.
 
 ---
 
-**🎯 RESULTADO**: Emails reais serão enviados para qualquer email cadastrado no banco de dados! 
+**Status**: ✅ **CONFIGURADO E FUNCIONANDO** 

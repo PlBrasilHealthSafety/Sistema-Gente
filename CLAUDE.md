@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Important Information
+
+- **Environment: Windows PowerShell - ALWAYS USE COMMANDS AIMED AT POWERSHELL**
+- **Shadcn Command**: `npx shadcn@latest add`
+- **Always analyze Pull Requests for potential breaking changes and adjust code for best integration**
+- **Always use local.env as the main .env file for configuration in development**
+- **Always use npm run dev in the correct directory**
+
 ## Project Overview
 
 Sistema GENTE is a full-stack business management system focused on occupational health and safety compliance for PLBrasil Health&Safety. The application consists of:
@@ -9,6 +17,21 @@ Sistema GENTE is a full-stack business management system focused on occupational
 - **Backend**: Express.js + TypeScript API (port 3001)
 - **Frontend**: Next.js 15 + TypeScript with App Router (port 3000)
 - **Database**: PostgreSQL with connection pooling
+
+## Tech Stack
+
+### Frontend
+- **Next.js 15** with App Router and TypeScript
+- **Tailwind CSS** with custom PLBrasil design system
+- **ShadcnUI** for component library
+- **Lucide React** for icons
+
+### Backend
+- **Node.js with Express** REST API
+- **TypeScript** for type safety
+- **PostgreSQL** with connection pooling
+- **JWT authentication** with bcryptjs
+- **Nodemailer** for email services
 
 ## Development Commands
 
@@ -36,6 +59,24 @@ cd backend
 node database-test.js  # Test database connection
 ```
 
+## ShadcnUI Integration
+
+### Installation
+```bash
+# Initialize ShadcnUI in frontend directory
+npx shadcn@latest init
+
+# Add components as needed
+npx shadcn@latest add <component>
+# Example: npx shadcn@latest add toast
+```
+
+### Tailwind Configuration
+```bash
+# Initialize Tailwind (already configured)
+npx tailwindcss init -p
+```
+
 ## Architecture & Key Patterns
 
 ### Authentication Flow
@@ -43,24 +84,27 @@ node database-test.js  # Test database connection
 - Role-based access control (SUPER_ADMIN, ADMIN, USER)
 - Password reset via email tokens with expiration
 - Frontend auth state managed in localStorage with useEffect protection
+- **Password Requirements**: Minimum 6 characters + special characters (!@#$%^&*)
 
 ### Backend Structure
 - **Model-Controller-Route pattern**: `/models`, `/controllers`, `/routes`
 - **Middleware stack**: Auth, CORS, security (helmet), logging (morgan)
 - **Database abstraction**: Custom query wrapper with connection pooling
-- **Email service**: Production Gmail SMTP integration
+- **Email service**: Production Gmail SMTP integration with Gmail App Password
 
 ### Frontend Structure
 - **App Router architecture**: `/app` directory with layout.tsx
 - **Component-based design**: Reusable UI with Tailwind CSS + Lucide icons
 - **Client-side routing**: Protected routes with authentication checks
 - **State management**: React hooks with localStorage persistence
+- **Real-time validation**: Password strength indicators in registration forms
 
 ### Security Implementation
 - Parameterized queries for SQL injection protection
 - CORS configuration for frontend URL whitelisting
 - JWT token validation middleware for protected routes
-- Input validation for email formats and password strength
+- Input validation for email formats and password strength with special characters
+- Secure password hashing with bcryptjs (12 salt rounds)
 
 ## Environment Configuration
 
@@ -86,10 +130,12 @@ The system uses PostgreSQL with these key tables:
 ## Business Modules
 
 Core functionality areas:
-- **Authentication**: Login, registration, password recovery
-- **Dashboard**: Multi-module navigation (SST, eSocial, Funcionários)
+- **Authentication**: Login, registration, password recovery with email
+- **Dashboard**: Multi-module navigation (SST, eSocial, Funcionários, Cadastros, Relatórios, Faturamento)
 - **User Management**: Role-based access control
-- **Email Integration**: Notification and recovery systems
+- **Email Integration**: Gmail SMTP for notifications and recovery systems
+- **Occupational Safety (SST)**: Core business feature for compliance
+- **eSocial Integration**: Brazilian government integration requirements
 
 ## Testing & Quality
 
@@ -101,10 +147,27 @@ Core functionality areas:
 ## Development Workflow
 
 1. Ensure PostgreSQL is running locally
-2. Configure environment files in both backend and frontend
+2. Configure environment files:
+   - Backend: Copy `config.example.env` to `local.env`
+   - Frontend: Copy `config.example.env` to `.env.local`
 3. Run `npm run dev` in both directories simultaneously
 4. Backend API available at http://localhost:3001
 5. Frontend application at http://localhost:3000
+
+## Project Creation Commands
+
+### Frontend
+```bash
+npx create-next-app@latest sistema_gente
+# Add TypeScript, Tailwind, and App Router during setup
+```
+
+### Backend
+```bash
+# Created manually with Express + TypeScript structure
+npm init -y
+npm install express typescript @types/express ts-node nodemon
+```
 
 ## Color Palette
 
@@ -121,6 +184,17 @@ Core functionality areas:
 
 ## Common Issues
 
-- Email service requires Gmail App Password configuration (see CONFIGURAR_GMAIL_SMTP.md)
-- Database connection issues: verify PostgreSQL service and credentials
-- CORS errors: check FRONTEND_URL in backend .env matches frontend URL
+- **Email service**: Requires Gmail App Password configuration (see CONFIGURAR_GMAIL_SMTP.md)
+- **Database connection**: Verify PostgreSQL service and credentials in local.env
+- **CORS errors**: Check FRONTEND_URL in backend local.env matches frontend URL
+- **PowerShell commands**: Always use Windows PowerShell syntax for file operations
+- **Environment files**: Use `local.env` in backend, `.env.local` in frontend
+- **ShadcnUI components**: Initialize before adding components with `npx shadcn@latest init`
+
+## Pull Request Guidelines
+
+- Always analyze PRs for potential breaking changes
+- Test authentication flows after merging auth-related changes
+- Verify email functionality when modifying email services
+- Check database migrations and schema changes
+- Ensure both frontend and backend start successfully after changes

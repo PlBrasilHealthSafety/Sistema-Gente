@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface User {
   id: number;
@@ -160,16 +161,20 @@ export default function HomePage() {
         <div className="flex justify-between items-center h-16 px-4">
           {/* Logo */}
           <div className="flex items-center w-1/3">
-            <div className="text-xl font-bold text-[#00A298]">plbrasil</div>
-            <div className="text-xl font-bold text-[#1D3C44] ml-1">sst</div>
-            <div className="text-sm text-gray-500 ml-2">Health&Safety</div>
+            <div className="text-xl font-bold text-[#00A298]">PLBrasil</div>
+            <div className="text-sm font-bold text-gray-500 ml-2">Health&Safety</div>
           </div>
           
-          {/* Nome do Sistema Centralizado */}
-          <div className="flex-1 text-center">
-            <h1 className="text-2xl font-bold text-[#1D3C44]">
-              Sistema <span className="text-[#00A298]">GENTE</span>
-            </h1>
+          {/* Logo do Sistema Centralizado */}
+          <div className="flex-1 text-center flex justify-center">
+            <Image
+              src="/sistemagente_logo.png"
+              alt="Sistema GENTE"
+              width={150}
+              height={15}
+              className="object-contain"
+              priority
+            />
           </div>
           
           {/* Informações do usuário e logout */}

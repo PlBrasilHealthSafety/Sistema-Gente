@@ -164,7 +164,7 @@ export class EmailService {
             .button {
                 display: inline-block;
                 background-color: #00A298;
-                color: white;
+                color: #ffffff !important;
                 text-decoration: none;
                 padding: 12px 30px;
                 border-radius: 8px;
@@ -214,11 +214,11 @@ export class EmailService {
                 </div>
                 
                 <div class="message">
-                    Recebemos uma solicitação para redefinir a senha da sua conta no Sistema GENTE.
+                    Você solicitou a recuperação de senha para sua conta no <strong>Sistema GENTE</strong> da PLBrasil Health&Safety.
                 </div>
                 
                 <div class="message">
-                    Para criar uma nova senha, clique no botão abaixo:
+                    Para definir uma nova senha e acessar sua conta novamente, clique no botão abaixo:
                 </div>
                 
                 <div style="text-align: center;">
@@ -244,8 +244,10 @@ export class EmailService {
             </div>
             
             <div class="footer">
-                <p>Sistema GENTE © 2025 | PLBrasil Health&Safety</p>
-                <p>Este é um email automático, não responda a esta mensagem.</p>
+                <p><strong>Sistema GENTE © 2025 | PLBrasil Health&Safety</strong></p>
+                <p>Este é um email automático enviado de: plbrasilrecovery01@gmail.com</p>
+                <p>Se você não solicitou esta recuperação, entre em contato conosco.</p>
+                <p>© 2025 PLBrasil Health&Safety - Todos os direitos reservados</p>
             </div>
         </div>
     </body>
@@ -266,12 +268,12 @@ export class EmailService {
     
     return await this.sendEmail({
       to: email,
-      subject: '🔐 Recuperação de Senha - Sistema GENTE',
+      subject: '🔐 Solicitação de Recuperação de Senha - Sistema GENTE | PLBrasil Health&Safety',
       html: htmlContent,
       text: `
 Olá, ${firstName}!
 
-Recebemos uma solicitação para redefinir a senha da sua conta no Sistema GENTE.
+Você solicitou a recuperação de senha para sua conta no Sistema GENTE da PLBrasil Health&Safety.
 
 Para criar uma nova senha, acesse o link abaixo:
 ${resetLink}
@@ -281,7 +283,11 @@ IMPORTANTE:
 - Por segurança, você só pode usar este link uma vez
 - Se você não solicitou esta redefinição, ignore este email
 
-Sistema GENTE © 2025 | PLBrasil Health&Safety
+Atenciosamente,
+Equipe Sistema GENTE
+PLBrasil Health&Safety
+
+© 2025 PLBrasil Health&Safety - Todos os direitos reservados
       `
     });
   }
