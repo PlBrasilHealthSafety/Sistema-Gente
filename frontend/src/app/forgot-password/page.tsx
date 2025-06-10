@@ -57,19 +57,14 @@ export default function ForgotPasswordPage() {
       {/* Container principal */}
       <div className="relative z-10 w-full max-w-md mx-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
-          {/* Header com logos */}
+          {/* Header com logo Sistema GENTE */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <span className="text-2xl font-bold text-[grey]">Sistema</span>
-              <span className="text-2xl font-bold text-[#00A298] ml-2">GENTE</span>
-            </div>
-            
-            <div className="flex items-center justify-center mb-6">
               <Image
-                src="/logo.png"
-                alt="PLBrasil Health&Safety"
+                src="/sistemagente_logo.png"
+                alt="Sistema GENTE"
                 width={120}
-                height={60}
+                height={15}
                 className="object-contain"
               />
             </div>
@@ -88,7 +83,7 @@ export default function ForgotPasswordPage() {
 
               {/* Descrição */}
               <div className="text-center mb-6">
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-sm font-medium leading-relaxed">
                   Digite seu e-mail para receber as instruções de recuperação de senha.
                 </p>
               </div>
@@ -169,6 +164,17 @@ export default function ForgotPasswordPage() {
               </div>
             </>
           )}
+          
+          {/* Logo PLBrasil */}
+          <div className="flex items-center justify-center mt-8">
+            <Image
+              src="/logo.png"
+              alt="PLBrasil Health&Safety"
+              width={115}
+              height={10}
+              className="object-contain"
+            />
+          </div>
         </div>
 
         {/* Copyright */}

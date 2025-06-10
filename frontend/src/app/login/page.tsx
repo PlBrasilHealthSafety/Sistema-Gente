@@ -215,26 +215,21 @@ export default function LoginPage() {
       {/* Container principal */}
       <div className="relative z-10 w-full max-w-md mx-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
-          {/* Header com logos */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <span className="text-2xl font-bold text-[grey]">Sistema</span>
-              <span className="text-2xl font-bold text-[#00A298] ml-2">GENTE</span>
-            </div>
-            
-            <div className="flex items-center justify-center mb-4">
+          {/* Header com logo Sistema GENTE */}
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center mb-3">
               <Image
-                src="/logo.png"
-                alt="PLBrasil Health&Safety"
-                width={100}
-                height={50}
+                src="/sistemagente_logo.png"
+                alt="Sistema GENTE"
+                width={120}
+                height={15}
                 className="object-contain"
               />
             </div>
           </div>
 
           {/* Título da seção */}
-          <div className="flex items-center mb-4">
+          <div className="flex items-center mb-3">
             <div className="flex-1 h-px bg-gray-200"></div>
             <div className="px-4 text-gray-500 text-sm font-medium">
               {showCreateAccount ? 'CRIAR CONTA' : 'ACESSO AO SISTEMA'}
@@ -446,7 +441,7 @@ export default function LoginPage() {
           </form>
 
           {/* Toggle entre login e criar conta */}
-          <div className="mt-4 text-center">
+          <div className="mt-3 text-center">
             <button
               onClick={() => setShowCreateAccount(!showCreateAccount)}
               className="text-sm text-[#00A298] hover:text-[#1D3C44] transition-all duration-200 font-medium hover:underline hover:scale-105 cursor-pointer"
@@ -456,6 +451,17 @@ export default function LoginPage() {
                 : 'Não tem uma conta? Criar conta'
               }
             </button>
+          </div>
+          
+          {/* Logo PLBrasil */}
+          <div className="flex items-center justify-center mt-6">
+            <Image
+              src="/logo.png"
+              alt="PLBrasil Health&Safety"
+              width={115}
+              height={10}
+              className="object-contain"
+            />
           </div>
         </div>
 
