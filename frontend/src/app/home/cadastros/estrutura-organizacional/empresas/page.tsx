@@ -21,6 +21,7 @@ export default function EmpresasPage() {
   const [activeTab, setActiveTab] = useState('dados-empresa');
   const [tipoEstabelecimento, setTipoEstabelecimento] = useState('matriz');
   const [classificacaoPorte, setClassificacaoPorte] = useState('ME');
+  const [searchType, setSearchType] = useState('nome');
   
   // Estados para CEP e endereço
   const [cep, setCep] = useState('');
@@ -43,6 +44,24 @@ export default function EmpresasPage() {
   // Estados para observações
   const [observacao, setObservacao] = useState('');
   const [observacaoOS, setObservacaoOS] = useState('');
+
+  // Função para obter o placeholder baseado no tipo de pesquisa
+  const getPlaceholder = (type: string) => {
+    switch (type) {
+      case 'nome':
+        return 'Digite o nome fantasia...';
+      case 'n de inscrição':
+        return 'Digite o n° de inscrição...';
+      case 'razao':
+        return 'Digite a razão social...';
+      case 'codigo':
+        return 'Digite o código...';
+        case 'regiao':
+          return 'Digite a região...';
+      default:
+        return 'Digite para buscar...';
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -164,10 +183,8 @@ export default function EmpresasPage() {
       {/* Header Superior */}
       <header className="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
         <div className="flex justify-between items-center h-16 px-4">
-          {/* Logo */}
-          <div className="flex items-center w-1/3">
-            <div className="text-xl font-bold text-[#00A298]">PLBrasil</div>
-            <div className="text-sm font-bold text-gray-500 ml-2">Health&Safety</div>
+          {/* Espaço vazio para balanceamento */}
+          <div className="w-1/3">
           </div>
           
           {/* Logo do Sistema Centralizado */}
@@ -208,7 +225,7 @@ export default function EmpresasPage() {
       <div className="pt-16">
         {/* Conteúdo Principal */}
         <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             {/* Breadcrumb e Navegação */}
             <div className="mb-6">
               <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
@@ -264,28 +281,35 @@ export default function EmpresasPage() {
             {/* Conteúdo Principal */}
             <div className="bg-white rounded-2xl shadow-xl">
               {/* Formulário de busca */}
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex flex-wrap gap-4 items-end">
-                  <div className="flex-1 min-w-64">
+              <div className="p-8 border-b border-gray-200">
+                <div className="flex flex-wrap gap-6 items-end w-full">
+                  {/* Barra de pesquisa */}
+                  <div className="flex-1 min-w-96">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Pesquisar por
                     </label>
                     <div className="flex gap-2">
-                      <select className="w-38 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
+                      <select 
+                        value={searchType}
+                        onChange={(e) => setSearchType(e.target.value)}
+                        className="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      >
                         <option value="nome">Nome Fantasia</option>
-                        <option value="cnpj">CNPJ</option>
+                        <option value="n de inscrição">N° de Inscrição</option>
                         <option value="razao">Razão Social</option>
                         <option value="codigo">Código</option>
+                        <option value="regiao">Região</option>
                       </select>
                       <input
                         type="text"
-                        placeholder="Digite o nome fantasia para buscar..."
+                        placeholder={getPlaceholder(searchType)}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                       />
                     </div>
                   </div>
-                  
-                  <div>
+
+                  {/* Filtros */}
+                  <div className="min-w-fit">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Grupo
                     </label>
@@ -294,8 +318,8 @@ export default function EmpresasPage() {
                       <option value="grupo-teste">Grupo Teste</option>
                     </select>
                   </div>
-                  
-                  <div>
+
+                  <div className="min-w-fit">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Região
                     </label>
@@ -304,8 +328,8 @@ export default function EmpresasPage() {
                       <option value="regiao-teste">Região Teste</option>
                     </select>
                   </div>
-                  
-                  <div>
+
+                  <div className="min-w-fit">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Situação
                     </label>
@@ -316,19 +340,22 @@ export default function EmpresasPage() {
                     </select>
                   </div>
 
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                  >
-                    PROCURAR
-                  </button>
-                  
-                  <button 
-                    onClick={() => setShowNewCompanyModal(true)}
-                    className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                  >
-                    NOVA EMPRESA
-                  </button>
+                  {/* Botões */}
+                  <div className="flex gap-2 min-w-fit">
+                    <button 
+                      onClick={() => window.location.reload()}
+                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                    >
+                      PROCURAR
+                    </button>
+                    
+                    <button 
+                      onClick={() => setShowNewCompanyModal(true)}
+                      className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                    >
+                      NOVA EMPRESA
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -367,69 +394,76 @@ export default function EmpresasPage() {
                   {activeTab === 'dados-empresa' && (
                     <div className="bg-white rounded-lg p-6 shadow-sm space-y-6">
                       {/* Seção Estabelecimento */}
-                      <div className="border border-gray-200 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-gray-700 mb-4 bg-gray-100 px-3 py-2 rounded">Estabelecimento</h4>
+                      <div className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm">
+                        <div className="flex items-center mb-6">
+                          <div className="bg-[#00A298] text-white p-2 rounded-lg mr-3">
+                            🏢
+                          </div>
+                          <h4 className="text-lg font-semibold text-[#1D3C44]">Estabelecimento</h4>
+                        </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                          <div className="space-y-3">
+                            <label className="block text-sm font-medium text-gray-700">
                               Tipo
                             </label>
-                            <div className="flex gap-4">
-                              <label className="flex items-center">
+                            <div className="space-y-2">
+                              <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                                 <input
                                   type="radio"
                                   name="tipo"
                                   value="matriz"
                                   checked={tipoEstabelecimento === 'matriz'}
                                   onChange={(e) => setTipoEstabelecimento(e.target.value)}
-                                  className="mr-2"
+                                  className="mr-3 text-[#00A298] focus:ring-[#00A298]"
                                 />
-                                Matriz
+                                <span className="text-sm font-medium">Matriz</span>
                               </label>
-                              <label className="flex items-center">
+                              <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                                 <input
                                   type="radio"
                                   name="tipo"
                                   value="filial"
                                   checked={tipoEstabelecimento === 'filial'}
                                   onChange={(e) => setTipoEstabelecimento(e.target.value)}
-                                  className="mr-2"
+                                  className="mr-3 text-[#00A298] focus:ring-[#00A298]"
                                 />
-                                Filial
+                                <span className="text-sm font-medium">Filial</span>
                               </label>
                             </div>
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Tipo de Inscrição <span className="text-blue-500 text-xs">(Opcional)</span>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Tipo de Inscrição 
+                              <span className="text-blue-500 text-xs ml-1">(Opcional)</span>
                             </label>
-                            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
+                            <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all">
                               <option value="">Selecione...</option>
                               <option value="cnpj">CNPJ</option>
                               <option value="cpf">CPF</option>
                             </select>
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Número de Inscrição <span className="text-blue-500 text-xs">(Opcional)</span>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Número de Inscrição 
+                              <span className="text-blue-500 text-xs ml-1">(Opcional)</span>
                             </label>
                             <input
                               type="text"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
                               placeholder="Digite o número"
                             />
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
                               CNO
                             </label>
                             <input
                               type="text"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
                               placeholder="Digite o CNO"
                             />
                           </div>

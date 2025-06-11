@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface MenuItem {
   id: string;
@@ -176,6 +177,22 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="space-y-1">
           {menuItems.map(item => renderMenuItem(item))}
         </div>
+        
+        {/* Logo PLBrasil no fundo da página */}
+        {!collapsed && (
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+            <div className="px-4">
+              <Image
+                src="/logo.png"
+                alt="PLBrasil Health&Safety"
+                width={160}
+                height={60}
+                className="object-contain opacity-80 hover:opacity-100 transition-opacity"
+                priority
+              />
+            </div>
+          </div>
+        )}
       </nav>
     </aside>
   );
