@@ -129,19 +129,7 @@ export default function FaturamentoPage() {
       </header>
 
       <div className="pt-16">
-        {/* Navegação */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
-          <nav className="flex items-center space-x-1 text-sm text-gray-500">
-            <button 
-              onClick={() => router.push('/home')}
-              className="hover:text-[#00A298] transition-colors"
-            >
-              Home
-            </button>
-            <span>›</span>
-            <span className="text-[#00A298] font-medium">Faturamento</span>
-          </nav>
-        </div>
+
 
         {/* Conteúdo Principal */}
         <main className="flex-1 p-6">

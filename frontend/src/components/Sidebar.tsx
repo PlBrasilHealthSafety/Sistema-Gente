@@ -97,24 +97,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       icon: '🔄',
       href: '/home/esocial'
     },
-    {
-      id: 'configuracoes',
-      name: 'Configurações',
-      icon: '⚙️',
-      href: '/home/configuracoes'
-    },
-    {
-      id: 'auditoria',
-      name: 'Auditoria',
-      icon: '🔍',
-      href: '/home/auditoria'
-    },
-    {
-      id: 'backup',
-      name: 'Backup',
-      icon: '💾',
-      href: '/home/backup'
-    }
+    
   ];
 
   const toggleMenuExpansion = (menuId: string) => {

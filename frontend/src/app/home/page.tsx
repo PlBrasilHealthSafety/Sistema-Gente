@@ -99,7 +99,7 @@ export default function HomePage() {
           Use o menu lateral para navegar entre os módulos do sistema
         </p>
         <div className="text-sm text-gray-400">
-          PLBrasil Health&Safety - Sistema GENTE V 1.0
+          PLBrasil Health&Safety - Sistema GENTE V 1.0.0
         </div>
       </div>
     </div>

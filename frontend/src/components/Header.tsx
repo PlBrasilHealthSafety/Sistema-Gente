@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -17,6 +17,8 @@ export default function Header() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -30,8 +32,22 @@ export default function Header() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
+    setShowUserDropdown(false);
   };
 
   const handleLogoutConfirm = () => {
@@ -49,6 +65,15 @@ export default function Header() {
     router.push('/home');
   };
 
+  const handleProfileClick = () => {
+    setShowUserDropdown(false);
+    router.push('/home/perfil');
+  };
+
+  const handleSettingsClick = () => {
+    router.push('/home/configuracoes');
+  };
+
   const getRoleName = (role: string) => {
     switch (role) {
       case 'SUPER_ADMIN':
@@ -64,7 +89,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white border-b border-gray-200 shadow-sm relative z-40">
         <div className="flex justify-between items-center h-16 px-4">
           <div className="flex items-center w-1/3">
             <div className="text-xl font-bold text-[#00A298]">PLBrasil</div>
@@ -85,19 +110,51 @@ export default function Header() {
 
           <div className="flex items-center space-x-6 w-1/3 justify-end">
             {user && (
-              <div className="text-right">
-                <div className="text-sm font-medium text-[#1D3C44] mb-1">
-                  {user.first_name} {user.last_name}
-                </div>
-                <div className="text-xs px-3 py-1 rounded-full inline-block bg-gray-100 text-gray-800">
-                  {getRoleName(user.role)}
-                </div>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className="text-right hover:bg-gray-50 p-2 rounded-lg transition-colors cursor-pointer"
+                >
+                  <div className="text-sm font-medium text-[#1D3C44] mb-1">
+                    {user.first_name} {user.last_name}
+                  </div>
+                  <div className="text-xs px-3 py-1 rounded-full inline-block bg-gray-100 text-gray-800">
+                    {getRoleName(user.role)}
+                  </div>
+                </button>
+
+                {/* Dropdown Menu */}
+                {showUserDropdown && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="py-2">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <div className="text-sm font-medium text-[#1D3C44]">
+                          {user.first_name} {user.last_name}
+                        </div>
+                        <div className="text-xs text-gray-500">{user.email}</div>
+                      </div>
+                      
+                      <button
+                        onClick={handleProfileClick}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                      >
+                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Ver Perfil
+                      </button>
+                      
+
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
             <button 
-              className="p-2 text-gray-600 hover:text-[#00A298] hover:bg-gray-100 rounded-lg transition-all duration-200 transform hover:scale-102 hover:shadow-lg cursor-pointer"
-              title="Configurações do usuário"
+              onClick={handleSettingsClick}
+              className="p-2 text-gray-600 hover:text-[#00A298] hover:bg-gray-100 rounded-lg transition-all duration-200 transform hover:scale-102 hover:shadow-lg cursor-pointer z-50 relative"
+              title="Configurações do sistema"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>

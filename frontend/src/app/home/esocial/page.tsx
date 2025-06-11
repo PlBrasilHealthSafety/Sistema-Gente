@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 
 interface User {
   id: number;
@@ -17,6 +18,7 @@ export default function ESocialPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -129,20 +131,6 @@ export default function ESocialPage() {
       </header>
 
       <div className="pt-16">
-        {/* Navegação */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
-          <nav className="flex items-center space-x-1 text-sm text-gray-500">
-            <button 
-              onClick={() => router.push('/home')}
-              className="hover:text-[#00A298] transition-colors"
-            >
-              Home
-            </button>
-            <span>›</span>
-            <span className="text-[#00A298] font-medium">eSocial</span>
-          </nav>
-        </div>
-
         {/* Conteúdo Principal */}
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto">

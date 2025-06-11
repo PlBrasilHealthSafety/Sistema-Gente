@@ -17,10 +17,6 @@ export default function EstruturaOrganizacionalPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('grupos');
-  const [showNewGroupModal, setShowNewGroupModal] = useState(false);
-  const [showNewRegionModal, setShowNewRegionModal] = useState(false);
-  const [showNewCompanyModal, setShowNewCompanyModal] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -133,398 +129,128 @@ export default function EstruturaOrganizacionalPage() {
       </header>
 
       <div className="pt-16">
-        {/* Navegação */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
-          <nav className="flex items-center space-x-1 text-sm text-gray-500">
-            <button 
-              onClick={() => router.push('/home')}
-              className="hover:text-[#00A298] transition-colors"
-            >
-              Home
-            </button>
-            <span>›</span>
-            <button 
-              onClick={() => router.push('/home/cadastros')}
-              className="hover:text-[#00A298] transition-colors"
-            >
-              Cadastros
-            </button>
-            <span>›</span>
-            <span className="text-[#00A298] font-medium">Estrutura Organizacional</span>
-          </nav>
-        </div>
-
         {/* Conteúdo Principal */}
         <main className="flex-1 p-6">
           <div className="max-w-6xl mx-auto">
-            {/* Título da página */}
+            {/* Breadcrumb e Navegação */}
             <div className="mb-6">
+              <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+                <button 
+                  onClick={() => router.push('/home/cadastros')}
+                  className="hover:text-[#00A298] cursor-pointer"
+                >
+                  Cadastros
+                </button>
+                <span>/</span>
+                <span className="text-[#00A298] font-medium">Estrutura Organizacional</span>
+              </div>
+              
               <h1 className="text-3xl font-bold text-[#1D3C44] mb-2">
                 Estrutura Organizacional
               </h1>
               <p className="text-gray-600">
-                Cadastro de Grupos, Regiões e Empresas
+                Gerencie a estrutura da sua organização: grupos, regiões e empresas
               </p>
             </div>
 
-            {/* Tabs para alternar entre Grupos, Regiões e Empresas */}
-            <div className="bg-white rounded-2xl shadow-xl">
-              {/* Header com tabs */}
-              <div className="border-b border-gray-200">
-                <nav className="flex space-x-8 px-6">
+            {/* Cards de Navegação */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Card Grupos */}
+              <div className="bg-white rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">👥</div>
+                  <h3 className="text-2xl font-bold text-[#1D3C44] mb-3">Grupos</h3>
+                  <p className="text-gray-600 mb-6">
+                    Cadastre e gerencie os grupos da sua organização
+                  </p>
                   <button
-                    onClick={() => setActiveTab('grupos')}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 transform hover:scale-102 cursor-pointer ${
-                      activeTab === 'grupos'
-                        ? 'border-[#00A298] text-[#00A298]'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
+                    onClick={() => router.push('/home/cadastros/estrutura-organizacional/grupos')}
+                    className="w-full bg-[#00A298] hover:bg-[#1D3C44] text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
-                    👥 Grupos
+                    Acessar Grupos
                   </button>
-                  <button
-                    onClick={() => setActiveTab('regioes')}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 transform hover:scale-102 cursor-pointer ${
-                      activeTab === 'regioes'
-                        ? 'border-[#00A298] text-[#00A298]'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    🗺️ Regiões
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('empresas')}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 transform hover:scale-102 cursor-pointer ${
-                      activeTab === 'empresas'
-                        ? 'border-[#00A298] text-[#00A298]'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    🏢 Empresas
-                  </button>
-                </nav>
+                </div>
               </div>
 
-              {/* Conteúdo da tab ativa */}
-              <div className="p-6">
-                {/* Formulário de busca */}
-                <div className="mb-6">
-                  <div className="flex flex-wrap gap-4 items-end">
-                    <div className="flex-1 min-w-64">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Pesquisar por
-                      </label>
-                      <div className="flex gap-2">
-                        <select className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                          <option value="nome">
-                            {activeTab === 'empresas' ? 'Nome Fantasia' : 'Nome'}
-                          </option>
-                          {activeTab === 'empresas' && (
-                            <>
-                              <option value="cnpj">CNPJ</option>
-                              <option value="razao">Razão Social</option>
-                              <option value="codigo">Código</option>
-                            </>
-                          )}
-                        </select>
-                        <input
-                          type="text"
-                          placeholder={`Digite o ${activeTab === 'empresas' ? 'nome fantasia' : 'nome'} para buscar...`}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                    
+              {/* Card Regiões */}
+              <div className="bg-white rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🗺️</div>
+                  <h3 className="text-2xl font-bold text-[#1D3C44] mb-3">Regiões</h3>
+                  <p className="text-gray-600 mb-6">
+                    Cadastre e gerencie as regiões vinculadas aos grupos
+                  </p>
+                  <button
+                    onClick={() => router.push('/home/cadastros/estrutura-organizacional/regioes')}
+                    className="w-full bg-[#00A298] hover:bg-[#1D3C44] text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    Acessar Regiões
+                  </button>
+                </div>
+              </div>
+
+              {/* Card Empresas */}
+              <div className="bg-white rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🏢</div>
+                  <h3 className="text-2xl font-bold text-[#1D3C44] mb-3">Empresas</h3>
+                  <p className="text-gray-600 mb-6">
+                    Cadastre e gerencie as empresas vinculadas às regiões
+                  </p>
+                  <button
+                    onClick={() => router.push('/home/cadastros/estrutura-organizacional/empresas')}
+                    className="w-full bg-[#00A298] hover:bg-[#1D3C44] text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    Acessar Empresas
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Seção de Resumo/Estatísticas */}
+            <div className="mt-8 bg-white rounded-2xl shadow-xl p-6">
+              <h3 className="text-xl font-bold text-[#1D3C44] mb-4">Resumo da Estrutura</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Situação
-                      </label>
-                      <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                        <option value="ativo">Ativo</option>
-                        <option value="inativo">Inativo</option>
-                        <option value="todos">Todos</option>
-                      </select>
+                      <p className="text-blue-600 font-medium">Total de Grupos</p>
+                      <p className="text-2xl font-bold text-blue-800">0</p>
                     </div>
-
-                    <button 
-                      onClick={() => window.location.reload()}
-                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                    >
-                      PROCURAR
-                    </button>
-                    
-                    <button 
-                      onClick={() => {
-                        if (activeTab === 'grupos') {
-                          setShowNewGroupModal(true);
-                        } else if (activeTab === 'regioes') {
-                          setShowNewRegionModal(true);
-                        } else if (activeTab === 'empresas') {
-                          setShowNewCompanyModal(true);
-                        }
-                      }}
-                      className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                    >
-                      {activeTab === 'grupos' && 'NOVO GRUPO'}
-                      {activeTab === 'regioes' && 'NOVA REGIÃO'}
-                      {activeTab === 'empresas' && 'NOVA EMPRESA'}
-                    </button>
+                    <div className="text-blue-500">👥</div>
                   </div>
                 </div>
-
-                {/* Container de Novo Cadastro - Grupos */}
-                {showNewGroupModal && activeTab === 'grupos' && (
-                  <div className="mb-6 bg-gray-50 rounded-lg p-6 border-2 border-[#00A298]/20">
-                    <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Cadastro de Grupos</h3>
-                    
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
-                      <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Nome
-                          </label>
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                            placeholder="Digite o nome do grupo"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Situação
-                          </label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                            <option value="ativo">Ativo</option>
-                            <option value="inativo">Inativo</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3 mt-6">
-                        <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
-                          INCLUIR
-                        </button>
-                        <button className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
-                          LIMPAR
-                        </button>
-                        <button
-                          onClick={() => setShowNewGroupModal(false)}
-                          className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                        >
-                          RETORNAR
-                        </button>
-                      </div>
+                
+                <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-600 font-medium">Total de Regiões</p>
+                      <p className="text-2xl font-bold text-green-800">0</p>
                     </div>
+                    <div className="text-green-500">🗺️</div>
                   </div>
-                )}
-
-                {/* Container de Novo Cadastro - Regiões */}
-                {showNewRegionModal && activeTab === 'regioes' && (
-                  <div className="mb-6 bg-gray-50 rounded-lg p-6 border-2 border-[#00A298]/20">
-                    <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Cadastro de Regiões</h3>
-                    
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
-                      <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Nome
-                          </label>
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                            placeholder="Digite o nome da região"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Grupo
-                          </label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                            <option value="">Selecione um grupo</option>
-                            <option value="grupo-teste">Grupo Teste</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Situação
-                          </label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                            <option value="ativo">Ativo</option>
-                            <option value="inativo">Inativo</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3 mt-6">
-                        <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
-                          INCLUIR
-                        </button>
-                        <button className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
-                          LIMPAR
-                        </button>
-                        <button
-                          onClick={() => setShowNewRegionModal(false)}
-                          className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                        >
-                          RETORNAR
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Container de Novo Cadastro - Empresas */}
-                {showNewCompanyModal && activeTab === 'empresas' && (
-                  <div className="mb-6 bg-gray-50 rounded-lg p-6 border-2 border-[#00A298]/20">
-                    <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Cadastro de Empresas</h3>
-                    
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
-                      <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            CNPJ
-                          </label>
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                            placeholder="00.000.000/0001-00"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Razão Social
-                          </label>
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                            placeholder="Digite a razão social"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Nome Fantasia
-                          </label>
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                            placeholder="Digite o nome fantasia"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Código
-                          </label>
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                            placeholder="Digite o código"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Grupo
-                          </label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                            <option value="">Selecione um grupo</option>
-                            <option value="grupo-teste">Grupo Teste</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Região
-                          </label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                            <option value="">Selecione uma região</option>
-                            <option value="regiao-teste">Região Teste</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Situação
-                          </label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                            <option value="ativo">Ativo</option>
-                            <option value="inativo">Inativo</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3 mt-6">
-                        <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
-                          INCLUIR
-                        </button>
-                        <button className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
-                          LIMPAR
-                        </button>
-                        <button
-                          onClick={() => setShowNewCompanyModal(false)}
-                          className="bg-gray-400 hover:bg-gray-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                        >
-                          RETORNAR
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tabela de resultados */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        {activeTab === 'grupos' && (
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
-                        )}
-                        
-                        {activeTab === 'regioes' && (
-                          <>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Grupo</th>
-                          </>
-                        )}
-                        
-                        {activeTab === 'empresas' && (
-                          <>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CNPJ</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Razão Social</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome Fantasia</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Código</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Grupo</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Região</th>
-                          </>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td 
-                          colSpan={
-                            activeTab === 'grupos' ? 1 : 
-                            activeTab === 'regioes' ? 2 : 6
-                          } 
-                          className="px-4 py-8 text-center text-gray-500"
-                        >
-                          Não existem dados para mostrar
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
                 </div>
+                
+                <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-600 font-medium">Total de Empresas</p>
+                      <p className="text-2xl font-bold text-purple-800">0</p>
+                    </div>
+                    <div className="text-purple-500">🏢</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Instruções */}
+            <div className="mt-8 bg-gradient-to-r from-[#00A298]/10 to-[#1D3C44]/10 rounded-2xl p-6 border border-[#00A298]/20">
+              <h3 className="text-lg font-bold text-[#1D3C44] mb-3">Como usar a Estrutura Organizacional</h3>
+              <div className="space-y-2 text-gray-700">
+                <p>📋 <strong>1. Grupos:</strong> Comece criando os grupos principais da sua organização</p>
+                <p>📍 <strong>2. Regiões:</strong> Crie regiões e associe-as aos grupos correspondentes</p>
+                <p>🏢 <strong>3. Empresas:</strong> Cadastre as empresas vinculando-as às regiões</p>
+                <p>✅ Esta hierarquia garante uma organização estruturada dos seus dados</p>
               </div>
             </div>
           </div>
