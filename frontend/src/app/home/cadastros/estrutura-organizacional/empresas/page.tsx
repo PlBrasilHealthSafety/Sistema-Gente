@@ -402,36 +402,36 @@ export default function EmpresasPage() {
                           <h4 className="text-lg font-semibold text-[#1D3C44]">Estabelecimento</h4>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                          <div className="space-y-3">
-                            <label className="block text-sm font-medium text-gray-700">
-                              Tipo
-                            </label>
-                            <div className="space-y-2">
-                              <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                <input
-                                  type="radio"
-                                  name="tipo"
-                                  value="matriz"
-                                  checked={tipoEstabelecimento === 'matriz'}
-                                  onChange={(e) => setTipoEstabelecimento(e.target.value)}
-                                  className="mr-3 text-[#00A298] focus:ring-[#00A298]"
-                                />
-                                <span className="text-sm font-medium">Matriz</span>
-                              </label>
-                              <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                                <input
-                                  type="radio"
-                                  name="tipo"
-                                  value="filial"
-                                  checked={tipoEstabelecimento === 'filial'}
-                                  onChange={(e) => setTipoEstabelecimento(e.target.value)}
-                                  className="mr-3 text-[#00A298] focus:ring-[#00A298]"
-                                />
-                                <span className="text-sm font-medium">Filial</span>
-                              </label>
-                            </div>
-                          </div>
+                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                           <div className="space-y-2">
+                             <label className="block text-sm font-medium text-gray-700">
+                               Tipo
+                             </label>
+                             <div className="flex gap-3">
+                               <label className="flex items-center cursor-pointer">
+                                 <input
+                                   type="radio"
+                                   name="tipo"
+                                   value="matriz"
+                                   checked={tipoEstabelecimento === 'matriz'}
+                                   onChange={(e) => setTipoEstabelecimento(e.target.value)}
+                                   className="mr-2 text-[#00A298] focus:ring-[#00A298]"
+                                 />
+                                 <span className="text-sm font-medium">Matriz</span>
+                               </label>
+                               <label className="flex items-center cursor-pointer">
+                                 <input
+                                   type="radio"
+                                   name="tipo"
+                                   value="filial"
+                                   checked={tipoEstabelecimento === 'filial'}
+                                   onChange={(e) => setTipoEstabelecimento(e.target.value)}
+                                   className="mr-2 text-[#00A298] focus:ring-[#00A298]"
+                                 />
+                                 <span className="text-sm font-medium">Filial</span>
+                               </label>
+                             </div>
+                           </div>
 
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
@@ -470,33 +470,38 @@ export default function EmpresasPage() {
                         </div>
                       </div>
 
-                      {/* Seção Dados cadastrais */}
-                      <div className="border border-gray-200 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-gray-700 mb-4 bg-gray-100 px-3 py-2 rounded">Dados cadastrais</h4>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Código
-                            </label>
-                            <input
-                              type="text"
-                              value="AUTOMÁTICO"
-                              disabled
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
-                            />
-                          </div>
+                                             {/* Seção Dados cadastrais */}
+                       <div className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm">
+                         <div className="flex items-center mb-6">
+                           <div className="bg-[#00A298] text-white p-2 rounded-lg mr-3">
+                             📊
+                           </div>
+                           <h4 className="text-lg font-semibold text-[#1D3C44]">Dados cadastrais</h4>
+                         </div>
+                         
+                                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                           <div className="space-y-2">
+                             <label className="block text-sm font-medium text-gray-700">
+                               Código
+                             </label>
+                             <input
+                               type="text"
+                               value="AUTOMÁTICO"
+                               disabled
+                               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
+                             />
+                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Grupo / Região
-                            </label>
-                            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                              <option value="">Selecione um grupo/região</option>
-                              <option value="grupo-regiao-1">Grupo 1 / Região A</option>
-                              <option value="grupo-regiao-2">Grupo 2 / Região B</option>
-                            </select>
-                          </div>
+                           <div className="space-y-2">
+                             <label className="block text-sm font-medium text-gray-700">
+                               Grupo / Região
+                             </label>
+                             <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all">
+                               <option value="">Selecione um grupo/região</option>
+                               <option value="grupo-regiao-1">Grupo 1 / Região A</option>
+                               <option value="grupo-regiao-2">Grupo 2 / Região B</option>
+                             </select>
+                           </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -564,35 +569,35 @@ export default function EmpresasPage() {
                             />
                           </div>
 
-                          <div className="md:col-span-3">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Classificação Porte
-                            </label>
-                            <div className="flex gap-4">
-                              <label className="flex items-center">
-                                <input
-                                  type="radio"
-                                  name="classificacao"
-                                  value="ME"
-                                  checked={classificacaoPorte === 'ME'}
-                                  onChange={(e) => setClassificacaoPorte(e.target.value)}
-                                  className="mr-2"
-                                />
-                                ME
-                              </label>
-                              <label className="flex items-center">
-                                <input
-                                  type="radio"
-                                  name="classificacao"
-                                  value="EPP"
-                                  checked={classificacaoPorte === 'EPP'}
-                                  onChange={(e) => setClassificacaoPorte(e.target.value)}
-                                  className="mr-2"
-                                />
-                                EPP
-                              </label>
-                            </div>
-                          </div>
+                                                     <div className="space-y-2">
+                             <label className="block text-sm font-medium text-gray-700">
+                               Classificação Porte
+                             </label>
+                             <div className="flex gap-4">
+                               <label className="flex items-center cursor-pointer">
+                                 <input
+                                   type="radio"
+                                   name="classificacao"
+                                   value="ME"
+                                   checked={classificacaoPorte === 'ME'}
+                                   onChange={(e) => setClassificacaoPorte(e.target.value)}
+                                   className="mr-2 text-[#00A298] focus:ring-[#00A298]"
+                                 />
+                                 <span className="text-sm font-medium">ME</span>
+                               </label>
+                               <label className="flex items-center cursor-pointer">
+                                 <input
+                                   type="radio"
+                                   name="classificacao"
+                                   value="EPP"
+                                   checked={classificacaoPorte === 'EPP'}
+                                   onChange={(e) => setClassificacaoPorte(e.target.value)}
+                                   className="mr-2 text-[#00A298] focus:ring-[#00A298]"
+                                 />
+                                 <span className="text-sm font-medium">EPP</span>
+                               </label>
+                             </div>
+                           </div>
                         </div>
                       </div>
 
@@ -903,32 +908,34 @@ export default function EmpresasPage() {
                 </div>
               )}
 
-              {/* Tabela de resultados */}
-              <div className="p-6">
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CNPJ</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Razão Social</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome Fantasia</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Código</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Grupo</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Região</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
-                          Não existem dados para mostrar
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+              {/* Tabela de resultados - apenas quando não estiver no modo de cadastro */}
+              {!showNewCompanyModal && (
+                <div className="p-6">
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CNPJ</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Razão Social</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome Fantasia</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Código</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Grupo</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Região</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                            Não existem dados para mostrar
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </main>
