@@ -1,5 +1,8 @@
 import { UserModel } from '../models/User';
 import { PasswordResetModel } from '../models/PasswordReset';
+import { GrupoModel } from '../models/Grupo';
+import { RegiaoModel } from '../models/Regiao';
+import { EmpresaModel } from '../models/Empresa';
 import { UserRole } from '../types/user';
 
 export const initializeDatabase = async (): Promise<void> => {
@@ -13,6 +16,16 @@ export const initializeDatabase = async (): Promise<void> => {
     // Criar tabela de tokens de recuperação de senha
     await PasswordResetModel.createTable();
     console.log('✅ Tabela de tokens de recuperação criada/verificada');
+    
+    // Criar tabelas organizacionais
+    await GrupoModel.createTable();
+    console.log('✅ Tabela de grupos criada/verificada');
+    
+    await RegiaoModel.createTable();
+    console.log('✅ Tabela de regiões criada/verificada');
+    
+    await EmpresaModel.createTable();
+    console.log('✅ Tabela de empresas criada/verificada');
     
     // Verificar se já existem usuários
     const existingUsers = await UserModel.findAll();
