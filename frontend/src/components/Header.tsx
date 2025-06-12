@@ -170,7 +170,7 @@ export default function Header() {
             <div className="relative z-50" ref={configDropdownRef}>
               <button 
                 onClick={handleSettingsClick}
-                className="p-2 text-[#1D3C44] hover:text-[#00A298] hover:bg-[#AECECB] rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors duration-200 cursor-pointer relative"
                 title="Configurações do sistema"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,7 +185,7 @@ export default function Header() {
                      style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
                   <div className="py-2">
                     {/* Seção Configurações */}
-                    <div className="px-4 py-2 bg-[#1D3C44] text-white">
+                    <div className="px-4 py-2 bg-gray-500 text-white mt-2">
                       <div className="text-sm font-medium flex items-center">
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"></path>
@@ -196,7 +196,7 @@ export default function Header() {
                     
                     <button
                       onClick={() => handleConfigMenuClick('/home/configuracoes/personalizacao-ficha-medica')}
-                      className="w-full text-left px-4 py-2 text-sm text-[#1D3C44] hover:bg-[#AECECB] hover:text-[#1D3C44] flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-950 flex items-center transition-colors"
                     >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -206,7 +206,7 @@ export default function Header() {
                     
                     <button
                       onClick={() => handleConfigMenuClick('/home/configuracoes/personalizacao-aso')}
-                      className="w-full text-left px-4 py-2 text-sm text-[#1D3C44] hover:bg-[#AECECB] hover:text-[#1D3C44] flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-950 flex items-center transition-colors"
                     >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -216,7 +216,7 @@ export default function Header() {
                     
                     <button
                       onClick={() => handleConfigMenuClick('/home/configuracoes/cadastro-perguntas')}
-                      className="w-full text-left px-4 py-2 text-sm text-[#1D3C44] hover:bg-[#AECECB] hover:text-[#1D3C44] flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-950 flex items-center transition-colors"
                     >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -226,7 +226,7 @@ export default function Header() {
                     
                     <button
                       onClick={() => handleConfigMenuClick('/home/configuracoes/preferencias')}
-                      className="w-full text-left px-4 py-2 text-sm text-[#1D3C44] hover:bg-[#AECECB] hover:text-[#1D3C44] flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-950 flex items-center transition-colors"
                     >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
@@ -236,7 +236,7 @@ export default function Header() {
                     
                     <button
                       onClick={() => handleConfigMenuClick('/home/configuracoes/dados-cliente')}
-                      className="w-full text-left px-4 py-2 text-sm text-[#1D3C44] hover:bg-[#AECECB] hover:text-[#1D3C44] flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-950 flex items-center transition-colors"
                     >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -246,7 +246,7 @@ export default function Header() {
                     
                     <button
                       onClick={() => handleConfigMenuClick('/home/configuracoes/logotipos-rodapes')}
-                      className="w-full text-left px-4 py-2 text-sm text-[#1D3C44] hover:bg-[#AECECB] hover:text-[#1D3C44] flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-950 flex items-center transition-colors"
                     >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -256,7 +256,7 @@ export default function Header() {
                     
                     <button
                       onClick={() => handleConfigMenuClick('/home/configuracoes/cadastro-feriados')}
-                      className="w-full text-left px-4 py-2 text-sm text-[#1D3C44] hover:bg-[#AECECB] hover:text-[#1D3C44] flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-80 hover:text-gray-950 flex items-center transition-colors"
                     >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -265,13 +265,13 @@ export default function Header() {
                     </button>
 
                     {/* Seção eSocial */}
-                    <div className="px-4 py-2 bg-[#1D3C44] text-white mt-2">
+                    <div className="px-4 py-2 bg-gray-500 text-white mt-2">
                       <div className="text-sm font-medium">eSocial</div>
                     </div>
                     
                     <button
                       onClick={() => handleConfigMenuClick('/home/esocial/motivos-afastamento')}
-                      className="w-full text-left px-4 py-2 text-sm text-[#1D3C44] hover:bg-[#AECECB] hover:text-[#1D3C44] flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-950 flex items-center transition-colors"
                     >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -281,7 +281,7 @@ export default function Header() {
                     
                     <button
                       onClick={() => handleConfigMenuClick('/home/esocial/mapeamento-motivos')}
-                      className="w-full text-left px-4 py-2 text-sm text-[#1D3C44] hover:bg-[#AECECB] hover:text-[#1D3C44] flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-950 flex items-center transition-colors"
                     >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -290,13 +290,15 @@ export default function Header() {
                     </button>
 
                     {/* Seção Controle de Acesso */}
-                    <div className="px-4 py-2 bg-[#1D3C44] text-white mt-2">
+                    <div className="px-4 py-2 bg-gray-500 text-white mt-2">
+
                       <div className="text-sm font-medium">Controle de Acesso</div>
                     </div>
                     
                     <button
                       onClick={() => handleConfigMenuClick('/home/controle-acesso/perfis')}
-                      className="w-full text-left px-4 py-2 text-sm text-[#1D3C44] hover:bg-[#AECECB] hover:text-[#1D3C44] flex items-center transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-950 flex items-center transition-colors"
+
                     >
                       <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
