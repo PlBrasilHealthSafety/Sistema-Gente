@@ -11,9 +11,7 @@ import {
   formatNumeros, 
   formatTexto,
   isValidCPF,
-  isValidCNPJ,
-  isValidTelefone,
-  isValidCEP 
+  isValidTelefone
 } from '@/utils/masks';
 
 interface User {
@@ -25,6 +23,57 @@ interface User {
   is_active: boolean;
 }
 
+interface Grupo {
+  id: number;
+  nome: string;
+  descricao?: string;
+  grupo_pai_id?: number;
+  status: 'ATIVO' | 'INATIVO';
+}
+
+interface Regiao {
+  id: number;
+  nome: string;
+  descricao?: string;
+  uf: string;
+  cidade?: string;
+  status: 'ATIVO' | 'INATIVO';
+}
+
+interface Empresa {
+  id: number;
+  codigo: string;
+  nome_fantasia: string;
+  razao_social: string;
+  tipo_estabelecimento: 'MATRIZ' | 'FILIAL';
+  tipo_inscricao?: 'CNPJ' | 'CPF';
+  numero_inscricao?: string;
+  cno?: string;
+  endereco_cep?: string;
+  endereco_logradouro?: string;
+  endereco_numero?: string;
+  endereco_complemento?: string;
+  endereco_bairro?: string;
+  endereco_cidade?: string;
+  endereco_uf?: string;
+  contato_nome?: string;
+  contato_telefone?: string;
+  contato_email?: string;
+  representante_legal_nome?: string;
+  representante_legal_cpf?: string;
+  observacoes?: string;
+  observacoes_os?: string;
+  grupo_id?: number;
+  regiao_id?: number;
+  grupo?: Grupo;
+  regiao?: Regiao;
+  status: 'ATIVO' | 'INATIVO';
+  created_by: number;
+  updated_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function EmpresasPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -34,6 +83,7 @@ export default function EmpresasPage() {
   const [tipoEstabelecimento, setTipoEstabelecimento] = useState('matriz');
   const [classificacaoPorte, setClassificacaoPorte] = useState('ME');
   const [searchType, setSearchType] = useState('nome');
+  const [pesquisaTexto, setPesquisaTexto] = useState('');
   
   // Estados para CEP e endereço
   const [cep, setCep] = useState('');
@@ -64,9 +114,19 @@ export default function EmpresasPage() {
   const [cpfRepresentante, setCpfRepresentante] = useState('');
   const [nomeRepresentante, setNomeRepresentante] = useState('');
   const [cno, setCno] = useState('');
+  const [tipoInscricao, setTipoInscricao] = useState('');
+  const [grupoSelecionado, setGrupoSelecionado] = useState('');
+  const [regiaoSelecionada, setRegiaoSelecionada] = useState('');
   
   // Estados para mensagens de erro
   const [cepError, setCepError] = useState('');
+  
+  // Estados para dados carregados
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [filteredEmpresas, setFilteredEmpresas] = useState<Empresa[]>([]);
+  const [grupos, setGrupos] = useState<Grupo[]>([]);
+  const [regioes, setRegioes] = useState<Regiao[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Função para obter o placeholder baseado no tipo de pesquisa
   const getPlaceholder = (type: string) => {
@@ -98,6 +158,12 @@ export default function EmpresasPage() {
     try {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
+      // Carregar dados após definir usuário
+      Promise.all([
+        carregarEmpresas(),
+        carregarGrupos(),
+        carregarRegioes()
+      ]);
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
       router.push('/login');
@@ -221,6 +287,198 @@ export default function EmpresasPage() {
   const handleCnoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatNumeros(e.target.value, 14);
     setCno(formatted);
+  };
+
+  // Função para carregar empresas
+  const carregarEmpresas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/empresas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEmpresas(data);
+        setFilteredEmpresas(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar empresas:', error);
+    }
+  };
+
+  // Função para carregar grupos
+  const carregarGrupos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/grupos', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setGrupos(Array.isArray(data) ? data : []);
+      } else {
+        console.error('Erro na resposta da API de grupos');
+        setGrupos([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar grupos:', error);
+      setGrupos([]);
+    }
+  };
+
+  // Função para carregar regiões
+  const carregarRegioes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/regioes', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRegioes(Array.isArray(data) ? data : []);
+      } else {
+        console.error('Erro na resposta da API de regiões');
+        setRegioes([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar regiões:', error);
+      setRegioes([]);
+    }
+  };
+
+  // Função para procurar empresas
+  const handleProcurar = () => {
+    if (!pesquisaTexto.trim()) {
+      setFilteredEmpresas(empresas);
+      return;
+    }
+
+    const filtered = empresas.filter(empresa => {
+      switch (searchType) {
+        case 'nome':
+          return empresa.nome_fantasia.toLowerCase().includes(pesquisaTexto.toLowerCase());
+        case 'n de inscrição':
+          return empresa.numero_inscricao?.includes(pesquisaTexto) || false;
+        case 'razao':
+          return empresa.razao_social.toLowerCase().includes(pesquisaTexto.toLowerCase());
+        case 'codigo':
+          return empresa.codigo.includes(pesquisaTexto);
+        case 'regiao':
+          return empresa.regiao?.nome.toLowerCase().includes(pesquisaTexto.toLowerCase()) || false;
+        default:
+          return false;
+      }
+    });
+    setFilteredEmpresas(filtered);
+  };
+
+  // Função para incluir nova empresa
+  const handleIncluir = async () => {
+    if (!nomeFantasia.trim() || !razaoSocial.trim()) {
+      alert('Por favor, informe o nome fantasia e a razão social.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const empresaData = {
+        nome_fantasia: nomeFantasia,
+        razao_social: razaoSocial,
+        tipo_estabelecimento: tipoEstabelecimento.toUpperCase(),
+        tipo_inscricao: tipoInscricao || null,
+        numero_inscricao: numeroInscricao || null,
+        cno: cno || null,
+        endereco_cep: cep || null,
+        endereco_logradouro: endereco.logradouro || null,
+        endereco_numero: endereco.numero || null,
+        endereco_complemento: endereco.complemento || null,
+        endereco_bairro: endereco.bairro || null,
+        endereco_cidade: endereco.cidade || null,
+        endereco_uf: endereco.uf || null,
+        contato_nome: contato || null,
+        contato_telefone: telefone || null,
+        contato_email: email || null,
+        representante_legal_nome: nomeRepresentante || null,
+        representante_legal_cpf: cpfRepresentante || null,
+        observacoes: observacao || null,
+        observacoes_os: observacaoOS || null,
+        grupo_id: grupoSelecionado || null,
+        regiao_id: regiaoSelecionada || null
+      };
+
+      const response = await fetch('http://localhost:3001/api/empresas', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(empresaData)
+      });
+
+      if (response.ok) {
+        alert('Empresa cadastrada com sucesso!');
+        handleLimpar();
+        await carregarEmpresas();
+        setShowNewCompanyModal(false);
+      } else {
+        const error = await response.json();
+        alert(`Erro ao cadastrar empresa: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao cadastrar empresa:', error);
+      alert('Erro ao cadastrar empresa. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Função para limpar formulário
+  const handleLimpar = () => {
+    setNomeFantasia('');
+    setRazaoSocial('');
+    setTipoEstabelecimento('matriz');
+    setTipoInscricao('');
+    setNumeroInscricao('');
+    setCno('');
+    setCep('');
+    setEndereco({
+      logradouro: '',
+      tipoLogradouro: '',
+      numero: '',
+      complemento: '',
+      bairro: '',
+      cidade: '',
+      uf: ''
+    });
+    setContato('');
+    setTelefone('');
+    setEmail('');
+    setNomeRepresentante('');
+    setCpfRepresentante('');
+    setObservacao('');
+    setObservacaoOS('');
+    setGrupoSelecionado('');
+    setRegiaoSelecionada('');
+    setCepError('');
+  };
+
+  // Função para retornar (fechar modal)
+  const handleRetornar = () => {
+    handleLimpar();
+    setShowNewCompanyModal(false);
   };
 
   if (isLoading) {
@@ -359,6 +617,8 @@ export default function EmpresasPage() {
                       </select>
                       <input
                         type="text"
+                        value={pesquisaTexto}
+                        onChange={(e) => setPesquisaTexto(e.target.value)}
                         placeholder={getPlaceholder(searchType)}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                       />
@@ -372,7 +632,9 @@ export default function EmpresasPage() {
                     </label>
                     <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
                       <option value="">Todos os grupos</option>
-                      <option value="grupo-teste">Grupo Teste</option>
+                      {grupos && Array.isArray(grupos) && grupos.map(grupo => (
+                        <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -382,7 +644,9 @@ export default function EmpresasPage() {
                     </label>
                     <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
                       <option value="">Todas as regiões</option>
-                      <option value="regiao-teste">Região Teste</option>
+                      {regioes && Array.isArray(regioes) && regioes.map(regiao => (
+                        <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -400,7 +664,7 @@ export default function EmpresasPage() {
                   {/* Botões */}
                   <div className="flex gap-2 min-w-fit">
                     <button 
-                      onClick={() => window.location.reload()}
+                      onClick={handleProcurar}
                       className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                     >
                       PROCURAR
@@ -497,6 +761,8 @@ export default function EmpresasPage() {
                             </label>
                             <select 
                               name="tipoInscricao"
+                              value={tipoInscricao}
+                              onChange={(e) => setTipoInscricao(e.target.value)}
                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
                             >
                               <option value="">Selecione...</option>
@@ -557,16 +823,37 @@ export default function EmpresasPage() {
                              />
                            </div>
 
-                           <div className="space-y-2">
-                             <label className="block text-sm font-medium text-gray-700">
-                               Grupo / Região
-                             </label>
-                             <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all">
-                               <option value="">Selecione um grupo/região</option>
-                               <option value="grupo-regiao-1">Grupo 1 / Região A</option>
-                               <option value="grupo-regiao-2">Grupo 2 / Região B</option>
-                             </select>
-                           </div>
+                                                     <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Grupo
+                            </label>
+                            <select 
+                              value={grupoSelecionado}
+                              onChange={(e) => setGrupoSelecionado(e.target.value)}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
+                            >
+                              <option value="">Selecione um grupo</option>
+                              {grupos && Array.isArray(grupos) && grupos.map(grupo => (
+                                <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Região
+                            </label>
+                            <select 
+                              value={regiaoSelecionada}
+                              onChange={(e) => setRegiaoSelecionada(e.target.value)}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
+                            >
+                              <option value="">Selecione uma região</option>
+                              {regioes && Array.isArray(regioes) && regioes.map(regiao => (
+                                <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
+                              ))}
+                            </select>
+                          </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -574,6 +861,8 @@ export default function EmpresasPage() {
                             </label>
                             <input
                               type="text"
+                              value={razaoSocial}
+                              onChange={(e) => setRazaoSocial(e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                               placeholder="Digite a razão social"
                             />
@@ -585,6 +874,8 @@ export default function EmpresasPage() {
                             </label>
                             <input
                               type="text"
+                              value={nomeFantasia}
+                              onChange={(e) => setNomeFantasia(e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                               placeholder="Digite o nome fantasia"
                             />
@@ -960,14 +1251,21 @@ export default function EmpresasPage() {
 
                       {/* Botões de ação */}
                       <div className="flex gap-3 pt-4 border-t border-gray-200">
-                        <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
-                          INCLUIR
+                        <button 
+                          onClick={handleIncluir}
+                          disabled={isSubmitting}
+                          className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
                         </button>
-                        <button className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
+                        <button 
+                          onClick={handleLimpar}
+                          className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                        >
                           LIMPAR
                         </button>
                         <button
-                          onClick={() => setShowNewCompanyModal(false)}
+                          onClick={handleRetornar}
                           className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                         >
                           RETORNAR
@@ -1005,11 +1303,43 @@ export default function EmpresasPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
-                            Não existem dados para mostrar
-                          </td>
-                        </tr>
+                        {filteredEmpresas.length > 0 ? (
+                          filteredEmpresas.map((empresa) => (
+                            <tr key={empresa.id} className="border-b border-gray-200 hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm">{empresa.numero_inscricao || '-'}</td>
+                              <td className="px-4 py-3 text-sm">{empresa.razao_social}</td>
+                              <td className="px-4 py-3 text-sm">{empresa.nome_fantasia}</td>
+                              <td className="px-4 py-3 text-sm">{empresa.codigo}</td>
+                              <td className="px-4 py-3 text-sm">{empresa.grupo?.nome || '-'}</td>
+                              <td className="px-4 py-3 text-sm">{empresa.regiao?.nome || '-'}</td>
+                              <td className="px-4 py-3 text-sm">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  empresa.status === 'ATIVO' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {empresa.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                <div className="flex space-x-2">
+                                  <button className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                    Editar
+                                  </button>
+                                  <button className="text-red-600 hover:text-red-800 text-xs font-medium">
+                                    Excluir
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                              {pesquisaTexto ? 'Nenhuma empresa encontrada com os critérios pesquisados' : 'Não existem dados para mostrar'}
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>

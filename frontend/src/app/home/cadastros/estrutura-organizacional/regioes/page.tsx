@@ -13,11 +13,132 @@ interface User {
   is_active: boolean;
 }
 
+interface Regiao {
+  id: number;
+  nome: string;
+  descricao?: string;
+  uf: string;
+  cidade?: string;
+  status: 'ATIVO' | 'INATIVO';
+  created_by: number;
+  updated_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function RegioesPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewRegionModal, setShowNewRegionModal] = useState(false);
+  const [nomeRegiao, setNomeRegiao] = useState('');
+  const [nomeBusca, setNomeBusca] = useState('');
+  const [descricaoRegiao, setDescricaoRegiao] = useState('');
+  const [ufRegiao, setUfRegiao] = useState('');
+  const [cidadeRegiao, setCidadeRegiao] = useState('');
+  const [regioes, setRegioes] = useState<Regiao[]>([]);
+  const [filteredRegioes, setFilteredRegioes] = useState<Regiao[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Lista de UFs brasileiras
+  const ufs = [
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
+    'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 
+    'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+  ];
+
+  // Função para carregar regiões
+  const carregarRegioes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/regioes', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRegioes(data);
+        setFilteredRegioes(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar regiões:', error);
+    }
+  };
+
+  // Função para procurar regiões
+  const handleProcurar = () => {
+    if (!nomeBusca.trim()) {
+      setFilteredRegioes(regioes);
+      return;
+    }
+
+    const filtered = regioes.filter(regiao =>
+      regiao.nome.toLowerCase().includes(nomeBusca.toLowerCase())
+    );
+    setFilteredRegioes(filtered);
+  };
+
+  // Função para incluir nova região
+  const handleIncluir = async () => {
+    if (!nomeRegiao.trim()) {
+      alert('Por favor, informe o nome da região.');
+      return;
+    }
+    if (!ufRegiao) {
+      alert('Por favor, selecione a UF.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/regioes', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nome: nomeRegiao,
+          descricao: descricaoRegiao || null,
+          uf: ufRegiao,
+          cidade: cidadeRegiao || null
+        })
+      });
+
+      if (response.ok) {
+        alert('Região cadastrada com sucesso!');
+        handleLimpar();
+        await carregarRegioes();
+        setShowNewRegionModal(false);
+      } else {
+        const error = await response.json();
+        alert(`Erro ao cadastrar região: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao cadastrar região:', error);
+      alert('Erro ao cadastrar região. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Função para limpar formulário
+  const handleLimpar = () => {
+    setNomeRegiao('');
+    setDescricaoRegiao('');
+    setUfRegiao('');
+    setCidadeRegiao('');
+  };
+
+  // Função para retornar (fechar modal)
+  const handleRetornar = () => {
+    handleLimpar();
+    setShowNewRegionModal(false);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -31,6 +152,8 @@ export default function RegioesPage() {
     try {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
+      // Carregar regiões após definir usuário
+      carregarRegioes();
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
       router.push('/login');
@@ -201,6 +324,8 @@ export default function RegioesPage() {
                     </label>
                     <input
                       type="text"
+                      value={nomeBusca}
+                      onChange={(e) => setNomeBusca(e.target.value)}
                       placeholder="Digite o nome da região para buscar..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     />
@@ -228,7 +353,7 @@ export default function RegioesPage() {
                   </div>
 
                   <button 
-                    onClick={() => window.location.reload()}
+                    onClick={handleProcurar}
                     className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
                     PROCURAR
@@ -258,6 +383,8 @@ export default function RegioesPage() {
                         </label>
                         <input
                           type="text"
+                          value={nomeRegiao}
+                          onChange={(e) => setNomeRegiao(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                           placeholder="Digite o nome da região"
                         />
@@ -265,34 +392,63 @@ export default function RegioesPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Grupo
+                          UF (Estado)
                         </label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                          <option value="">Selecione um grupo</option>
-                          <option value="grupo-teste">Grupo Teste</option>
+                        <select 
+                          value={ufRegiao}
+                          onChange={(e) => setUfRegiao(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        >
+                          <option value="">Selecione a UF</option>
+                          {ufs.map(uf => (
+                            <option key={uf} value={uf}>{uf}</option>
+                          ))}
                         </select>
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Situação
+                          Cidade (Opcional)
                         </label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                          <option value="ativo">Ativo</option>
-                          <option value="inativo">Inativo</option>
-                        </select>
+                        <input
+                          type="text"
+                          value={cidadeRegiao}
+                          onChange={(e) => setCidadeRegiao(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          placeholder="Digite o nome da cidade"
+                        />
                       </div>
                     </div>
 
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Descrição (Opcional)
+                      </label>
+                      <textarea
+                        value={descricaoRegiao}
+                        onChange={(e) => setDescricaoRegiao(e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        placeholder="Digite uma descrição para a região..."
+                      />
+                    </div>
+
                     <div className="flex gap-3 mt-6">
-                      <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
-                        INCLUIR
+                      <button 
+                        onClick={handleIncluir}
+                        disabled={isSubmitting}
+                        className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
                       </button>
-                      <button className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
+                      <button 
+                        onClick={handleLimpar}
+                        className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                      >
                         LIMPAR
                       </button>
                       <button
-                        onClick={() => setShowNewRegionModal(false)}
+                        onClick={handleRetornar}
                         className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                       >
                         RETORNAR
@@ -315,11 +471,51 @@ export default function RegioesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                          Não existem dados para mostrar
-                        </td>
-                      </tr>
+                      {filteredRegioes.length > 0 ? (
+                        filteredRegioes.map((regiao) => (
+                          <tr key={regiao.id} className="border-b border-gray-200 hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm">
+                              <div>
+                                <div className="font-medium text-gray-900">{regiao.nome}</div>
+                                {regiao.descricao && (
+                                  <div className="text-gray-500 text-xs mt-1">{regiao.descricao}</div>
+                                )}
+                                <div className="text-blue-600 text-xs mt-1">
+                                  📍 {regiao.uf}{regiao.cidade ? ` - ${regiao.cidade}` : ''}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500">
+                              -
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                regiao.status === 'ATIVO' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {regiao.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <div className="flex space-x-2">
+                                <button className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                  Editar
+                                </button>
+                                <button className="text-red-600 hover:text-red-800 text-xs font-medium">
+                                  Excluir
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                            {nomeBusca ? 'Nenhuma região encontrada com o nome pesquisado' : 'Não existem dados para mostrar'}
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

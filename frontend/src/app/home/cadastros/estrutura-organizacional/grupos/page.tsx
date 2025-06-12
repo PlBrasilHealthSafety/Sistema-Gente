@@ -14,6 +14,19 @@ interface User {
   is_active: boolean;
 }
 
+interface Grupo {
+  id: number;
+  nome: string;
+  descricao?: string;
+  grupo_pai_id?: number;
+  grupo_pai?: Grupo;
+  status: 'ATIVO' | 'INATIVO';
+  created_by: number;
+  updated_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function GruposPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -21,6 +34,110 @@ export default function GruposPage() {
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [nomeGrupo, setNomeGrupo] = useState('');
   const [nomeBusca, setNomeBusca] = useState('');
+  const [descricaoGrupo, setDescricaoGrupo] = useState('');
+  const [grupoPai, setGrupoPai] = useState('');
+  const [grupos, setGrupos] = useState<Grupo[]>([]);
+  const [filteredGrupos, setFilteredGrupos] = useState<Grupo[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Função para carregar grupos
+  const carregarGrupos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/grupos', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const validData = Array.isArray(data) ? data : [];
+        setGrupos(validData);
+        setFilteredGrupos(validData);
+      } else {
+        console.error('Erro na resposta da API de grupos');
+        setGrupos([]);
+        setFilteredGrupos([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar grupos:', error);
+      setGrupos([]);
+      setFilteredGrupos([]);
+    }
+  };
+
+  // Função para procurar grupos
+  const handleProcurar = () => {
+    if (!nomeBusca.trim()) {
+      setFilteredGrupos(grupos || []);
+      return;
+    }
+
+    if (!Array.isArray(grupos)) {
+      setFilteredGrupos([]);
+      return;
+    }
+
+    const filtered = grupos.filter(grupo =>
+      grupo.nome.toLowerCase().includes(nomeBusca.toLowerCase())
+    );
+    setFilteredGrupos(filtered);
+  };
+
+  // Função para incluir novo grupo
+  const handleIncluir = async () => {
+    if (!nomeGrupo.trim()) {
+      alert('Por favor, informe o nome do grupo.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/grupos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nome: nomeGrupo,
+          descricao: descricaoGrupo || null,
+          grupo_pai_id: grupoPai || null
+        })
+      });
+
+      if (response.ok) {
+        alert('Grupo cadastrado com sucesso!');
+        handleLimpar();
+        await carregarGrupos();
+        setShowNewGroupModal(false);
+      } else {
+        const error = await response.json();
+        alert(`Erro ao cadastrar grupo: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao cadastrar grupo:', error);
+      alert('Erro ao cadastrar grupo. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Função para limpar formulário
+  const handleLimpar = () => {
+    setNomeGrupo('');
+    setDescricaoGrupo('');
+    setGrupoPai('');
+  };
+
+  // Função para retornar (fechar modal)
+  const handleRetornar = () => {
+    handleLimpar();
+    setShowNewGroupModal(false);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -34,6 +151,8 @@ export default function GruposPage() {
     try {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
+      // Carregar grupos após definir usuário
+      carregarGrupos();
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
       router.push('/login');
@@ -223,7 +342,7 @@ export default function GruposPage() {
                   </div>
 
                   <button 
-                    onClick={() => window.location.reload()}
+                    onClick={handleProcurar}
                     className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
                     PROCURAR
@@ -262,24 +381,52 @@ export default function GruposPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Situação
+                          Grupo Pai (Opcional)
                         </label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
-                          <option value="ativo">Ativo</option>
-                          <option value="inativo">Inativo</option>
+                        <select 
+                          value={grupoPai}
+                          onChange={(e) => setGrupoPai(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        >
+                          <option value="">Nenhum (grupo raiz)</option>
+                          {grupos && Array.isArray(grupos) && grupos.map(grupo => (
+                            <option key={grupo.id} value={grupo.id.toString()}>
+                              {grupo.nome}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
 
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Descrição (Opcional)
+                      </label>
+                      <textarea
+                        value={descricaoGrupo}
+                        onChange={(e) => setDescricaoGrupo(e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        placeholder="Digite uma descrição para o grupo..."
+                      />
+                    </div>
+
                     <div className="flex gap-3 mt-6">
-                      <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
-                        INCLUIR
+                      <button 
+                        onClick={handleIncluir}
+                        disabled={isSubmitting}
+                        className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
                       </button>
-                      <button className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer">
+                      <button 
+                        onClick={handleLimpar}
+                        className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                      >
                         LIMPAR
                       </button>
                       <button
-                        onClick={() => setShowNewGroupModal(false)}
+                        onClick={handleRetornar}
                         className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                       >
                         RETORNAR
@@ -301,11 +448,50 @@ export default function GruposPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
-                          Não existem dados para mostrar
-                        </td>
-                      </tr>
+                      {filteredGrupos && Array.isArray(filteredGrupos) && filteredGrupos.length > 0 ? (
+                        filteredGrupos.map((grupo) => (
+                          <tr key={grupo.id} className="border-b border-gray-200 hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm">
+                              <div>
+                                <div className="font-medium text-gray-900">{grupo.nome}</div>
+                                {grupo.descricao && (
+                                  <div className="text-gray-500 text-xs mt-1">{grupo.descricao}</div>
+                                )}
+                                {grupo.grupo_pai && (
+                                  <div className="text-blue-600 text-xs mt-1">
+                                    👥 Grupo pai: {grupo.grupo_pai.nome}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                grupo.status === 'ATIVO' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {grupo.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <div className="flex space-x-2">
+                                <button className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                  Editar
+                                </button>
+                                <button className="text-red-600 hover:text-red-800 text-xs font-medium">
+                                  Excluir
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
+                            {nomeBusca ? 'Nenhum grupo encontrado com o nome pesquisado' : 'Não existem dados para mostrar'}
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
