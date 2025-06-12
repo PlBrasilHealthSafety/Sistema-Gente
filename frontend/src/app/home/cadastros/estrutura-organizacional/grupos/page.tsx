@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { formatTexto } from '@/utils/masks';
 
+interface NotificationMessage {
+  type: 'success' | 'error';
+  message: string;
+  show: boolean;
+}
+
 interface User {
   id: number;
   first_name: string;
@@ -39,11 +45,27 @@ export default function GruposPage() {
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [filteredGrupos, setFilteredGrupos] = useState<Grupo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState<NotificationMessage>({
+    type: 'success',
+    message: '',
+    show: false
+  });
+
+  // Função para exibir notificação
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message, show: true });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 5000);
+  };
 
   // Função para carregar grupos
   const carregarGrupos = async () => {
+    console.log('=== CARREGANDO GRUPOS ===');
     try {
       const token = localStorage.getItem('token');
+      console.log('Token:', token ? 'Existe' : 'Não existe');
+      
       const response = await fetch('http://localhost:3001/api/grupos', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -51,18 +73,41 @@ export default function GruposPage() {
         }
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (response.ok) {
-        const data = await response.json();
+        const result = await response.json();
+        console.log('Raw response from API:', result);
+        
+        // A API retorna { success: true, data: grupos[], message: string }
+        const data = result.data || result; // Fallback para compatibilidade
+        console.log('Extracted data:', data);
+        console.log('Data type:', typeof data);
+        console.log('Data is array:', Array.isArray(data));
+        
         const validData = Array.isArray(data) ? data : [];
+        console.log('Valid data:', validData);
+        console.log('Valid data length:', validData.length);
+        
         setGrupos(validData);
         setFilteredGrupos(validData);
+        
+        if (validData.length > 0) {
+          showNotification('success', `${validData.length} grupo(s) carregado(s)`);
+        } else {
+          showNotification('error', 'Nenhum grupo encontrado no banco de dados');
+        }
       } else {
-        console.error('Erro na resposta da API de grupos');
+        const errorText = await response.text();
+        console.error('Erro na resposta da API de grupos:', errorText);
+        showNotification('error', `Erro ao carregar grupos: ${response.status}`);
         setGrupos([]);
         setFilteredGrupos([]);
       }
     } catch (error) {
       console.error('Erro ao carregar grupos:', error);
+      showNotification('error', 'Erro de conexão ao carregar grupos');
       setGrupos([]);
       setFilteredGrupos([]);
     }
@@ -70,26 +115,44 @@ export default function GruposPage() {
 
   // Função para procurar grupos
   const handleProcurar = () => {
+    console.log('=== DEBUG BUSCA ===');
+    console.log('nomeBusca:', nomeBusca);
+    console.log('grupos array:', grupos);
+    console.log('grupos length:', grupos?.length);
+    
     if (!nomeBusca.trim()) {
+      console.log('Campo busca vazio, mostrando todos os grupos');
       setFilteredGrupos(grupos || []);
       return;
     }
 
     if (!Array.isArray(grupos)) {
+      console.log('grupos não é array:', typeof grupos);
       setFilteredGrupos([]);
       return;
     }
 
-    const filtered = grupos.filter(grupo =>
-      grupo.nome.toLowerCase().includes(nomeBusca.toLowerCase())
-    );
+    console.log('Iniciando filtro...');
+    const filtered = grupos.filter(grupo => {
+      const match = grupo.nome.toLowerCase().includes(nomeBusca.toLowerCase());
+      console.log(`Grupo "${grupo.nome}" - Match: ${match}`);
+      return match;
+    });
+    
+    console.log('Grupos filtrados:', filtered);
     setFilteredGrupos(filtered);
+    
+    if (filtered.length === 0) {
+      showNotification('error', 'Nenhum grupo encontrado com o nome pesquisado');
+    } else {
+      showNotification('success', `${filtered.length} grupo(s) encontrado(s)`);
+    }
   };
 
   // Função para incluir novo grupo
   const handleIncluir = async () => {
     if (!nomeGrupo.trim()) {
-      alert('Por favor, informe o nome do grupo.');
+      showNotification('error', 'Por favor, informe o nome do grupo.');
       return;
     }
 
@@ -110,17 +173,17 @@ export default function GruposPage() {
       });
 
       if (response.ok) {
-        alert('Grupo cadastrado com sucesso!');
+        showNotification('success', 'Grupo cadastrado com sucesso!');
         handleLimpar();
         await carregarGrupos();
         setShowNewGroupModal(false);
       } else {
         const error = await response.json();
-        alert(`Erro ao cadastrar grupo: ${error.message}`);
+        showNotification('error', `Erro ao cadastrar grupo: ${error.message}`);
       }
     } catch (error) {
       console.error('Erro ao cadastrar grupo:', error);
-      alert('Erro ao cadastrar grupo. Tente novamente.');
+      showNotification('error', 'Erro ao cadastrar grupo. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -207,6 +270,36 @@ export default function GruposPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-[#00A298]/15">
+      {/* Notificação Toast */}
+      {notification.show && (
+        <div className={`fixed top-20 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+          notification.type === 'success' 
+            ? 'bg-green-100 border border-green-400 text-green-700' 
+            : 'bg-red-100 border border-red-400 text-red-700'
+        }`}>
+          <div className="flex items-center">
+            {notification.type === 'success' ? (
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            <span className="font-medium">{notification.message}</span>
+            <button
+              onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+              className="ml-4 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header Superior */}
       <header className="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
         <div className="flex justify-between items-center h-16 px-4">
@@ -353,6 +446,13 @@ export default function GruposPage() {
                     className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
                     NOVO GRUPO
+                  </button>
+                  
+                  <button 
+                    onClick={carregarGrupos}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    RECARREGAR
                   </button>
                 </div>
               </div>
