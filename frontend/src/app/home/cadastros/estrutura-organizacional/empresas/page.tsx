@@ -3,6 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { 
+  formatCPF, 
+  formatCNPJ, 
+  formatTelefone, 
+  formatCEP, 
+  formatNumeros, 
+  formatTexto,
+  isValidCPF,
+  isValidCNPJ,
+  isValidTelefone,
+  isValidCEP 
+} from '@/utils/masks';
 
 interface User {
   id: number;
@@ -44,6 +56,17 @@ export default function EmpresasPage() {
   // Estados para observações
   const [observacao, setObservacao] = useState('');
   const [observacaoOS, setObservacaoOS] = useState('');
+  
+  // Estados para campos com máscara
+  const [nomeFantasia, setNomeFantasia] = useState('');
+  const [razaoSocial, setRazaoSocial] = useState('');
+  const [numeroInscricao, setNumeroInscricao] = useState('');
+  const [cpfRepresentante, setCpfRepresentante] = useState('');
+  const [nomeRepresentante, setNomeRepresentante] = useState('');
+  const [cno, setCno] = useState('');
+  
+  // Estados para mensagens de erro
+  const [cepError, setCepError] = useState('');
 
   // Função para obter o placeholder baseado no tipo de pesquisa
   const getPlaceholder = (type: string) => {
@@ -121,6 +144,8 @@ export default function EmpresasPage() {
     
     if (cepLimpo.length === 8) {
       setLoadingCep(true);
+      setCepError(''); // Limpa erro anterior
+      
       try {
         const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
         const data = await response.json();
@@ -134,12 +159,13 @@ export default function EmpresasPage() {
             uf: data.uf || '',
             tipoLogradouro: data.logradouro ? data.logradouro.split(' ')[0] : ''
           });
+          setCepError(''); // Limpa erro se sucesso
         } else {
-          alert('CEP não encontrado!');
+          setCepError('CEP não encontrado. Verifique o número digitado.');
         }
       } catch (error) {
         console.error('Erro ao buscar CEP:', error);
-        alert('Erro ao buscar CEP. Tente novamente.');
+        setCepError('Erro ao buscar CEP. Verifique sua conexão e tente novamente.');
       } finally {
         setLoadingCep(false);
       }
@@ -147,23 +173,54 @@ export default function EmpresasPage() {
   };
 
   const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '');
-    const formattedCep = value.replace(/(\d{5})(\d{3})/, '$1-$2');
+    const formattedCep = formatCEP(e.target.value);
     setCep(formattedCep);
     
-    if (value.length === 8) {
-      buscarCep(value);
+    // Limpa erro quando usuário está digitando
+    if (cepError) {
+      setCepError('');
+    }
+    
+    const numbers = e.target.value.replace(/\D/g, '');
+    if (numbers.length === 8) {
+      buscarCep(numbers);
     }
   };
 
-  // Função para formatar telefone
-  const formatTelefone = (value: string) => {
-    const numeros = value.replace(/\D/g, '');
-    if (numeros.length <= 10) {
-      return numeros.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  // Função para lidar com mudanças em campos específicos
+  const handleNumeroInscricaoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const tipoInscricao = (document.querySelector('select[name="tipoInscricao"]') as HTMLSelectElement)?.value;
+    
+    if (tipoInscricao === 'cnpj') {
+      const formatted = formatCNPJ(value);
+      setNumeroInscricao(formatted);
+    } else if (tipoInscricao === 'cpf') {
+      const formatted = formatCPF(value);
+      setNumeroInscricao(formatted);
     } else {
-      return numeros.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      setNumeroInscricao(value);
     }
+  };
+
+  const handleCpfRepresentanteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value);
+    setCpfRepresentante(formatted);
+  };
+
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatTelefone(e.target.value);
+    setTelefone(formatted);
+  };
+
+  const handleNomeRepresentanteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatTexto(e.target.value);
+    setNomeRepresentante(formatted);
+  };
+
+  const handleCnoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatNumeros(e.target.value, 14);
+    setCno(formatted);
   };
 
   if (isLoading) {
@@ -438,7 +495,10 @@ export default function EmpresasPage() {
                               Tipo de Inscrição 
                               <span className="text-blue-500 text-xs ml-1">(Opcional)</span>
                             </label>
-                            <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all">
+                            <select 
+                              name="tipoInscricao"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
+                            >
                               <option value="">Selecione...</option>
                               <option value="cnpj">CNPJ</option>
                               <option value="cpf">CPF</option>
@@ -452,6 +512,8 @@ export default function EmpresasPage() {
                             </label>
                             <input
                               type="text"
+                              value={numeroInscricao}
+                              onChange={handleNumeroInscricaoChange}
                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
                               placeholder="Digite o número"
                             />
@@ -463,8 +525,11 @@ export default function EmpresasPage() {
                             </label>
                             <input
                               type="text"
+                              value={cno}
+                              onChange={handleCnoChange}
+                              maxLength={14}
                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
-                              placeholder="Digite o CNO"
+                              placeholder="Digite o CNO (máx. 14 dígitos)"
                             />
                           </div>
                         </div>
@@ -612,8 +677,10 @@ export default function EmpresasPage() {
                             </label>
                             <input
                               type="text"
+                              value={nomeRepresentante}
+                              onChange={handleNomeRepresentanteChange}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                              placeholder="Digite o nome do representante"
+                              placeholder="Digite o nome do representante (apenas letras)"
                             />
                           </div>
 
@@ -623,9 +690,15 @@ export default function EmpresasPage() {
                             </label>
                             <input
                               type="text"
+                              value={cpfRepresentante}
+                              onChange={handleCpfRepresentanteChange}
+                              maxLength={14}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                              placeholder="Digite o CPF"
+                              placeholder="000.000.000-00"
                             />
+                            {cpfRepresentante && !isValidCPF(cpfRepresentante) && (
+                              <p className="text-red-500 text-xs mt-1">CPF inválido</p>
+                            )}
                           </div>
 
                           <div>
@@ -666,10 +739,13 @@ export default function EmpresasPage() {
                               value={cep}
                               onChange={handleCepChange}
                               maxLength={9}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                cepError ? 'border-red-300' : 'border-gray-300'
+                              }`}
                               placeholder="00000-000"
                             />
                             {loadingCep && <p className="text-xs text-blue-500 mt-1">Buscando CEP...</p>}
+                            {cepError && <p className="text-xs text-red-500 mt-1">{cepError}</p>}
                           </div>
 
                           <div>
@@ -803,9 +879,9 @@ export default function EmpresasPage() {
                             <input
                               type="text"
                               value={contato}
-                              onChange={(e) => setContato(e.target.value)}
+                              onChange={(e) => setContato(formatTexto(e.target.value))}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                              placeholder="Nome do contato"
+                              placeholder="Nome do contato (apenas letras)"
                             />
                           </div>
 
@@ -816,11 +892,14 @@ export default function EmpresasPage() {
                             <input
                               type="tel"
                               value={telefone}
-                              onChange={(e) => setTelefone(formatTelefone(e.target.value))}
+                              onChange={handleTelefoneChange}
                               maxLength={15}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                               placeholder="(00) 00000-0000"
                             />
+                            {telefone && !isValidTelefone(telefone) && (
+                              <p className="text-red-500 text-xs mt-1">Telefone inválido (10 ou 11 dígitos)</p>
+                            )}
                           </div>
 
                           <div>

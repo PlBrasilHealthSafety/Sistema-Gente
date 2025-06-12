@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { formatTexto } from '@/utils/masks';
 
 interface User {
   id: number;
@@ -18,6 +19,8 @@ export default function GruposPage() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
+  const [nomeGrupo, setNomeGrupo] = useState('');
+  const [nomeBusca, setNomeBusca] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -201,7 +204,9 @@ export default function GruposPage() {
                     </label>
                     <input
                       type="text"
-                      placeholder="Digite o nome do grupo para buscar..."
+                      value={nomeBusca}
+                      onChange={(e) => setNomeBusca(formatTexto(e.target.value))}
+                      placeholder="Digite o nome do grupo para buscar (apenas letras)..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     />
                   </div>
@@ -248,8 +253,10 @@ export default function GruposPage() {
                         </label>
                         <input
                           type="text"
+                          value={nomeGrupo}
+                          onChange={(e) => setNomeGrupo(formatTexto(e.target.value))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                          placeholder="Digite o nome do grupo"
+                          placeholder="Digite o nome do grupo (apenas letras)"
                         />
                       </div>
 

@@ -329,20 +329,20 @@ export default function Header() {
 
       {/* Modal de confirmação de logout */}
       {showLogoutModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="fixed top-20 right-4 z-[10000]">
+          <div className="bg-white p-6 rounded-lg shadow-2xl border border-gray-200 w-80">
             <h2 className="text-lg font-semibold text-[#1D3C44] mb-4">Confirmar logout</h2>
             <p className="text-gray-600 mb-6">Tem certeza que deseja sair do sistema?</p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={handleLogoutCancel}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-md hover:bg-gray-100 cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleLogoutConfirm}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors cursor-pointer"
               >
                 Sair
               </button>
