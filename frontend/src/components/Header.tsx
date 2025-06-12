@@ -99,7 +99,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 shadow-sm relative z-[9998] fixed top-0 left-0 right-0">
+      <header className="bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 w-full z-[9999]">
         <div className="flex justify-between items-center h-16 px-4">
           <div className="flex items-center w-1/3">
             <Image
@@ -111,17 +111,22 @@ export default function Header() {
             />
           </div>
 
-          <div className="flex-1 text-center flex justify-center">
-            <button onClick={handleLogoClick} className="cursor-pointer">
-              <Image
-                src="/sistemagente_logo.png"
-                alt="Sistema GENTE"
-                width={150}
-                height={15}
-                className="object-contain hover:opacity-80 transition-opacity"
-              />
-            </button>
-          </div>
+                      <div className="flex-1 relative flex justify-center items-center">
+              <button onClick={handleLogoClick} className="cursor-pointer group">
+                <Image
+                  src="/sistemagente_logo.png"
+                  alt="Sistema GENTE"
+                  width={150}
+                  height={15}
+                  className="object-contain group-hover:opacity-100 transition-opacity"
+                />
+              </button>
+              <div className="hidden lg:block absolute left-1/2 ml-20">
+                <p className="text-xs font-medium text-[#00A298] leading-tight whitespace-nowrap">
+                  Recuperar o tempo perdido com o que realmente importa!
+                </p>
+              </div>
+            </div>
 
           <div className="flex items-center space-x-4 w-1/3 justify-end">
             {user && (
