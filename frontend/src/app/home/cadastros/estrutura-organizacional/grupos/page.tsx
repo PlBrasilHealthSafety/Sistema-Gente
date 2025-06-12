@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { formatTexto } from '@/utils/masks';
 
+interface NotificationMessage {
+  type: 'success' | 'error';
+  message: string;
+  show: boolean;
+}
+
 interface User {
   id: number;
   first_name: string;
@@ -27,13 +33,6 @@ interface Grupo {
   updated_at: string;
 }
 
-interface Notification {
-  id: string;
-  type: 'success' | 'error' | 'info';
-  message: string;
-  visible: boolean;
-}
-
 export default function GruposPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -46,15 +45,27 @@ export default function GruposPage() {
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [filteredGrupos, setFilteredGrupos] = useState<Grupo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [editingGroup, setEditingGroup] = useState<Grupo | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [groupToDelete, setGroupToDelete] = useState<Grupo | null>(null);
+  const [notification, setNotification] = useState<NotificationMessage>({
+    type: 'success',
+    message: '',
+    show: false
+  });
+
+  // Função para exibir notificação
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message, show: true });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 5000);
+  };
 
   // Função para carregar grupos
   const carregarGrupos = async () => {
+    console.log('=== CARREGANDO GRUPOS ===');
     try {
       const token = localStorage.getItem('token');
+      console.log('Token:', token ? 'Existe' : 'Não existe');
+      
       const response = await fetch('http://localhost:3001/api/grupos', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -62,24 +73,41 @@ export default function GruposPage() {
         }
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (response.ok) {
-        const data = await response.json();
+        const result = await response.json();
+        console.log('Raw response from API:', result);
+        
+        // A API retorna { success: true, data: grupos[], message: string }
+        const data = result.data || result; // Fallback para compatibilidade
+        console.log('Extracted data:', data);
+        console.log('Data type:', typeof data);
+        console.log('Data is array:', Array.isArray(data));
+        
         const validData = Array.isArray(data) ? data : [];
+        console.log('Valid data:', validData);
+        console.log('Valid data length:', validData.length);
+        
         setGrupos(validData);
         setFilteredGrupos(validData);
         
-        if (validData.length === 0) {
-          showNotification('info', 'Nenhum grupo cadastrado encontrado.');
+        if (validData.length > 0) {
+          showNotification('success', `${validData.length} grupo(s) carregado(s)`);
+        } else {
+          showNotification('error', 'Nenhum grupo encontrado no banco de dados');
         }
       } else {
-        console.error('Erro na resposta da API de grupos');
-        showNotification('error', 'Erro ao carregar grupos. Verifique sua conexão.');
+        const errorText = await response.text();
+        console.error('Erro na resposta da API de grupos:', errorText);
+        showNotification('error', `Erro ao carregar grupos: ${response.status}`);
         setGrupos([]);
         setFilteredGrupos([]);
       }
     } catch (error) {
       console.error('Erro ao carregar grupos:', error);
-      showNotification('error', 'Erro ao conectar com o servidor. Tente novamente.');
+      showNotification('error', 'Erro de conexão ao carregar grupos');
       setGrupos([]);
       setFilteredGrupos([]);
     }
@@ -87,47 +115,38 @@ export default function GruposPage() {
 
   // Função para procurar grupos
   const handleProcurar = () => {
+    console.log('=== DEBUG BUSCA ===');
+    console.log('nomeBusca:', nomeBusca);
+    console.log('grupos array:', grupos);
+    console.log('grupos length:', grupos?.length);
+    
     if (!nomeBusca.trim()) {
+      console.log('Campo busca vazio, mostrando todos os grupos');
       setFilteredGrupos(grupos || []);
       return;
     }
 
     if (!Array.isArray(grupos)) {
+      console.log('grupos não é array:', typeof grupos);
       setFilteredGrupos([]);
       return;
     }
 
-    const filtered = grupos.filter(grupo =>
-      grupo.nome.toLowerCase().includes(nomeBusca.toLowerCase())
-    );
+    console.log('Iniciando filtro...');
+    const filtered = grupos.filter(grupo => {
+      const match = grupo.nome.toLowerCase().includes(nomeBusca.toLowerCase());
+      console.log(`Grupo "${grupo.nome}" - Match: ${match}`);
+      return match;
+    });
+    
+    console.log('Grupos filtrados:', filtered);
     setFilteredGrupos(filtered);
-  };
-
-  // Função para mostrar notificação
-  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
-    const id = Date.now().toString();
-    const notification: Notification = {
-      id,
-      type,
-      message,
-      visible: true
-    };
     
-    setNotifications(prev => [...prev, notification]);
-    
-    // Auto remover após 5 segundos
-    setTimeout(() => {
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif.id === id ? { ...notif, visible: false } : notif
-        )
-      );
-      
-      // Remover completamente após animação
-      setTimeout(() => {
-        setNotifications(prev => prev.filter(notif => notif.id !== id));
-      }, 300);
-    }, 5000);
+    if (filtered.length === 0) {
+      showNotification('error', 'Nenhum grupo encontrado com o nome pesquisado');
+    } else {
+      showNotification('success', `${filtered.length} grupo(s) encontrado(s)`);
+    }
   };
 
   // Função para incluir novo grupo
@@ -154,7 +173,7 @@ export default function GruposPage() {
       });
 
       if (response.ok) {
-        showNotification('success', `Grupo "${nomeGrupo}" cadastrado com sucesso!`);
+        showNotification('success', 'Grupo cadastrado com sucesso!');
         handleLimpar();
         await carregarGrupos();
         setShowNewGroupModal(false);
@@ -164,7 +183,7 @@ export default function GruposPage() {
       }
     } catch (error) {
       console.error('Erro ao cadastrar grupo:', error);
-      showNotification('error', 'Erro ao cadastrar grupo. Verifique sua conexão e tente novamente.');
+      showNotification('error', 'Erro ao cadastrar grupo. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -181,93 +200,6 @@ export default function GruposPage() {
   const handleRetornar = () => {
     handleLimpar();
     setShowNewGroupModal(false);
-    setEditingGroup(null);
-  };
-
-  // Função para editar grupo
-  const handleEditGroup = (grupo: Grupo) => {
-    setEditingGroup(grupo);
-    setNomeGrupo(grupo.nome);
-    setDescricaoGrupo(grupo.descricao || '');
-    setGrupoPai(grupo.grupo_pai_id?.toString() || '');
-    setShowNewGroupModal(true);
-  };
-
-  // Função para atualizar grupo
-  const handleUpdateGroup = async () => {
-    if (!editingGroup || !nomeGrupo.trim()) {
-      showNotification('error', 'Por favor, informe o nome do grupo.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/grupos/${editingGroup.id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          nome: nomeGrupo,
-          descricao: descricaoGrupo || null,
-          grupo_pai_id: grupoPai || null
-        })
-      });
-
-      if (response.ok) {
-        showNotification('success', `Grupo "${nomeGrupo}" atualizado com sucesso!`);
-        handleLimpar();
-        await carregarGrupos();
-        setShowNewGroupModal(false);
-        setEditingGroup(null);
-      } else {
-        const error = await response.json();
-        showNotification('error', `Erro ao atualizar grupo: ${error.message}`);
-      }
-    } catch (error) {
-      console.error('Erro ao atualizar grupo:', error);
-      showNotification('error', 'Erro ao atualizar grupo. Verifique sua conexão e tente novamente.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Função para confirmar exclusão
-  const handleDeleteGroup = (grupo: Grupo) => {
-    setGroupToDelete(grupo);
-    setShowDeleteModal(true);
-  };
-
-  // Função para excluir grupo
-  const confirmDeleteGroup = async () => {
-    if (!groupToDelete) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/grupos/${groupToDelete.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        showNotification('success', `Grupo "${groupToDelete.nome}" excluído com sucesso!`);
-        await carregarGrupos();
-      } else {
-        const error = await response.json();
-        showNotification('error', `Erro ao excluir grupo: ${error.message}`);
-      }
-    } catch (error) {
-      console.error('Erro ao excluir grupo:', error);
-      showNotification('error', 'Erro ao excluir grupo. Verifique sua conexão e tente novamente.');
-    } finally {
-      setShowDeleteModal(false);
-      setGroupToDelete(null);
-    }
   };
 
   useEffect(() => {
@@ -338,6 +270,36 @@ export default function GruposPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-[#00A298]/15">
+      {/* Notificação Toast */}
+      {notification.show && (
+        <div className={`fixed top-20 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+          notification.type === 'success' 
+            ? 'bg-green-100 border border-green-400 text-green-700' 
+            : 'bg-red-100 border border-red-400 text-red-700'
+        }`}>
+          <div className="flex items-center">
+            {notification.type === 'success' ? (
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            <span className="font-medium">{notification.message}</span>
+            <button
+              onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+              className="ml-4 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header Superior */}
       <header className="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
         <div className="flex justify-between items-center h-16 px-4">
@@ -485,15 +447,20 @@ export default function GruposPage() {
                   >
                     NOVO GRUPO
                   </button>
+                  
+                  <button 
+                    onClick={carregarGrupos}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    RECARREGAR
+                  </button>
                 </div>
               </div>
 
               {/* Container de Novo Cadastro */}
               {showNewGroupModal && (
                 <div className="p-6 bg-gray-50 border-b border-gray-200">
-                  <h3 className="text-lg font-bold text-[#1D3C44] mb-4">
-                    {editingGroup ? 'Editar Grupo' : 'Cadastro de Grupos'}
-                  </h3>
+                  <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Cadastro de Grupos</h3>
                   
                   <div className="bg-white rounded-lg p-4 shadow-sm">
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
@@ -546,14 +513,11 @@ export default function GruposPage() {
 
                     <div className="flex gap-3 mt-6">
                       <button 
-                        onClick={editingGroup ? handleUpdateGroup : handleIncluir}
+                        onClick={handleIncluir}
                         disabled={isSubmitting}
                         className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isSubmitting 
-                          ? (editingGroup ? 'ATUALIZANDO...' : 'INCLUINDO...') 
-                          : (editingGroup ? 'ATUALIZAR' : 'INCLUIR')
-                        }
+                        {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
                       </button>
                       <button 
                         onClick={handleLimpar}
@@ -611,16 +575,10 @@ export default function GruposPage() {
                             </td>
                             <td className="px-4 py-3 text-sm">
                               <div className="flex space-x-2">
-                                <button 
-                                  onClick={() => handleEditGroup(grupo)}
-                                  className="text-blue-600 hover:text-blue-800 text-xs font-medium transition-colors"
-                                >
+                                <button className="text-blue-600 hover:text-blue-800 text-xs font-medium">
                                   Editar
                                 </button>
-                                <button 
-                                  onClick={() => handleDeleteGroup(grupo)}
-                                  className="text-red-600 hover:text-red-800 text-xs font-medium transition-colors"
-                                >
+                                <button className="text-red-600 hover:text-red-800 text-xs font-medium">
                                   Excluir
                                 </button>
                               </div>
@@ -642,117 +600,6 @@ export default function GruposPage() {
           </div>
         </main>
       </div>
-
-      {/* Sistema de Notificações */}
-      <div className="fixed top-20 right-4 z-[9999] space-y-2">
-        {notifications.map((notification) => (
-          <div
-            key={notification.id}
-            className={`transform transition-all duration-300 ease-in-out ${
-              notification.visible 
-                ? 'translate-x-0 opacity-100' 
-                : 'translate-x-full opacity-0'
-            }`}
-          >
-            <div className={`min-w-80 max-w-md p-4 rounded-lg shadow-lg border-l-4 ${
-              notification.type === 'success'
-                ? 'bg-green-50 border-green-400 text-green-800'
-                : notification.type === 'error'
-                ? 'bg-red-50 border-red-400 text-red-800'
-                : 'bg-blue-50 border-blue-400 text-blue-800'
-            }`}>
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  {notification.type === 'success' && (
-                    <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                  {notification.type === 'error' && (
-                    <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                  {notification.type === 'info' && (
-                    <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-                <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium">
-                    {notification.message}
-                  </p>
-                </div>
-                <div className="ml-4 flex-shrink-0">
-                  <button
-                    onClick={() => {
-                      setNotifications(prev =>
-                        prev.map(notif =>
-                          notif.id === notification.id
-                            ? { ...notif, visible: false }
-                            : notif
-                        )
-                      );
-                      setTimeout(() => {
-                        setNotifications(prev => prev.filter(notif => notif.id !== notification.id));
-                      }, 300);
-                    }}
-                    className={`inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                      notification.type === 'success'
-                        ? 'text-green-500 hover:bg-green-100 focus:ring-green-600'
-                        : notification.type === 'error'
-                        ? 'text-red-500 hover:bg-red-100 focus:ring-red-600'
-                        : 'text-blue-500 hover:bg-blue-100 focus:ring-blue-600'
-                    }`}
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Modal de Confirmação de Exclusão */}
-      {showDeleteModal && groupToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000]">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
-            <div className="flex items-center mb-4">
-              <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              <h3 className="text-lg font-semibold text-gray-900">Confirmar Exclusão</h3>
-            </div>
-            
-            <p className="text-gray-600 mb-6">
-              Tem certeza que deseja excluir o grupo <strong>"{groupToDelete.nome}"</strong>? 
-              Esta ação não pode ser desfeita.
-            </p>
-            
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setGroupToDelete(null);
-                }}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-md hover:bg-gray-100"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmDeleteGroup}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-              >
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 
