@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -12,6 +12,15 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
+interface User {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+}
+
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
@@ -19,10 +28,49 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
   const [expandedMenus, setExpandedMenus] = useState<{[key: string]: boolean}>({
     cadastros: true,
     'tabelas-basicas': false
   });
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+      }
+    }
+  }, []);
+
+  const getRoleName = (role: string) => {
+    switch (role) {
+      case 'SUPER_ADMIN':
+        return 'Super Admin';
+      case 'ADMIN':
+        return 'Admin';
+      case 'USER':
+        return 'User';
+      default:
+        return role.toLowerCase();
+    }
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'SUPER_ADMIN':
+        return 'bg-purple-100 text-purple-800';
+      case 'ADMIN':
+        return 'bg-blue-100 text-blue-800';
+      case 'USER':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   const menuItems: MenuItem[] = [
     {
@@ -178,18 +226,44 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           {menuItems.map(item => renderMenuItem(item))}
         </div>
         
-        {/* Logo PLBrasil no fundo da página */}
-        {!collapsed && (
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-            <div className="px-4">
-              <Image
-                src="/logo.png"
-                alt="PLBrasil Health&Safety"
-                width={160}
-                height={60}
-                className="object-contain opacity-80 hover:opacity-100 transition-opacity"
-                priority
-              />
+        {/* Informações do usuário no fundo da página */}
+        {!collapsed && user && (
+          <div className="absolute bottom-4 left-0 right-0 px-4">
+            <div className="bg-gradient-to-r from-[#00A298]/5 to-[#1D3C44]/5 rounded-xl p-4 border border-gray-200/50 backdrop-blur-sm">
+              <div className="text-center">
+                {/* Avatar do usuário */}
+                <div className="w-12 h-12 bg-gradient-to-br from-[#00A298] to-[#1D3C44] rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-white font-bold text-lg">
+                    {user.first_name.charAt(0).toUpperCase()}{user.last_name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                
+                {/* Nome do usuário */}
+                <div className="text-sm font-medium text-[#1D3C44] mb-2 leading-tight">
+                  {user.first_name} {user.last_name}
+                </div>
+                
+                {/* Email do usuário */}
+                <div className="text-xs text-gray-600 mb-2 truncate">
+                  {user.email}
+                </div>
+                
+                {/* Role do usuário */}
+                <div className={`text-xs px-3 py-1 rounded-full inline-block ${getRoleColor(user.role)} font-medium`}>
+                  {getRoleName(user.role)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Ícone do usuário quando collapsed */}
+        {collapsed && user && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#00A298] to-[#1D3C44] rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-xs">
+                {user.first_name.charAt(0).toUpperCase()}
+              </span>
             </div>
           </div>
         )}

@@ -102,8 +102,13 @@ export default function Header() {
       <header className="bg-white border-b border-gray-200 shadow-sm relative z-[9998] fixed top-0 left-0 right-0">
         <div className="flex justify-between items-center h-16 px-4">
           <div className="flex items-center w-1/3">
-            <div className="text-xl font-bold text-[#00A298]">PLBrasil</div>
-            <div className="text-sm font-bold text-gray-500 ml-2">Health&Safety</div>
+            <Image
+              src="/logo.png"
+              alt="PLBrasil Health&Safety"
+              width={120}
+              height={30}
+              className="object-contain opacity-80 hover:opacity-100 transition-opacity"
+            />
           </div>
 
           <div className="flex-1 text-center flex justify-center">
