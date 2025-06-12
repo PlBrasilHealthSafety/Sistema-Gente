@@ -13,12 +13,24 @@ interface User {
   is_active: boolean;
 }
 
+interface Grupo {
+  id: number;
+  nome: string;
+  descricao?: string;
+  status: 'ATIVO' | 'INATIVO';
+  created_by: number;
+  updated_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Regiao {
   id: number;
   nome: string;
   descricao?: string;
   uf: string;
   cidade?: string;
+  grupo_id?: number;
   status: 'ATIVO' | 'INATIVO';
   created_by: number;
   updated_by: number;
@@ -38,6 +50,9 @@ export default function RegioesPage() {
   const [cidadeRegiao, setCidadeRegiao] = useState('');
   const [regioes, setRegioes] = useState<Regiao[]>([]);
   const [filteredRegioes, setFilteredRegioes] = useState<Regiao[]>([]);
+  const [grupos, setGrupos] = useState<Grupo[]>([]);
+  const [grupoSelecionado, setGrupoSelecionado] = useState('');
+  const [grupoFiltro, setGrupoFiltro] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Lista de UFs brasileiras
@@ -46,6 +61,32 @@ export default function RegioesPage() {
     'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 
     'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
   ];
+
+  // Função para carregar grupos
+  const carregarGrupos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/grupos', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // A API retorna {success: true, data: Array, message: string}
+        const validData = result.success && Array.isArray(result.data) ? result.data : [];
+        setGrupos(validData);
+      } else {
+        console.error('Erro na resposta da API de grupos. Status:', response.status);
+        setGrupos([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar grupos:', error);
+      setGrupos([]);
+    }
+  };
 
   // Função para carregar regiões
   const carregarRegioes = async () => {
@@ -70,14 +111,22 @@ export default function RegioesPage() {
 
   // Função para procurar regiões
   const handleProcurar = () => {
-    if (!nomeBusca.trim()) {
-      setFilteredRegioes(regioes);
-      return;
+    let filtered = regioes;
+
+    // Filtrar por nome se houver busca
+    if (nomeBusca.trim()) {
+      filtered = filtered.filter(regiao =>
+        regiao.nome.toLowerCase().includes(nomeBusca.toLowerCase())
+      );
     }
 
-    const filtered = regioes.filter(regiao =>
-      regiao.nome.toLowerCase().includes(nomeBusca.toLowerCase())
-    );
+    // Filtrar por grupo se houver seleção
+    if (grupoFiltro) {
+      filtered = filtered.filter(regiao =>
+        regiao.grupo_id === parseInt(grupoFiltro)
+      );
+    }
+
     setFilteredRegioes(filtered);
   };
 
@@ -105,7 +154,8 @@ export default function RegioesPage() {
           nome: nomeRegiao,
           descricao: descricaoRegiao || null,
           uf: ufRegiao,
-          cidade: cidadeRegiao || null
+          cidade: cidadeRegiao || null,
+          grupo_id: grupoSelecionado ? parseInt(grupoSelecionado) : null
         })
       });
 
@@ -113,6 +163,7 @@ export default function RegioesPage() {
         alert('Região cadastrada com sucesso!');
         handleLimpar();
         await carregarRegioes();
+        await carregarGrupos(); // Recarregar grupos para sincronizar
         setShowNewRegionModal(false);
       } else {
         const error = await response.json();
@@ -132,6 +183,7 @@ export default function RegioesPage() {
     setDescricaoRegiao('');
     setUfRegiao('');
     setCidadeRegiao('');
+    setGrupoSelecionado('');
   };
 
   // Função para retornar (fechar modal)
@@ -152,7 +204,8 @@ export default function RegioesPage() {
     try {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      // Carregar regiões após definir usuário
+      // Carregar dados após definir usuário
+      carregarGrupos();
       carregarRegioes();
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
@@ -161,6 +214,20 @@ export default function RegioesPage() {
       setIsLoading(false);
     }
   }, [router]);
+
+  // Recarregar dados quando a página ganhar foco (para pegar novos grupos cadastrados)
+  useEffect(() => {
+    const handleFocus = () => {
+      carregarGrupos();
+      carregarRegioes();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -335,9 +402,15 @@ export default function RegioesPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Grupo
                     </label>
-                    <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
+                    <select 
+                      value={grupoFiltro}
+                      onChange={(e) => setGrupoFiltro(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
                       <option value="">Todos os grupos</option>
-                      <option value="grupo-teste">Grupo Teste</option>
+                      {grupos.map(grupo => (
+                        <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
+                      ))}
                     </select>
                   </div>
                   
@@ -376,7 +449,7 @@ export default function RegioesPage() {
                   <div className="bg-white rounded-lg p-4 shadow-sm">
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Nome
@@ -388,6 +461,22 @@ export default function RegioesPage() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                           placeholder="Digite o nome da região"
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Grupo
+                        </label>
+                        <select 
+                          value={grupoSelecionado}
+                          onChange={(e) => setGrupoSelecionado(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        >
+                          <option value="">Selecione um grupo</option>
+                          {grupos.filter(grupo => grupo.status === 'ATIVO').map(grupo => (
+                            <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div>
@@ -486,7 +575,10 @@ export default function RegioesPage() {
                               </div>
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-500">
-                              -
+                              {regiao.grupo_id ? 
+                                grupos.find(g => g.id === regiao.grupo_id)?.nome || 'Grupo não encontrado'
+                                : '-'
+                              }
                             </td>
                             <td className="px-4 py-3 text-sm">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${

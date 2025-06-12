@@ -117,9 +117,24 @@ export default function EmpresasPage() {
   const [tipoInscricao, setTipoInscricao] = useState('');
   const [grupoSelecionado, setGrupoSelecionado] = useState('');
   const [regiaoSelecionada, setRegiaoSelecionada] = useState('');
+  const [cnaeDescricao, setCnaeDescricao] = useState('');
+  const [risco, setRisco] = useState('');
   
   // Estados para mensagens de erro
   const [cepError, setCepError] = useState('');
+  const [errors, setErrors] = useState({
+    nomeFantasia: '',
+    razaoSocial: '',
+    grupoSelecionado: '',
+    regiaoSelecionada: '',
+    cnaeDescricao: '',
+    risco: '',
+    cep: '',
+    numeroEndereco: '',
+    tipoInscricao: '',
+    numeroInscricao: '',
+    cno: ''
+  });
   
   // Estados para dados carregados
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
@@ -158,12 +173,11 @@ export default function EmpresasPage() {
     try {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
+      console.log('Usuário definido, carregando dados...'); // Debug
       // Carregar dados após definir usuário
-      Promise.all([
-        carregarEmpresas(),
-        carregarGrupos(),
-        carregarRegioes()
-      ]);
+      carregarEmpresas();
+      carregarGrupos();
+      carregarRegioes();
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
       router.push('/login');
@@ -322,10 +336,18 @@ export default function EmpresasPage() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setGrupos(Array.isArray(data) ? data : []);
+        const result = await response.json();
+        console.log('Resposta da API de grupos:', result); // Debug
+        // A API pode retornar {success: true, data: Array} ou Array direto
+        const validData = result.success && Array.isArray(result.data) 
+          ? result.data
+          : Array.isArray(result) 
+            ? result
+            : [];
+        console.log('Grupos carregados:', validData); // Debug
+        setGrupos(validData);
       } else {
-        console.error('Erro na resposta da API de grupos');
+        console.error('Erro na resposta da API de grupos. Status:', response.status);
         setGrupos([]);
       }
     } catch (error) {
@@ -346,10 +368,18 @@ export default function EmpresasPage() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setRegioes(Array.isArray(data) ? data : []);
+        const result = await response.json();
+        console.log('Resposta da API de regiões:', result); // Debug
+        // A API pode retornar {success: true, data: Array} ou Array direto
+        const validData = result.success && Array.isArray(result.data) 
+          ? result.data
+          : Array.isArray(result) 
+            ? result
+            : [];
+        console.log('Regiões carregadas:', validData); // Debug
+        setRegioes(validData);
       } else {
-        console.error('Erro na resposta da API de regiões');
+        console.error('Erro na resposta da API de regiões. Status:', response.status);
         setRegioes([]);
       }
     } catch (error) {
@@ -384,10 +414,76 @@ export default function EmpresasPage() {
     setFilteredEmpresas(filtered);
   };
 
+  // Função para validar campos obrigatórios
+  const validateForm = () => {
+    const newErrors = {
+      nomeFantasia: '',
+      razaoSocial: '',
+      grupoSelecionado: '',
+      regiaoSelecionada: '',
+      cnaeDescricao: '',
+      risco: '',
+      cep: '',
+      numeroEndereco: '',
+      tipoInscricao: '',
+      numeroInscricao: '',
+      cno: ''
+    };
+
+    if (!nomeFantasia.trim()) {
+      newErrors.nomeFantasia = 'Nome fantasia é obrigatório';
+    }
+
+    if (!razaoSocial.trim()) {
+      newErrors.razaoSocial = 'Razão social é obrigatória';
+    }
+
+    if (!grupoSelecionado) {
+      newErrors.grupoSelecionado = 'Grupo é obrigatório';
+    }
+
+    if (!regiaoSelecionada) {
+      newErrors.regiaoSelecionada = 'Região é obrigatória';
+    }
+
+    if (!cnaeDescricao.trim()) {
+      newErrors.cnaeDescricao = 'CNAE e descrição é obrigatório';
+    }
+
+    if (!risco.trim()) {
+      newErrors.risco = 'Risco é obrigatório';
+    }
+
+    if (!cep.trim()) {
+      newErrors.cep = 'CEP é obrigatório';
+    }
+
+    if (!endereco.numero.trim()) {
+      newErrors.numeroEndereco = 'Número é obrigatório';
+    }
+
+    if (!tipoInscricao) {
+      newErrors.tipoInscricao = 'Tipo de inscrição é obrigatório';
+    }
+
+    if (!numeroInscricao.trim()) {
+      newErrors.numeroInscricao = 'Número de inscrição é obrigatório';
+    }
+
+    if (!cno.trim()) {
+      newErrors.cno = 'CNO é obrigatório';
+    }
+
+    setErrors(newErrors);
+
+    // Retorna true se não há erros
+    return !Object.values(newErrors).some(error => error !== '');
+  };
+
   // Função para incluir nova empresa
   const handleIncluir = async () => {
-    if (!nomeFantasia.trim() || !razaoSocial.trim()) {
-      alert('Por favor, informe o nome fantasia e a razão social.');
+    if (!validateForm()) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -398,12 +494,14 @@ export default function EmpresasPage() {
         nome_fantasia: nomeFantasia,
         razao_social: razaoSocial,
         tipo_estabelecimento: tipoEstabelecimento.toUpperCase(),
-        tipo_inscricao: tipoInscricao || null,
-        numero_inscricao: numeroInscricao || null,
-        cno: cno || null,
-        endereco_cep: cep || null,
+        tipo_inscricao: tipoInscricao,
+        numero_inscricao: numeroInscricao,
+        cno: cno,
+        cnae_descricao: cnaeDescricao,
+        risco: risco,
+        endereco_cep: cep,
         endereco_logradouro: endereco.logradouro || null,
-        endereco_numero: endereco.numero || null,
+        endereco_numero: endereco.numero,
         endereco_complemento: endereco.complemento || null,
         endereco_bairro: endereco.bairro || null,
         endereco_cidade: endereco.cidade || null,
@@ -415,8 +513,8 @@ export default function EmpresasPage() {
         representante_legal_cpf: cpfRepresentante || null,
         observacoes: observacao || null,
         observacoes_os: observacaoOS || null,
-        grupo_id: grupoSelecionado || null,
-        regiao_id: regiaoSelecionada || null
+        grupo_id: grupoSelecionado,
+        regiao_id: regiaoSelecionada
       };
 
       const response = await fetch('http://localhost:3001/api/empresas', {
@@ -473,6 +571,21 @@ export default function EmpresasPage() {
     setGrupoSelecionado('');
     setRegiaoSelecionada('');
     setCepError('');
+    setCnaeDescricao('');
+    setRisco('');
+    setErrors({
+      nomeFantasia: '',
+      razaoSocial: '',
+      grupoSelecionado: '',
+      regiaoSelecionada: '',
+      cnaeDescricao: '',
+      risco: '',
+      cep: '',
+      numeroEndereco: '',
+      tipoInscricao: '',
+      numeroInscricao: '',
+      cno: ''
+    });
   };
 
   // Função para retornar (fechar modal)
@@ -685,6 +798,16 @@ export default function EmpresasPage() {
                 <div className="p-6 bg-gray-50 border-b border-gray-200">
                   <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Cadastro de Empresas</h3>
                   
+                  {/* Legenda de campos obrigatórios */}
+                  <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center text-sm text-blue-800">
+                      <span className="text-red-500 mr-2 font-bold">*</span>
+                      <span className="font-medium">Campos obrigatórios</span>
+                      <span className="mx-2">•</span>
+                      <span className="text-blue-600">Preencha todos os campos marcados com asterisco para continuar</span>
+                    </div>
+                  </div>
+                  
                   {/* Abas */}
                   <div className="border-b border-gray-200 mb-6">
                     <nav className="flex space-x-8">
@@ -756,47 +879,75 @@ export default function EmpresasPage() {
 
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
-                              Tipo de Inscrição 
-                              <span className="text-blue-500 text-xs ml-1">(Opcional)</span>
+                              Tipo de Inscrição <span className="text-red-500">*</span>
                             </label>
                             <select 
                               name="tipoInscricao"
                               value={tipoInscricao}
-                              onChange={(e) => setTipoInscricao(e.target.value)}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
+                              onChange={(e) => {
+                                setTipoInscricao(e.target.value);
+                                if (e.target.value && errors.tipoInscricao) {
+                                  setErrors({...errors, tipoInscricao: ''});
+                                }
+                              }}
+                              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all ${
+                                errors.tipoInscricao ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                             >
                               <option value="">Selecione...</option>
                               <option value="cnpj">CNPJ</option>
                               <option value="cpf">CPF</option>
                             </select>
+                            {errors.tipoInscricao && (
+                              <p className="text-red-500 text-xs mt-1">{errors.tipoInscricao}</p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
-                              Número de Inscrição 
-                              <span className="text-blue-500 text-xs ml-1">(Opcional)</span>
+                              Número de Inscrição <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
                               value={numeroInscricao}
-                              onChange={handleNumeroInscricaoChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
+                              onChange={(e) => {
+                                handleNumeroInscricaoChange(e);
+                                if (e.target.value.trim() && errors.numeroInscricao) {
+                                  setErrors({...errors, numeroInscricao: ''});
+                                }
+                              }}
+                              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all ${
+                                errors.numeroInscricao ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="Digite o número"
                             />
+                            {errors.numeroInscricao && (
+                              <p className="text-red-500 text-xs mt-1">{errors.numeroInscricao}</p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
-                              CNO
+                              CNO <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
                               value={cno}
-                              onChange={handleCnoChange}
+                              onChange={(e) => {
+                                handleCnoChange(e);
+                                if (e.target.value.trim() && errors.cno) {
+                                  setErrors({...errors, cno: ''});
+                                }
+                              }}
                               maxLength={14}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
+                              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all ${
+                                errors.cno ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="Digite o CNO (máx. 14 dígitos)"
                             />
+                            {errors.cno && (
+                              <p className="text-red-500 text-xs mt-1">{errors.cno}</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -823,62 +974,102 @@ export default function EmpresasPage() {
                              />
                            </div>
 
-                                                     <div className="space-y-2">
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
-                              Grupo
+                              Grupo <span className="text-red-500">*</span>
                             </label>
                             <select 
                               value={grupoSelecionado}
-                              onChange={(e) => setGrupoSelecionado(e.target.value)}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
+                              onChange={(e) => {
+                                setGrupoSelecionado(e.target.value);
+                                if (e.target.value && errors.grupoSelecionado) {
+                                  setErrors({...errors, grupoSelecionado: ''});
+                                }
+                              }}
+                              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all ${
+                                errors.grupoSelecionado ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                             >
                               <option value="">Selecione um grupo</option>
                               {grupos && Array.isArray(grupos) && grupos.map(grupo => (
                                 <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                               ))}
                             </select>
+                            {errors.grupoSelecionado && (
+                              <p className="text-red-500 text-xs mt-1">{errors.grupoSelecionado}</p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
-                              Região
+                              Região <span className="text-red-500">*</span>
                             </label>
                             <select 
                               value={regiaoSelecionada}
-                              onChange={(e) => setRegiaoSelecionada(e.target.value)}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
+                              onChange={(e) => {
+                                setRegiaoSelecionada(e.target.value);
+                                if (e.target.value && errors.regiaoSelecionada) {
+                                  setErrors({...errors, regiaoSelecionada: ''});
+                                }
+                              }}
+                              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all ${
+                                errors.regiaoSelecionada ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                             >
                               <option value="">Selecione uma região</option>
                               {regioes && Array.isArray(regioes) && regioes.map(regiao => (
                                 <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
                               ))}
                             </select>
+                            {errors.regiaoSelecionada && (
+                              <p className="text-red-500 text-xs mt-1">{errors.regiaoSelecionada}</p>
+                            )}
                           </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Razão Social
+                              Razão Social <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
                               value={razaoSocial}
-                              onChange={(e) => setRazaoSocial(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              onChange={(e) => {
+                                setRazaoSocial(e.target.value);
+                                if (e.target.value.trim() && errors.razaoSocial) {
+                                  setErrors({...errors, razaoSocial: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.razaoSocial ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="Digite a razão social"
                             />
+                            {errors.razaoSocial && (
+                              <p className="text-red-500 text-xs mt-1">{errors.razaoSocial}</p>
+                            )}
                           </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Nome Fantasia
+                              Nome Fantasia <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
                               value={nomeFantasia}
-                              onChange={(e) => setNomeFantasia(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              onChange={(e) => {
+                                setNomeFantasia(e.target.value);
+                                if (e.target.value.trim() && errors.nomeFantasia) {
+                                  setErrors({...errors, nomeFantasia: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.nomeFantasia ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="Digite o nome fantasia"
                             />
+                            {errors.nomeFantasia && (
+                              <p className="text-red-500 text-xs mt-1">{errors.nomeFantasia}</p>
+                            )}
                           </div>
 
                           <div>
@@ -905,24 +1096,48 @@ export default function EmpresasPage() {
 
                           <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              CNAE e Descrição
+                              CNAE e Descrição <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              value={cnaeDescricao}
+                              onChange={(e) => {
+                                setCnaeDescricao(e.target.value);
+                                if (e.target.value.trim() && errors.cnaeDescricao) {
+                                  setErrors({...errors, cnaeDescricao: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.cnaeDescricao ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="Digite o CNAE e descrição"
                             />
+                            {errors.cnaeDescricao && (
+                              <p className="text-red-500 text-xs mt-1">{errors.cnaeDescricao}</p>
+                            )}
                           </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Risco
+                              Risco <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              value={risco}
+                              onChange={(e) => {
+                                setRisco(e.target.value);
+                                if (e.target.value.trim() && errors.risco) {
+                                  setErrors({...errors, risco: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.risco ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="Digite o risco"
                             />
+                            {errors.risco && (
+                              <p className="text-red-500 text-xs mt-1">{errors.risco}</p>
+                            )}
                           </div>
 
                                                      <div className="space-y-2">
@@ -1023,20 +1238,26 @@ export default function EmpresasPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              CEP
+                              CEP <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
                               value={cep}
-                              onChange={handleCepChange}
+                              onChange={(e) => {
+                                handleCepChange(e);
+                                if (e.target.value.trim() && errors.cep) {
+                                  setErrors({...errors, cep: ''});
+                                }
+                              }}
                               maxLength={9}
                               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
-                                cepError ? 'border-red-300' : 'border-gray-300'
+                                cepError || errors.cep ? 'border-red-300 bg-red-50' : 'border-gray-300'
                               }`}
                               placeholder="00000-000"
                             />
                             {loadingCep && <p className="text-xs text-blue-500 mt-1">Buscando CEP...</p>}
                             {cepError && <p className="text-xs text-red-500 mt-1">{cepError}</p>}
+                            {errors.cep && <p className="text-xs text-red-500 mt-1">{errors.cep}</p>}
                           </div>
 
                           <div>
@@ -1073,15 +1294,25 @@ export default function EmpresasPage() {
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Número
+                              Número <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
                               value={endereco.numero}
-                              onChange={(e) => setEndereco({...endereco, numero: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              onChange={(e) => {
+                                setEndereco({...endereco, numero: e.target.value});
+                                if (e.target.value.trim() && errors.numeroEndereco) {
+                                  setErrors({...errors, numeroEndereco: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.numeroEndereco ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="Número"
                             />
+                            {errors.numeroEndereco && (
+                              <p className="text-red-500 text-xs mt-1">{errors.numeroEndereco}</p>
+                            )}
                           </div>
 
                           <div>

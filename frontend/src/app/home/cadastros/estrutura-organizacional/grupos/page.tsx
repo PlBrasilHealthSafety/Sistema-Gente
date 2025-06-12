@@ -18,8 +18,6 @@ interface Grupo {
   id: number;
   nome: string;
   descricao?: string;
-  grupo_pai_id?: number;
-  grupo_pai?: Grupo;
   status: 'ATIVO' | 'INATIVO';
   created_by: number;
   updated_by: number;
@@ -35,7 +33,6 @@ export default function GruposPage() {
   const [nomeGrupo, setNomeGrupo] = useState('');
   const [nomeBusca, setNomeBusca] = useState('');
   const [descricaoGrupo, setDescricaoGrupo] = useState('');
-  const [grupoPai, setGrupoPai] = useState('');
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [filteredGrupos, setFilteredGrupos] = useState<Grupo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,7 +102,6 @@ export default function GruposPage() {
         body: JSON.stringify({
           nome: nomeGrupo,
           descricao: descricaoGrupo || null,
-          grupo_pai_id: grupoPai || null
         })
       });
 
@@ -130,7 +126,7 @@ export default function GruposPage() {
   const handleLimpar = () => {
     setNomeGrupo('');
     setDescricaoGrupo('');
-    setGrupoPai('');
+
   };
 
   // Função para retornar (fechar modal)
@@ -379,23 +375,7 @@ export default function GruposPage() {
                         />
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Grupo Pai (Opcional)
-                        </label>
-                        <select 
-                          value={grupoPai}
-                          onChange={(e) => setGrupoPai(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                        >
-                          <option value="">Nenhum (grupo raiz)</option>
-                          {grupos && Array.isArray(grupos) && grupos.map(grupo => (
-                            <option key={grupo.id} value={grupo.id.toString()}>
-                              {grupo.nome}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                     
                     </div>
 
                     <div className="mt-4">
@@ -457,11 +437,7 @@ export default function GruposPage() {
                                 {grupo.descricao && (
                                   <div className="text-gray-500 text-xs mt-1">{grupo.descricao}</div>
                                 )}
-                                {grupo.grupo_pai && (
-                                  <div className="text-blue-600 text-xs mt-1">
-                                    👥 Grupo pai: {grupo.grupo_pai.nome}
-                                  </div>
-                                )}
+
                               </div>
                             </td>
                             <td className="px-4 py-3 text-sm">
