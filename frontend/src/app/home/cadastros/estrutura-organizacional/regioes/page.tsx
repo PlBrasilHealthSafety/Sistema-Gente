@@ -89,8 +89,11 @@ export default function RegioesPage() {
 
   // Função para carregar grupos
   const carregarGrupos = async () => {
+    console.log('=== CARREGANDO GRUPOS (REGIÕES) ===');
     try {
       const token = localStorage.getItem('token');
+      console.log('Token existe:', token ? 'Sim' : 'Não');
+      
       const response = await fetch('http://localhost:3001/api/grupos', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -98,18 +101,42 @@ export default function RegioesPage() {
         }
       });
 
+      console.log('Status da resposta grupos:', response.status);
+      console.log('Resposta OK grupos:', response.ok);
+
       if (response.ok) {
         const result = await response.json();
+        console.log('Resposta da API de grupos:', result);
         // A API retorna {success: true, data: Array, message: string}
         const validData = result.success && Array.isArray(result.data) ? result.data : [];
+        console.log('Grupos carregados:', validData);
+        console.log('Número de grupos:', validData.length);
+        
+        // Debug dos grupos carregados
+        validData.forEach((grupo: Grupo, index: number) => {
+          console.log(`🔍 GRUPO ${index + 1}:`, {
+            id: grupo.id,
+            tipo_id: typeof grupo.id,
+            nome: grupo.nome,
+            status: grupo.status,
+            dados_completos: grupo
+          });
+        });
+        
         setGrupos(validData);
+        
+        if (validData.length > 0) {
+          console.log('✅ Grupos carregados com sucesso na página de regiões!');
+        } else {
+          console.log('⚠️ Nenhum grupo encontrado');
+        }
       } else {
-        console.error('Erro na resposta da API de grupos. Status:', response.status);
+        console.error('❌ Erro na resposta da API de grupos. Status:', response.status);
         showNotification('error', `Erro ao carregar grupos: ${response.status}`);
         setGrupos([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar grupos:', error);
+      console.error('❌ Erro ao carregar grupos:', error);
       showNotification('error', 'Erro de conexão ao carregar grupos');
       setGrupos([]);
     }
@@ -151,6 +178,16 @@ export default function RegioesPage() {
         const validData = Array.isArray(data) ? data : [];
         console.log('Valid data:', validData);
         console.log('Valid data length:', validData.length);
+        
+        // Debug das regiões carregadas
+        validData.forEach((regiao: Regiao, index: number) => {
+          console.log(`🔍 REGIÃO ${index + 1}:`, {
+            nome: regiao.nome,
+            grupo_id: regiao.grupo_id,
+            tipo_grupo_id: typeof regiao.grupo_id,
+            dados_completos: regiao
+          });
+        });
         
         setRegioes(validData);
         setFilteredRegioes(validData);
@@ -251,21 +288,36 @@ export default function RegioesPage() {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // Debug dos dados antes do envio
+      const dadosParaEnvio = {
+        nome: nomeRegiao,
+        descricao: descricaoRegiao || null,
+        uf: ufRegiao,
+        cidade: cidadeRegiao || null,
+        grupo_id: grupoSelecionado ? parseInt(grupoSelecionado) : null
+      };
+      
+      console.log('=== CRIANDO NOVA REGIÃO ===');
+      console.log('🔍 DADOS SENDO ENVIADOS:', dadosParaEnvio);
+      console.log('🔍 grupoSelecionado (original):', grupoSelecionado, 'tipo:', typeof grupoSelecionado);
+      console.log('🔍 parseInt(grupoSelecionado):', parseInt(grupoSelecionado), 'tipo:', typeof parseInt(grupoSelecionado));
+      
       const response = await fetch('http://localhost:3001/api/regioes', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          nome: nomeRegiao,
-          descricao: descricaoRegiao || null,
-          uf: ufRegiao,
-          cidade: cidadeRegiao || null,
-          grupo_id: grupoSelecionado ? parseInt(grupoSelecionado) : null
-        })
+        body: JSON.stringify(dadosParaEnvio)
       });
 
+      console.log('🔍 STATUS DA RESPOSTA:', response.status);
+      console.log('🔍 RESPONSE OK:', response.ok);
+      
+      const responseData = await response.json();
+      console.log('🔍 RESPOSTA COMPLETA DA API:', responseData);
+      
       if (response.ok) {
         showNotification('success', 'Região cadastrada com sucesso!');
         handleLimpar();
@@ -273,8 +325,7 @@ export default function RegioesPage() {
         await carregarGrupos(); // Recarregar grupos para sincronizar
         setShowNewRegionModal(false);
       } else {
-        const error = await response.json();
-        showNotification('error', `Erro ao cadastrar região: ${error.message}`);
+        showNotification('error', `Erro ao cadastrar região: ${responseData.message}`);
       }
     } catch (error) {
       console.error('Erro ao cadastrar região:', error);
@@ -406,6 +457,32 @@ export default function RegioesPage() {
   const handleCancelarExclusao = () => {
     setShowDeleteModal(false);
     setRegiaoExcluindo(null);
+  };
+
+  // Função para recarregar página
+  const handleRecarregar = async () => {
+    // Limpar campos de pesquisa
+    setNomeBusca('');
+    setSituacaoBusca('todos');
+    setGrupoFiltro('');
+    
+    // Fechar modais se estiverem abertos
+    setShowNewRegionModal(false);
+    setShowEditRegionModal(false);
+    setShowDeleteModal(false);
+    
+    // Limpar dados do formulário
+    setNomeRegiao('');
+    setDescricaoRegiao('');
+    setUfRegiao('');
+    setCidadeRegiao('');
+    setGrupoSelecionado('');
+    setRegiaoEditando(null);
+    setRegiaoExcluindo(null);
+    
+    // Recarregar dados
+    await carregarRegioes();
+    await carregarGrupos();
   };
 
   useEffect(() => {
@@ -689,7 +766,7 @@ export default function RegioesPage() {
                   </button>
                   
                   <button 
-                    onClick={carregarRegioes}
+                    onClick={handleRecarregar}
                     className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
                     RECARREGAR
@@ -727,9 +804,10 @@ export default function RegioesPage() {
                           value={grupoSelecionado}
                           onChange={(e) => setGrupoSelecionado(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+
                         >
                           <option value="">Selecione um grupo</option>
-                          {grupos.filter(grupo => grupo.status === 'ATIVO').map(grupo => (
+                          {grupos.filter(grupo => grupo.status?.toLowerCase() === 'ativo').map(grupo => (
                             <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                           ))}
                         </select>
@@ -905,9 +983,10 @@ export default function RegioesPage() {
                       value={grupoSelecionado}
                       onChange={(e) => setGrupoSelecionado(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+
                     >
                       <option value="">Selecione um grupo</option>
-                      {grupos.filter(grupo => grupo.status === 'ATIVO').map(grupo => (
+                      {grupos.filter(grupo => grupo.status?.toLowerCase() === 'ativo').map(grupo => (
                         <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                       ))}
                     </select>

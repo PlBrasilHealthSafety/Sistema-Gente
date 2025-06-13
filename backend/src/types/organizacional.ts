@@ -43,6 +43,7 @@ export interface Regiao {
   uf?: string; // Estado
   cidade?: string;
   status: StatusItem;
+  grupo_id?: number;
   created_at: Date;
   updated_at: Date;
   created_by: number;
@@ -56,6 +57,7 @@ export interface CreateRegiaoData {
   uf?: string;
   cidade?: string;
   status?: StatusItem;
+  grupo_id?: number;
 }
 
 export interface UpdateRegiaoData {
@@ -65,6 +67,7 @@ export interface UpdateRegiaoData {
   uf?: string;
   cidade?: string;
   status?: StatusItem;
+  grupo_id?: number;
 }
 
 // Interfaces para Empresas

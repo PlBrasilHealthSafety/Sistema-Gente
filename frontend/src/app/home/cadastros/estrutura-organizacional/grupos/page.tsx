@@ -305,6 +305,26 @@ export default function GruposPage() {
     setGrupoExcluindo(null);
   };
 
+  // Função para recarregar página
+  const handleRecarregar = async () => {
+    // Limpar campos de pesquisa
+    setNomeBusca('');
+    
+    // Fechar modais se estiverem abertos
+    setShowNewGroupModal(false);
+    setShowEditGroupModal(false);
+    setShowDeleteModal(false);
+    
+    // Limpar dados do formulário
+    setNomeGrupo('');
+    setDescricaoGrupo('');
+    setGrupoEditando(null);
+    setGrupoExcluindo(null);
+    
+    // Recarregar dados
+    await carregarGrupos();
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -555,12 +575,12 @@ export default function GruposPage() {
                     NOVO GRUPO
                   </button>
                   
-                                      <button 
-                      onClick={carregarGrupos}
-                      className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                    >
-                      RECARREGAR
-                    </button>
+                                                        <button 
+                    onClick={handleRecarregar}
+                    className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    RECARREGAR
+                  </button>
                 </div>
               </div>
 

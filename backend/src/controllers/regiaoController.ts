@@ -164,8 +164,13 @@ export const getAvailableUFs = async (req: Request, res: Response) => {
 // Criar região (apenas SUPER_ADMIN e ADMIN)
 export const createRegiao = async (req: Request, res: Response) => {
   try {
-    const { nome, descricao, codigo, uf, cidade, status } = req.body as CreateRegiaoData;
+    const { nome, descricao, codigo, uf, cidade, status, grupo_id } = req.body as CreateRegiaoData;
     const userId = req.user!.id;
+
+    // Debug dos dados recebidos
+    console.log('=== BACKEND - CRIANDO REGIÃO ===');
+    console.log('🔍 DADOS RECEBIDOS:', { nome, descricao, codigo, uf, cidade, status, grupo_id });
+    console.log('🔍 grupo_id tipo:', typeof grupo_id, 'valor:', grupo_id);
 
     // Validações básicas
     if (!nome || nome.trim().length === 0) {
@@ -203,7 +208,8 @@ export const createRegiao = async (req: Request, res: Response) => {
       codigo: codigo?.trim(),
       uf: uf?.toUpperCase(),
       cidade: cidade?.trim(),
-      status: status || StatusItem.ATIVO
+      status: status || StatusItem.ATIVO,
+      grupo_id: grupo_id
     }, userId);
 
     res.status(201).json({
@@ -295,6 +301,7 @@ export const updateRegiao = async (req: Request, res: Response) => {
     if (updateData.uf !== undefined) cleanedData.uf = updateData.uf?.toUpperCase();
     if (updateData.cidade !== undefined) cleanedData.cidade = updateData.cidade?.trim();
     if (updateData.status !== undefined) cleanedData.status = updateData.status;
+    if (updateData.grupo_id !== undefined) cleanedData.grupo_id = updateData.grupo_id;
 
     const regiao = await RegiaoModel.update(regiaoId, cleanedData, userId);
 

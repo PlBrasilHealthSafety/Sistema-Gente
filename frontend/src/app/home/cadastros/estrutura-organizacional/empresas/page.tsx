@@ -358,14 +358,20 @@ export default function EmpresasPage() {
 
   // Função para carregar regiões
   const carregarRegioes = async () => {
+    console.log('=== CARREGANDO REGIÕES (EMPRESAS) ===');
     try {
       const token = localStorage.getItem('token');
+      console.log('Token existe:', token ? 'Sim' : 'Não');
+      
       const response = await fetch('http://localhost:3001/api/regioes', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+
+      console.log('Status da resposta:', response.status);
+      console.log('Resposta OK:', response.ok);
 
       if (response.ok) {
         const result = await response.json();
@@ -377,13 +383,20 @@ export default function EmpresasPage() {
             ? result
             : [];
         console.log('Regiões carregadas:', validData); // Debug
+        console.log('Número de regiões:', validData.length);
         setRegioes(validData);
+        
+        if (validData.length > 0) {
+          console.log('✅ Regiões carregadas com sucesso!');
+        } else {
+          console.log('⚠️ Nenhuma região encontrada');
+        }
       } else {
-        console.error('Erro na resposta da API de regiões. Status:', response.status);
+        console.error('❌ Erro na resposta da API de regiões. Status:', response.status);
         setRegioes([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar regiões:', error);
+      console.error('❌ Erro ao carregar regiões:', error);
       setRegioes([]);
     }
   };
@@ -1017,7 +1030,7 @@ export default function EmpresasPage() {
                               }`}
                             >
                               <option value="">Selecione uma região</option>
-                              {regioes && Array.isArray(regioes) && regioes.map(regiao => (
+                              {regioes && Array.isArray(regioes) && regioes.filter(regiao => regiao.status === 'ATIVO').map(regiao => (
                                 <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
                               ))}
                             </select>
