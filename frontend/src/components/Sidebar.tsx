@@ -77,7 +77,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       id: 'cadastros',
       name: 'Cadastros',
       icon: '👥',
-      href: '/home/cadastros',
+      href: '', // Sem href - apenas agrupador
       children: [
         {
           id: 'estrutura-organizacional',
@@ -171,7 +171,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           onClick={() => {
             if (hasChildren && !collapsed) {
               toggleMenuExpansion(item.id);
-            } else {
+            } else if (item.href) {
               handleNavigation(item.href);
             }
           }}

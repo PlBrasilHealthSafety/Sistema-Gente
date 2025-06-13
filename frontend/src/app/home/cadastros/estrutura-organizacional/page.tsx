@@ -114,13 +114,6 @@ export default function EstruturaOrganizacionalPage() {
             {/* Breadcrumb e Navegação */}
             <div className="mb-6">
               <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
-                <button 
-                  onClick={() => router.push('/home/cadastros')}
-                  className="hover:text-[#00A298] cursor-pointer"
-                >
-                  Cadastros
-                </button>
-                <span>/</span>
                 <span className="text-[#00A298] font-medium">Estrutura Organizacional</span>
               </div>
               

@@ -545,13 +545,6 @@ export default function GruposPage() {
             <div className="mb-6">
               <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
                 <button 
-                  onClick={() => router.push('/home/cadastros')}
-                  className="hover:text-[#00A298] cursor-pointer"
-                >
-                  Cadastros
-                </button>
-                <span>/</span>
-                <button 
                   onClick={() => router.push('/home/cadastros/estrutura-organizacional')}
                   className="hover:text-[#00A298] cursor-pointer"
                 >
