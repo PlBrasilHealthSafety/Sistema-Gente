@@ -561,7 +561,7 @@ export default function GruposPage() {
                   <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Cadastro de Grupos</h3>
                   
                   <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastraias</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
