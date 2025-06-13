@@ -38,7 +38,6 @@ export default function GruposPage() {
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [nomeGrupo, setNomeGrupo] = useState('');
   const [nomeBusca, setNomeBusca] = useState('');
-  const [situacaoBusca, setSituacaoBusca] = useState('todos');
   const [descricaoGrupo, setDescricaoGrupo] = useState('');
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [filteredGrupos, setFilteredGrupos] = useState<Grupo[]>([]);
@@ -64,10 +63,6 @@ export default function GruposPage() {
   // Função para carregar grupos
   const carregarGrupos = async () => {
     console.log('=== CARREGANDO GRUPOS ===');
-    
-    // Limpar campos de pesquisa quando recarregar
-    setNomeBusca('');
-    setSituacaoBusca('todos');
     
     try {
       const token = localStorage.getItem('token');
@@ -530,11 +525,7 @@ export default function GruposPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Situação
                     </label>
-                    <select 
-                      value={situacaoBusca}
-                      onChange={(e) => setSituacaoBusca(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                    >
+                    <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
                       <option value="ativo">Ativo</option>
                       <option value="inativo">Inativo</option>
                       <option value="todos">Todos</option>

@@ -14,6 +14,12 @@ import {
   isValidTelefone
 } from '@/utils/masks';
 
+interface NotificationMessage {
+  type: 'success' | 'error';
+  message: string;
+  show: boolean;
+}
+
 interface User {
   id: number;
   first_name: string;
@@ -84,6 +90,9 @@ export default function EmpresasPage() {
   const [classificacaoPorte, setClassificacaoPorte] = useState('ME');
   const [searchType, setSearchType] = useState('nome');
   const [pesquisaTexto, setPesquisaTexto] = useState('');
+  const [grupoFiltro, setGrupoFiltro] = useState('');
+  const [regiaoFiltro, setRegiaoFiltro] = useState('');
+  const [situacaoBusca, setSituacaoBusca] = useState('todos');
   
   // Estados para CEP e endereço
   const [cep, setCep] = useState('');
@@ -142,6 +151,23 @@ export default function EmpresasPage() {
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [regioes, setRegioes] = useState<Regiao[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState<NotificationMessage>({
+    type: 'success',
+    message: '',
+    show: false
+  });
+  const [showEditCompanyModal, setShowEditCompanyModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null);
+  const [empresaExcluindo, setEmpresaExcluindo] = useState<Empresa | null>(null);
+
+  // Função para exibir notificação
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message, show: true });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 5000);
+  };
 
   // Função para obter o placeholder baseado no tipo de pesquisa
   const getPlaceholder = (type: string) => {
@@ -305,8 +331,18 @@ export default function EmpresasPage() {
 
   // Função para carregar empresas
   const carregarEmpresas = async () => {
+    console.log('=== CARREGANDO EMPRESAS ===');
+    
+    // Limpar campos de pesquisa quando recarregar
+    setPesquisaTexto('');
+    setGrupoFiltro('');
+    setRegiaoFiltro('');
+    setSituacaoBusca('todos');
+    
     try {
       const token = localStorage.getItem('token');
+      console.log('Token:', token ? 'Existe' : 'Não existe');
+      
       const response = await fetch('http://localhost:3001/api/empresas', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -314,13 +350,43 @@ export default function EmpresasPage() {
         }
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (response.ok) {
-        const data = await response.json();
-        setEmpresas(data);
-        setFilteredEmpresas(data);
+        const result = await response.json();
+        console.log('Raw response from API:', result);
+        
+        // A API retorna { success: true, data: empresas[], message: string }
+        const data = result.data || result; // Fallback para compatibilidade
+        console.log('Extracted data:', data);
+        console.log('Data type:', typeof data);
+        console.log('Data is array:', Array.isArray(data));
+        
+        const validData = Array.isArray(data) ? data : [];
+        console.log('Valid data:', validData);
+        console.log('Valid data length:', validData.length);
+        
+        setEmpresas(validData);
+        setFilteredEmpresas(validData);
+        
+        if (validData.length > 0) {
+          showNotification('success', `${validData.length} empresa(s) carregada(s)`);
+        } else {
+          showNotification('error', 'Nenhuma empresa encontrada no banco de dados');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Erro na resposta da API de empresas:', errorText);
+        showNotification('error', `Erro ao carregar empresas: ${response.status}`);
+        setEmpresas([]);
+        setFilteredEmpresas([]);
       }
     } catch (error) {
       console.error('Erro ao carregar empresas:', error);
+      showNotification('error', 'Erro de conexão ao carregar empresas');
+      setEmpresas([]);
+      setFilteredEmpresas([]);
     }
   };
 
@@ -348,10 +414,12 @@ export default function EmpresasPage() {
         setGrupos(validData);
       } else {
         console.error('Erro na resposta da API de grupos. Status:', response.status);
+        showNotification('error', `Erro ao carregar grupos: ${response.status}`);
         setGrupos([]);
       }
     } catch (error) {
       console.error('Erro ao carregar grupos:', error);
+      showNotification('error', 'Erro de conexão ao carregar grupos');
       setGrupos([]);
     }
   };
@@ -380,38 +448,106 @@ export default function EmpresasPage() {
         setRegioes(validData);
       } else {
         console.error('Erro na resposta da API de regiões. Status:', response.status);
+        showNotification('error', `Erro ao carregar regiões: ${response.status}`);
         setRegioes([]);
       }
     } catch (error) {
       console.error('Erro ao carregar regiões:', error);
+      showNotification('error', 'Erro de conexão ao carregar regiões');
       setRegioes([]);
     }
   };
 
   // Função para procurar empresas
   const handleProcurar = () => {
-    if (!pesquisaTexto.trim()) {
-      setFilteredEmpresas(empresas);
+    console.log('=== DEBUG BUSCA ===');
+    console.log('pesquisaTexto:', pesquisaTexto);
+    console.log('searchType:', searchType);
+    console.log('grupoFiltro:', grupoFiltro);
+    console.log('regiaoFiltro:', regiaoFiltro);
+    console.log('situacaoBusca:', situacaoBusca);
+    console.log('empresas array:', empresas);
+    console.log('empresas length:', empresas?.length);
+    
+    if (!pesquisaTexto.trim() && !grupoFiltro && !regiaoFiltro && situacaoBusca === 'todos') {
+      console.log('Campos de busca vazios, mostrando todas as empresas');
+      setFilteredEmpresas(empresas || []);
       return;
     }
 
-    const filtered = empresas.filter(empresa => {
-      switch (searchType) {
-        case 'nome':
-          return empresa.nome_fantasia.toLowerCase().includes(pesquisaTexto.toLowerCase());
-        case 'n de inscrição':
-          return empresa.numero_inscricao?.includes(pesquisaTexto) || false;
-        case 'razao':
-          return empresa.razao_social.toLowerCase().includes(pesquisaTexto.toLowerCase());
-        case 'codigo':
-          return empresa.codigo.includes(pesquisaTexto);
-        case 'regiao':
-          return empresa.regiao?.nome.toLowerCase().includes(pesquisaTexto.toLowerCase()) || false;
-        default:
-          return false;
-      }
-    });
+    if (!Array.isArray(empresas)) {
+      console.log('empresas não é array:', typeof empresas);
+      setFilteredEmpresas([]);
+      return;
+    }
+
+    console.log('Iniciando filtro...');
+    let filtered = empresas;
+
+    // Filtrar por texto baseado no tipo de pesquisa
+    if (pesquisaTexto.trim()) {
+      filtered = filtered.filter(empresa => {
+        let match = false;
+        switch (searchType) {
+          case 'nome':
+            match = empresa.nome_fantasia.toLowerCase().includes(pesquisaTexto.toLowerCase());
+            break;
+          case 'n de inscrição':
+            match = empresa.numero_inscricao?.includes(pesquisaTexto) || false;
+            break;
+          case 'razao':
+            match = empresa.razao_social.toLowerCase().includes(pesquisaTexto.toLowerCase());
+            break;
+          case 'codigo':
+            match = empresa.codigo.includes(pesquisaTexto);
+            break;
+          case 'regiao':
+            match = empresa.regiao?.nome.toLowerCase().includes(pesquisaTexto.toLowerCase()) || false;
+            break;
+          default:
+            match = false;
+        }
+        console.log(`Empresa "${empresa.nome_fantasia}" - Match ${searchType}: ${match}`);
+        return match;
+      });
+    }
+
+    // Filtrar por grupo se houver seleção
+    if (grupoFiltro) {
+      filtered = filtered.filter(empresa => {
+        const match = empresa.grupo_id === parseInt(grupoFiltro);
+        console.log(`Empresa "${empresa.nome_fantasia}" - Match grupo: ${match}`);
+        return match;
+      });
+    }
+
+    // Filtrar por região se houver seleção
+    if (regiaoFiltro) {
+      filtered = filtered.filter(empresa => {
+        const match = empresa.regiao_id === parseInt(regiaoFiltro);
+        console.log(`Empresa "${empresa.nome_fantasia}" - Match região: ${match}`);
+        return match;
+      });
+    }
+
+    // Filtrar por situação se não for "todos"
+    if (situacaoBusca !== 'todos') {
+      const status = situacaoBusca === 'ativo' ? 'ATIVO' : 'INATIVO';
+      filtered = filtered.filter(empresa => {
+        const match = empresa.status === status;
+        console.log(`Empresa "${empresa.nome_fantasia}" - Match situação: ${match}`);
+        return match;
+      });
+    }
+    
+    console.log('Empresas filtradas:', filtered);
     setFilteredEmpresas(filtered);
+    
+    if (filtered.length === 0) {
+      showNotification('error', 'Nenhuma empresa encontrada com os critérios pesquisados');
+    } else {
+      showNotification('success', `${filtered.length} empresa(s) encontrada(s)`);
+    }
   };
 
   // Função para validar campos obrigatórios
@@ -483,7 +619,7 @@ export default function EmpresasPage() {
   // Função para incluir nova empresa
   const handleIncluir = async () => {
     if (!validateForm()) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
+      showNotification('error', 'Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -527,17 +663,17 @@ export default function EmpresasPage() {
       });
 
       if (response.ok) {
-        alert('Empresa cadastrada com sucesso!');
+        showNotification('success', 'Empresa cadastrada com sucesso!');
         handleLimpar();
         await carregarEmpresas();
         setShowNewCompanyModal(false);
       } else {
         const error = await response.json();
-        alert(`Erro ao cadastrar empresa: ${error.message}`);
+        showNotification('error', `Erro ao cadastrar empresa: ${error.message}`);
       }
     } catch (error) {
       console.error('Erro ao cadastrar empresa:', error);
-      alert('Erro ao cadastrar empresa. Tente novamente.');
+      showNotification('error', 'Erro ao cadastrar empresa. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -594,6 +730,152 @@ export default function EmpresasPage() {
     setShowNewCompanyModal(false);
   };
 
+  // Função para abrir modal de edição
+  const handleEditarEmpresa = (empresa: Empresa) => {
+    setEmpresaEditando(empresa);
+    setNomeFantasia(empresa.nome_fantasia);
+    setRazaoSocial(empresa.razao_social);
+    setTipoEstabelecimento(empresa.tipo_estabelecimento.toLowerCase());
+    setTipoInscricao(empresa.tipo_inscricao || '');
+    setNumeroInscricao(empresa.numero_inscricao || '');
+    setCno(empresa.cno || '');
+    setCep(empresa.endereco_cep || '');
+    setEndereco({
+      logradouro: empresa.endereco_logradouro || '',
+      tipoLogradouro: '',
+      numero: empresa.endereco_numero || '',
+      complemento: empresa.endereco_complemento || '',
+      bairro: empresa.endereco_bairro || '',
+      cidade: empresa.endereco_cidade || '',
+      uf: empresa.endereco_uf || ''
+    });
+    setContato(empresa.contato_nome || '');
+    setTelefone(empresa.contato_telefone || '');
+    setEmail(empresa.contato_email || '');
+    setNomeRepresentante(empresa.representante_legal_nome || '');
+    setCpfRepresentante(empresa.representante_legal_cpf || '');
+    setObservacao(empresa.observacoes || '');
+    setObservacaoOS(empresa.observacoes_os || '');
+    setGrupoSelecionado(empresa.grupo_id ? empresa.grupo_id.toString() : '');
+    setRegiaoSelecionada(empresa.regiao_id ? empresa.regiao_id.toString() : '');
+    setShowEditCompanyModal(true);
+  };
+
+  // Função para salvar edição
+  const handleSalvarEdicao = async () => {
+    if (!validateForm()) {
+      showNotification('error', 'Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const empresaData = {
+        nome_fantasia: nomeFantasia,
+        razao_social: razaoSocial,
+        tipo_estabelecimento: tipoEstabelecimento.toUpperCase(),
+        tipo_inscricao: tipoInscricao,
+        numero_inscricao: numeroInscricao,
+        cno: cno,
+        cnae_descricao: cnaeDescricao,
+        risco: risco,
+        endereco_cep: cep,
+        endereco_logradouro: endereco.logradouro || null,
+        endereco_numero: endereco.numero,
+        endereco_complemento: endereco.complemento || null,
+        endereco_bairro: endereco.bairro || null,
+        endereco_cidade: endereco.cidade || null,
+        endereco_uf: endereco.uf || null,
+        contato_nome: contato || null,
+        contato_telefone: telefone || null,
+        contato_email: email || null,
+        representante_legal_nome: nomeRepresentante || null,
+        representante_legal_cpf: cpfRepresentante || null,
+        observacoes: observacao || null,
+        observacoes_os: observacaoOS || null,
+        grupo_id: grupoSelecionado,
+        regiao_id: regiaoSelecionada
+      };
+
+      const response = await fetch(`http://localhost:3001/api/empresas/${empresaEditando?.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(empresaData)
+      });
+      
+      if (response.ok) {
+        showNotification('success', 'Empresa atualizada com sucesso!');
+        handleLimpar();
+        await carregarEmpresas();
+        setShowEditCompanyModal(false);
+        setEmpresaEditando(null);
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao atualizar empresa: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar empresa:', error);
+      showNotification('error', 'Erro ao atualizar empresa. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Função para fechar modal de edição
+  const handleFecharEdicao = () => {
+    handleLimpar();
+    setShowEditCompanyModal(false);
+    setEmpresaEditando(null);
+  };
+
+  // Função para abrir modal de exclusão
+  const handleExcluirEmpresa = (empresa: Empresa) => {
+    setEmpresaExcluindo(empresa);
+    setShowDeleteModal(true);
+  };
+
+  // Função para confirmar exclusão
+  const handleConfirmarExclusao = async () => {
+    if (!empresaExcluindo) return;
+    
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/api/empresas/${empresaExcluindo.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        showNotification('success', 'Empresa excluída com sucesso!');
+        await carregarEmpresas();
+        setShowDeleteModal(false);
+        setEmpresaExcluindo(null);
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao excluir empresa: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir empresa:', error);
+      showNotification('error', 'Erro ao excluir empresa. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Função para cancelar exclusão
+  const handleCancelarExclusao = () => {
+    setShowDeleteModal(false);
+    setEmpresaExcluindo(null);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-[#00A298]/15 flex items-center justify-center">
@@ -608,6 +890,35 @@ export default function EmpresasPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-[#00A298]/15">
+      {/* Notificação Toast */}
+      {notification.show && (
+        <div className={`fixed top-20 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+          notification.type === 'success' 
+            ? 'bg-green-100 border border-green-400 text-green-700' 
+            : 'bg-red-100 border border-red-400 text-red-700'
+        }`}>
+          <div className="flex items-center">
+            {notification.type === 'success' ? (
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            <span className="font-medium">{notification.message}</span>
+            <button
+              onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+              className="ml-4 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header Superior */}
       <header className="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
         <div className="flex justify-between items-center h-16 px-4">
@@ -709,14 +1020,13 @@ export default function EmpresasPage() {
             {/* Conteúdo Principal */}
             <div className="bg-white rounded-2xl shadow-xl">
               {/* Formulário de busca */}
-              <div className="p-8 border-b border-gray-200">
-                <div className="flex flex-wrap gap-6 items-end w-full">
-                  {/* Barra de pesquisa */}
-                  <div className="flex-1 min-w-96">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pesquisar por
-                    </label>
-                    <div className="flex gap-2">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex flex-wrap gap-4 items-end">
+                  <div className="flex gap-2 min-w-96">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Pesquisar por
+                      </label>
                       <select 
                         value={searchType}
                         onChange={(e) => setSearchType(e.target.value)}
@@ -728,22 +1038,30 @@ export default function EmpresasPage() {
                         <option value="codigo">Código</option>
                         <option value="regiao">Região</option>
                       </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        &nbsp;
+                      </label>
                       <input
                         type="text"
                         value={pesquisaTexto}
                         onChange={(e) => setPesquisaTexto(e.target.value)}
                         placeholder={getPlaceholder(searchType)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                       />
                     </div>
                   </div>
-
-                  {/* Filtros */}
-                  <div className="min-w-fit">
+                  
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Grupo
                     </label>
-                    <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
+                    <select 
+                      value={grupoFiltro}
+                      onChange={(e) => setGrupoFiltro(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
                       <option value="">Todos os grupos</option>
                       {grupos && Array.isArray(grupos) && grupos.map(grupo => (
                         <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
@@ -751,11 +1069,15 @@ export default function EmpresasPage() {
                     </select>
                   </div>
 
-                  <div className="min-w-fit">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Região
                     </label>
-                    <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
+                    <select 
+                      value={regiaoFiltro}
+                      onChange={(e) => setRegiaoFiltro(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
                       <option value="">Todas as regiões</option>
                       {regioes && Array.isArray(regioes) && regioes.map(regiao => (
                         <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
@@ -763,31 +1085,41 @@ export default function EmpresasPage() {
                     </select>
                   </div>
 
-                  <div className="min-w-fit">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Situação
                     </label>
-                    <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
+                    <select 
+                      value={situacaoBusca}
+                      onChange={(e) => setSituacaoBusca(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
                       <option value="ativo">Ativo</option>
                       <option value="inativo">Inativo</option>
                       <option value="todos">Todos</option>
                     </select>
                   </div>
 
-                  {/* Botões */}
-                  <div className="flex gap-2 min-w-fit">
+                  <div className="flex gap-6 ml-auto">
                     <button 
                       onClick={handleProcurar}
-                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer text-xs"
                     >
                       PROCURAR
                     </button>
                     
                     <button 
                       onClick={() => setShowNewCompanyModal(true)}
-                      className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                      className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-3 py-1.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer text-xs"
                     >
                       NOVA EMPRESA
+                    </button>
+                    
+                    <button 
+                      onClick={carregarEmpresas}
+                      className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer text-xs"
+                    >
+                      RECARREGAR
                     </button>
                   </div>
                 </div>
@@ -1554,10 +1886,10 @@ export default function EmpresasPage() {
                               </td>
                               <td className="px-4 py-3 text-sm">
                                 <div className="flex space-x-2">
-                                  <button className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                  <button className="text-blue-600 hover:text-blue-800 text-xs font-medium" onClick={() => handleEditarEmpresa(empresa)}>
                                     Editar
                                   </button>
-                                  <button className="text-red-600 hover:text-red-800 text-xs font-medium">
+                                  <button className="text-red-600 hover:text-red-800 text-xs font-medium" onClick={() => handleExcluirEmpresa(empresa)}>
                                     Excluir
                                   </button>
                                 </div>
@@ -1580,6 +1912,234 @@ export default function EmpresasPage() {
           </div>
         </main>
       </div>
+
+      {/* Modal de Edição */}
+      {showEditCompanyModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Editar Empresa</h3>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Dados da empresa</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nome Fantasia <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={nomeFantasia}
+                      onChange={(e) => {
+                        setNomeFantasia(e.target.value);
+                        if (e.target.value.trim() && errors.nomeFantasia) {
+                          setErrors({...errors, nomeFantasia: ''});
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                        errors.nomeFantasia ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                      placeholder="Digite o nome fantasia"
+                    />
+                    {errors.nomeFantasia && (
+                      <p className="text-red-500 text-xs mt-1">{errors.nomeFantasia}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Razão Social <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={razaoSocial}
+                      onChange={(e) => {
+                        setRazaoSocial(e.target.value);
+                        if (e.target.value.trim() && errors.razaoSocial) {
+                          setErrors({...errors, razaoSocial: ''});
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                        errors.razaoSocial ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                      placeholder="Digite a razão social"
+                    />
+                    {errors.razaoSocial && (
+                      <p className="text-red-500 text-xs mt-1">{errors.razaoSocial}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Grupo <span className="text-red-500">*</span>
+                    </label>
+                    <select 
+                      value={grupoSelecionado}
+                      onChange={(e) => {
+                        setGrupoSelecionado(e.target.value);
+                        if (e.target.value && errors.grupoSelecionado) {
+                          setErrors({...errors, grupoSelecionado: ''});
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                        errors.grupoSelecionado ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Selecione um grupo</option>
+                      {grupos && Array.isArray(grupos) && grupos.map(grupo => (
+                        <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
+                      ))}
+                    </select>
+                    {errors.grupoSelecionado && (
+                      <p className="text-red-500 text-xs mt-1">{errors.grupoSelecionado}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Região <span className="text-red-500">*</span>
+                    </label>
+                    <select 
+                      value={regiaoSelecionada}
+                      onChange={(e) => {
+                        setRegiaoSelecionada(e.target.value);
+                        if (e.target.value && errors.regiaoSelecionada) {
+                          setErrors({...errors, regiaoSelecionada: ''});
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                        errors.regiaoSelecionada ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Selecione uma região</option>
+                      {regioes && Array.isArray(regioes) && regioes.map(regiao => (
+                        <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
+                      ))}
+                    </select>
+                    {errors.regiaoSelecionada && (
+                      <p className="text-red-500 text-xs mt-1">{errors.regiaoSelecionada}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CNAE e Descrição <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={cnaeDescricao}
+                      onChange={(e) => {
+                        setCnaeDescricao(e.target.value);
+                        if (e.target.value.trim() && errors.cnaeDescricao) {
+                          setErrors({...errors, cnaeDescricao: ''});
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                        errors.cnaeDescricao ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                      placeholder="Digite o CNAE e descrição"
+                    />
+                    {errors.cnaeDescricao && (
+                      <p className="text-red-500 text-xs mt-1">{errors.cnaeDescricao}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Risco <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={risco}
+                      onChange={(e) => {
+                        setRisco(e.target.value);
+                        if (e.target.value.trim() && errors.risco) {
+                          setErrors({...errors, risco: ''});
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                        errors.risco ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                      placeholder="Digite o risco"
+                    />
+                    {errors.risco && (
+                      <p className="text-red-500 text-xs mt-1">{errors.risco}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleSalvarEdicao}
+                    disabled={isSubmitting}
+                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? 'SALVANDO...' : 'SALVAR'}
+                  </button>
+                  <button
+                    onClick={handleLimpar}
+                    className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    LIMPAR
+                  </button>
+                  <button
+                    onClick={handleFecharEdicao}
+                    className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    RETORNAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja excluir a empresa "{empresaExcluindo?.nome_fantasia}"?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>Atenção:</strong> Esta ação não pode ser desfeita. A empresa será permanentemente removida do sistema.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelarExclusao}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarExclusao}
+                  disabled={isSubmitting}
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Excluindo...' : 'Sim, Excluir'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
