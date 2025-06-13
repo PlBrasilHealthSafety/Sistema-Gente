@@ -1,9 +1,110 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export default function EstruturaOrganizacionalPage() {
   const router = useRouter();
+  
+  // States para armazenar os totais
+  const [totalGrupos, setTotalGrupos] = useState(0);
+  const [totalRegioes, setTotalRegioes] = useState(0);
+  const [totalEmpresas, setTotalEmpresas] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Função para buscar total de grupos
+  const buscarTotalGrupos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/grupos', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const data = result.data || result;
+        const validData = Array.isArray(data) ? data : [];
+        setTotalGrupos(validData.length);
+      } else {
+        console.error('Erro ao buscar grupos:', response.status);
+        setTotalGrupos(0);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar grupos:', error);
+      setTotalGrupos(0);
+    }
+  };
+
+  // Função para buscar total de regiões
+  const buscarTotalRegioes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/regioes', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const data = result.data || result;
+        const validData = Array.isArray(data) ? data : [];
+        setTotalRegioes(validData.length);
+      } else {
+        console.error('Erro ao buscar regiões:', response.status);
+        setTotalRegioes(0);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar regiões:', error);
+      setTotalRegioes(0);
+    }
+  };
+
+  // Função para buscar total de empresas
+  const buscarTotalEmpresas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/empresas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const data = result.data || result;
+        const validData = Array.isArray(data) ? data : [];
+        setTotalEmpresas(validData.length);
+      } else {
+        console.error('Erro ao buscar empresas:', response.status);
+        setTotalEmpresas(0);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar empresas:', error);
+      setTotalEmpresas(0);
+    }
+  };
+
+  // Função para carregar todos os totais
+  const carregarTotais = async () => {
+    setIsLoading(true);
+    await Promise.all([
+      buscarTotalGrupos(),
+      buscarTotalRegioes(),
+      buscarTotalEmpresas()
+    ]);
+    setIsLoading(false);
+  };
+
+  // useEffect para carregar os dados quando a página é montada
+  useEffect(() => {
+    carregarTotais();
+  }, []);
 
   return (
     <div>
@@ -87,13 +188,24 @@ export default function EstruturaOrganizacionalPage() {
 
             {/* Seção de Resumo/Estatísticas */}
             <div className="mt-8 bg-white rounded-xl shadow-md p-6 border border-gray-100">
-              <h3 className="text-lg font-semibold text-[#1D3C44] mb-4">Resumo da Estrutura</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-[#1D3C44]">Resumo da Estrutura</h3>
+                <button
+                  onClick={carregarTotais}
+                  disabled={isLoading}
+                  className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Carregando...' : 'Atualizar'}
+                </button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-blue-600 font-medium text-sm">Total de Grupos</p>
-                      <p className="text-xl font-semibold text-blue-800">0</p>
+                      <p className="text-xl font-semibold text-blue-800">
+                        {isLoading ? '...' : totalGrupos}
+                      </p>
                     </div>
                     <div className="text-blue-500 text-lg opacity-70">👥</div>
                   </div>
@@ -103,7 +215,9 @@ export default function EstruturaOrganizacionalPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-green-600 font-medium text-sm">Total de Regiões</p>
-                      <p className="text-xl font-semibold text-green-800">0</p>
+                      <p className="text-xl font-semibold text-green-800">
+                        {isLoading ? '...' : totalRegioes}
+                      </p>
                     </div>
                     <div className="text-green-500 text-lg opacity-70">🗺️</div>
                   </div>
@@ -113,7 +227,9 @@ export default function EstruturaOrganizacionalPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-purple-600 font-medium text-sm">Total de Empresas</p>
-                      <p className="text-xl font-semibold text-purple-800">0</p>
+                      <p className="text-xl font-semibold text-purple-800">
+                        {isLoading ? '...' : totalEmpresas}
+                      </p>
                     </div>
                     <div className="text-purple-500 text-lg opacity-70">🏢</div>
                   </div>
