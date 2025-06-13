@@ -330,19 +330,26 @@ export default function Header() {
       {/* Modal de confirmação de logout */}
       {showLogoutModal && (
         <div className="fixed top-20 right-4 z-[10000]">
-          <div className="bg-white p-6 rounded-lg shadow-2xl border border-gray-200 w-80">
-            <h2 className="text-lg font-semibold text-[#1D3C44] mb-4">Confirmar logout</h2>
-            <p className="text-gray-600 mb-6">Tem certeza que deseja sair do sistema?</p>
-            <div className="flex justify-end space-x-3">
+          <div className="bg-gradient-to-br from-white to-gray-50 p-4 rounded-xl shadow-2xl border border-gray-300 w-64 backdrop-blur-sm">
+            <div className="flex items-center mb-3">
+              <div className="w-6 h-6 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center mr-2">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+              </div>
+              <h2 className="text-base font-bold text-gray-800">Confirmar Saída</h2>
+            </div>
+            <p className="text-gray-700 mb-4 text-sm leading-relaxed">Tem certeza que deseja sair do sistema?</p>
+            <div className="flex justify-end space-x-2">
               <button
                 onClick={handleLogoutCancel}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-md hover:bg-gray-100 cursor-pointer"
+                className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-all duration-200 rounded-md hover:bg-gray-200 border border-gray-300 hover:border-gray-400 cursor-pointer font-medium"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleLogoutConfirm}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-sm bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-md transition-all duration-200 transform hover:scale-105 hover:shadow-lg cursor-pointer font-medium"
               >
                 Sair
               </button>
