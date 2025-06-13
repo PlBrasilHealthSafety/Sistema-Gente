@@ -47,6 +47,10 @@ export default function GruposPage() {
     message: '',
     show: false
   });
+  const [showEditGroupModal, setShowEditGroupModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [grupoEditando, setGrupoEditando] = useState<Grupo | null>(null);
+  const [grupoExcluindo, setGrupoExcluindo] = useState<Grupo | null>(null);
 
   // Função para exibir notificação
   const showNotification = (type: 'success' | 'error', message: string) => {
@@ -196,6 +200,103 @@ export default function GruposPage() {
   const handleRetornar = () => {
     handleLimpar();
     setShowNewGroupModal(false);
+  };
+
+  // Função para abrir modal de edição
+  const handleEditarGrupo = (grupo: Grupo) => {
+    setGrupoEditando(grupo);
+    setNomeGrupo(grupo.nome);
+    setDescricaoGrupo(grupo.descricao || '');
+    setShowEditGroupModal(true);
+  };
+
+  // Função para salvar edição
+  const handleSalvarEdicao = async () => {
+    if (!nomeGrupo.trim()) {
+      showNotification('error', 'Por favor, informe o nome do grupo.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/api/grupos/${grupoEditando?.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nome: nomeGrupo,
+          descricao: descricaoGrupo || null,
+        })
+      });
+      if (response.ok) {
+        showNotification('success', 'Grupo atualizado com sucesso!');
+        handleLimpar();
+        await carregarGrupos();
+        setShowEditGroupModal(false);
+        setGrupoEditando(null);
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao atualizar grupo: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar grupo:', error);
+      showNotification('error', 'Erro ao atualizar grupo. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Função para fechar modal de edição
+  const handleFecharEdicao = () => {
+    handleLimpar();
+    setShowEditGroupModal(false);
+    setGrupoEditando(null);
+  };
+
+  // Função para abrir modal de exclusão
+  const handleExcluirGrupo = (grupo: Grupo) => {
+    setGrupoExcluindo(grupo);
+    setShowDeleteModal(true);
+  };
+
+  // Função para confirmar exclusão
+  const handleConfirmarExclusao = async () => {
+    if (!grupoExcluindo) return;
+    
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/api/grupos/${grupoExcluindo.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        showNotification('success', 'Grupo excluído com sucesso!');
+        await carregarGrupos();
+        setShowDeleteModal(false);
+        setGrupoExcluindo(null);
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao excluir grupo: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir grupo:', error);
+      showNotification('error', 'Erro ao excluir grupo. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Função para cancelar exclusão
+  const handleCancelarExclusao = () => {
+    setShowDeleteModal(false);
+    setGrupoExcluindo(null);
   };
 
   useEffect(() => {
@@ -444,12 +545,12 @@ export default function GruposPage() {
                     NOVO GRUPO
                   </button>
                   
-                  <button 
-                    onClick={carregarGrupos}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                  >
-                    RECARREGAR
-                  </button>
+                                      <button 
+                      onClick={carregarGrupos}
+                      className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                    >
+                      RECARREGAR
+                    </button>
                 </div>
               </div>
 
@@ -551,10 +652,10 @@ export default function GruposPage() {
                             </td>
                             <td className="px-4 py-3 text-sm">
                               <div className="flex space-x-2">
-                                <button className="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                <button className="text-blue-600 hover:text-blue-800 text-xs font-medium" onClick={() => handleEditarGrupo(grupo)}>
                                   Editar
                                 </button>
-                                <button className="text-red-600 hover:text-red-800 text-xs font-medium">
+                                <button className="text-red-600 hover:text-red-800 text-xs font-medium" onClick={() => handleExcluirGrupo(grupo)}>
                                   Excluir
                                 </button>
                               </div>
@@ -576,6 +677,116 @@ export default function GruposPage() {
           </div>
         </main>
       </div>
+
+              {/* Modal de Edição */}
+        {showEditGroupModal && (
+          <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Editar Grupo</h3>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nome
+                    </label>
+                    <input
+                      type="text"
+                      value={nomeGrupo}
+                      onChange={(e) => setNomeGrupo(formatTexto(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Digite o nome do grupo (apenas letras)"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descrição (Opcional)
+                  </label>
+                  <textarea
+                    value={descricaoGrupo}
+                    onChange={(e) => setDescricaoGrupo(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    placeholder="Digite uma descrição para o grupo..."
+                  />
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleSalvarEdicao}
+                    disabled={isSubmitting}
+                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? 'SALVANDO...' : 'SALVAR'}
+                  </button>
+                  <button
+                    onClick={handleLimpar}
+                    className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    LIMPAR
+                  </button>
+                  <button
+                    onClick={handleFecharEdicao}
+                    className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    RETORNAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+              {/* Modal de Confirmação de Exclusão */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja excluir o grupo "{grupoExcluindo?.nome}"?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>Atenção:</strong> Esta ação não pode ser desfeita. O grupo será permanentemente removido do sistema.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelarExclusao}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarExclusao}
+                  disabled={isSubmitting}
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Excluindo...' : 'Sim, Excluir'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
