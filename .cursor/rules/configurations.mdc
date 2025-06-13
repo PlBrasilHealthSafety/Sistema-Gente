@@ -27,7 +27,7 @@ alwaysApply: true
 
 - **Always use local.env as the main .env file for configuration in development**
 
-- **Always use npm run dev in the correct directory**
+- **Always enter the specific directory (frontend or backend) to use the npm run dev command**
 
 ## Color Palette
 

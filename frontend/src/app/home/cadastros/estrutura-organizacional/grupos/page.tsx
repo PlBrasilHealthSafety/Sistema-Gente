@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { formatTexto } from '@/utils/masks';
@@ -24,7 +24,7 @@ interface Grupo {
   id: number;
   nome: string;
   descricao?: string;
-  status: 'ATIVO' | 'INATIVO';
+  status: 'ativo' | 'inativo';
   created_by: number;
   updated_by: number;
   created_at: string;
@@ -52,6 +52,11 @@ export default function GruposPage() {
   const [grupoEditando, setGrupoEditando] = useState<Grupo | null>(null);
   const [grupoExcluindo, setGrupoExcluindo] = useState<Grupo | null>(null);
 
+  // Estados para o autocomplete
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [autocompleteResults, setAutocompleteResults] = useState<Grupo[]>([]);
+  const [situacaoBusca, setSituacaoBusca] = useState('todos');
+
   // Função para exibir notificação
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message, show: true });
@@ -60,12 +65,91 @@ export default function GruposPage() {
     }, 5000);
   };
 
+  // Função para aplicar filtros automaticamente
+  const aplicarFiltrosAutomaticos = useCallback((nome: string = nomeBusca, situacao: string = situacaoBusca) => {
+    if (!Array.isArray(grupos) || grupos.length === 0) {
+      setFilteredGrupos([]);
+      return;
+    }
+
+    let filtered = grupos;
+
+    // Filtrar por nome se houver busca
+    if (nome.trim()) {
+      filtered = filtered.filter(grupo => 
+        grupo.nome.toLowerCase().includes(nome.toLowerCase())
+      );
+    }
+
+    // Filtrar por situação se não for "todos"
+    if (situacao && situacao !== 'todos') {
+      const status = situacao === 'ativo' ? 'ativo' : 'inativo';
+      filtered = filtered.filter(grupo => grupo.status === status);
+    }
+
+    setFilteredGrupos(filtered);
+    
+    // Mostrar notificação apenas se houver filtros aplicados
+    if (nome.trim() || (situacao && situacao !== 'todos')) {
+      if (filtered.length === 0) {
+        showNotification('error', 'Nenhum grupo encontrado com os critérios aplicados');
+      } else {
+        showNotification('success', `${filtered.length} grupo(s) encontrado(s)`);
+      }
+    }
+  }, [grupos, nomeBusca, situacaoBusca]);
+
+  // useEffect para aplicar filtros automaticamente quando situação muda
+  useEffect(() => {
+    if (grupos.length > 0) {
+      aplicarFiltrosAutomaticos(nomeBusca, situacaoBusca);
+    }
+  }, [situacaoBusca, grupos, aplicarFiltrosAutomaticos, nomeBusca]);
+
+  // Função para filtrar grupos em tempo real (autocomplete)
+  const handleAutocompleteSearch = (value: string) => {
+    if (!value.trim()) {
+      setShowAutocomplete(false);
+      setAutocompleteResults([]);
+      // Aplicar filtros mesmo sem texto de busca
+      aplicarFiltrosAutomaticos('', situacaoBusca);
+      return;
+    }
+
+    if (!Array.isArray(grupos)) {
+      setShowAutocomplete(false);
+      setAutocompleteResults([]);
+      return;
+    }
+
+    const filtered = grupos.filter(grupo => 
+      grupo.nome.toLowerCase().includes(value.toLowerCase())
+    ).slice(0, 5); // Limitar a 5 resultados
+
+    setAutocompleteResults(filtered);
+    setShowAutocomplete(filtered.length > 0);
+    
+    // Aplicar filtros em tempo real
+    aplicarFiltrosAutomaticos(value, situacaoBusca);
+  };
+
+  // Função para selecionar item do autocomplete
+  const handleSelectAutocomplete = (grupo: Grupo) => {
+    setNomeBusca(grupo.nome);
+    setShowAutocomplete(false);
+    // Aplicar filtro automaticamente
+    aplicarFiltrosAutomaticos(grupo.nome, situacaoBusca);
+  };
+
   // Função para carregar grupos
-  const carregarGrupos = async () => {
+  const carregarGrupos = useCallback(async () => {
     console.log('=== CARREGANDO GRUPOS ===');
     
-    // Limpar campo de pesquisa quando recarregar
+    // Limpar campos de pesquisa quando recarregar
     setNomeBusca('');
+    setSituacaoBusca('todos');
+    setShowAutocomplete(false);
+    setAutocompleteResults([]);
     
     try {
       const token = localStorage.getItem('token');
@@ -116,14 +200,17 @@ export default function GruposPage() {
       setGrupos([]);
       setFilteredGrupos([]);
     }
-  };
+  }, []);
 
-  // Função para procurar grupos
+  // Função para procurar grupos (botão Procurar)
   const handleProcurar = () => {
     console.log('=== DEBUG BUSCA ===');
     console.log('nomeBusca:', nomeBusca);
     console.log('grupos array:', grupos);
     console.log('grupos length:', grupos?.length);
+    
+    // Fechar autocomplete ao usar o botão
+    setShowAutocomplete(false);
     
     if (!nomeBusca.trim()) {
       console.log('Campo busca vazio, mostrando todos os grupos');
@@ -323,7 +410,7 @@ export default function GruposPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, carregarGrupos]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -511,24 +598,62 @@ export default function GruposPage() {
               {/* Formulário de busca */}
               <div className="p-6 border-b border-gray-200">
                 <div className="flex flex-wrap gap-4 items-end">
-                  <div className="flex-1 min-w-64">
+                  <div className="flex-1 min-w-64 relative">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Pesquisar por Nome
                     </label>
                     <input
                       type="text"
                       value={nomeBusca}
-                      onChange={(e) => setNomeBusca(formatTexto(e.target.value))}
+                      onChange={(e) => {
+                        const value = formatTexto(e.target.value);
+                        setNomeBusca(value);
+                        handleAutocompleteSearch(value);
+                      }}
+                      onFocus={() => {
+                        if (nomeBusca.trim()) {
+                          handleAutocompleteSearch(nomeBusca);
+                        }
+                      }}
+                      onBlur={() => {
+                        // Delay para permitir seleção do item
+                        setTimeout(() => setShowAutocomplete(false), 200);
+                      }}
                       placeholder="Digite o nome do grupo para buscar (apenas letras)..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     />
+                    
+                    {/* Dropdown do autocomplete */}
+                    {showAutocomplete && autocompleteResults.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {autocompleteResults.map((grupo) => (
+                          <div
+                            key={grupo.id}
+                            onClick={() => handleSelectAutocomplete(grupo)}
+                            className="px-4 py-3 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="font-medium text-gray-900">{grupo.nome}</div>
+                            {grupo.descricao && (
+                              <div className="text-sm text-gray-500">{grupo.descricao}</div>
+                            )}
+                            <div className="text-xs text-blue-600 mt-1">
+                              Status: {grupo.status}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Situação
                     </label>
-                    <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent">
+                    <select 
+                      value={situacaoBusca}
+                      onChange={(e) => setSituacaoBusca(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
                       <option value="ativo">Ativo</option>
                       <option value="inativo">Inativo</option>
                       <option value="todos">Todos</option>
@@ -647,7 +772,7 @@ export default function GruposPage() {
                             </td>
                             <td className="px-4 py-3 text-sm">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                grupo.status === 'ATIVO' 
+                                grupo.status === 'ativo' 
                                   ? 'bg-green-100 text-green-800' 
                                   : 'bg-red-100 text-red-800'
                               }`}>
@@ -761,7 +886,7 @@ export default function GruposPage() {
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    Tem certeza que deseja excluir o grupo "{grupoExcluindo?.nome}"?
+                    Tem certeza que deseja excluir o grupo &quot;{grupoExcluindo?.nome}&quot;?
                   </p>
                 </div>
               </div>

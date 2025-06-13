@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { formatTexto } from '@/utils/masks';
@@ -24,7 +24,7 @@ interface Grupo {
   id: number;
   nome: string;
   descricao?: string;
-  status: 'ATIVO' | 'INATIVO';
+  status: 'ativo' | 'inativo';
   created_by: number;
   updated_by: number;
   created_at: string;
@@ -38,7 +38,7 @@ interface Regiao {
   uf: string;
   cidade?: string;
   grupo_id?: number;
-  status: 'ATIVO' | 'INATIVO';
+  status: 'ativo' | 'inativo';
   created_by: number;
   updated_by: number;
   created_at: string;
@@ -71,6 +71,10 @@ export default function RegioesPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [regiaoEditando, setRegiaoEditando] = useState<Regiao | null>(null);
   const [regiaoExcluindo, setRegiaoExcluindo] = useState<Regiao | null>(null);
+  
+  // Estados para o autocomplete
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [autocompleteResults, setAutocompleteResults] = useState<Regiao[]>([]);
 
   // Lista de UFs brasileiras
   const ufs = [
@@ -87,8 +91,89 @@ export default function RegioesPage() {
     }, 5000);
   };
 
+  // Função para aplicar filtros automaticamente
+  const aplicarFiltrosAutomaticos = useCallback((nome: string = nomeBusca, grupo: string = grupoFiltro, situacao: string = situacaoBusca) => {
+    if (!Array.isArray(regioes) || regioes.length === 0) {
+      setFilteredRegioes([]);
+      return;
+    }
+
+    let filtered = regioes;
+
+    // Filtrar por nome se houver busca
+    if (nome.trim()) {
+      filtered = filtered.filter(regiao => 
+        regiao.nome.toLowerCase().includes(nome.toLowerCase())
+      );
+    }
+
+    // Filtrar por grupo se houver seleção
+    if (grupo) {
+      filtered = filtered.filter(regiao => regiao.grupo_id === parseInt(grupo));
+    }
+
+    // Filtrar por situação se não for "todos"
+    if (situacao && situacao !== 'todos') {
+      const status = situacao === 'ativo' ? 'ativo' : 'inativo';
+      filtered = filtered.filter(regiao => regiao.status === status);
+    }
+
+    setFilteredRegioes(filtered);
+    
+    // Mostrar notificação apenas se houver filtros aplicados
+    if (nome.trim() || grupo || (situacao && situacao !== 'todos')) {
+      if (filtered.length === 0) {
+        showNotification('error', 'Nenhuma região encontrada com os critérios aplicados');
+      } else {
+        showNotification('success', `${filtered.length} região(ões) encontrada(s)`);
+      }
+    }
+  }, [regioes, nomeBusca, grupoFiltro, situacaoBusca]);
+
+  // useEffect para aplicar filtros automaticamente quando situação ou grupo mudam
+  useEffect(() => {
+    if (regioes.length > 0) {
+      aplicarFiltrosAutomaticos(nomeBusca, grupoFiltro, situacaoBusca);
+    }
+  }, [situacaoBusca, grupoFiltro, regioes, aplicarFiltrosAutomaticos, nomeBusca]);
+
+  // Função para filtrar regiões em tempo real (autocomplete)
+  const handleAutocompleteSearch = (value: string) => {
+    if (!value.trim()) {
+      setShowAutocomplete(false);
+      setAutocompleteResults([]);
+      // Aplicar filtros mesmo sem texto de busca
+      aplicarFiltrosAutomaticos('', grupoFiltro, situacaoBusca);
+      return;
+    }
+
+    if (!Array.isArray(regioes)) {
+      setShowAutocomplete(false);
+      setAutocompleteResults([]);
+      return;
+    }
+
+    const filtered = regioes.filter(regiao => 
+      regiao.nome.toLowerCase().includes(value.toLowerCase())
+    ).slice(0, 5); // Limitar a 5 resultados
+
+    setAutocompleteResults(filtered);
+    setShowAutocomplete(filtered.length > 0);
+    
+    // Aplicar filtros em tempo real
+    aplicarFiltrosAutomaticos(value, grupoFiltro, situacaoBusca);
+  };
+
+  // Função para selecionar item do autocomplete
+  const handleSelectAutocomplete = (regiao: Regiao) => {
+    setNomeBusca(regiao.nome);
+    setShowAutocomplete(false);
+    // Aplicar filtro automaticamente
+    aplicarFiltrosAutomaticos(regiao.nome, grupoFiltro, situacaoBusca);
+  };
+
   // Função para carregar grupos
-  const carregarGrupos = async () => {
+  const carregarGrupos = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/api/grupos', {
@@ -114,16 +199,18 @@ export default function RegioesPage() {
       showNotification('error', 'Erro de conexão ao carregar grupos');
       setGrupos([]);
     }
-  };
+  }, []);
 
   // Função para carregar regiões
-  const carregarRegioes = async () => {
+  const carregarRegioes = useCallback(async () => {
     console.log('=== CARREGANDO REGIÕES ===');
     
     // Limpar campos de pesquisa quando recarregar
     setNomeBusca('');
     setSituacaoBusca('todos');
     setGrupoFiltro('');
+    setShowAutocomplete(false);
+    setAutocompleteResults([]);
     
     try {
       const token = localStorage.getItem('token');
@@ -175,9 +262,9 @@ export default function RegioesPage() {
       setRegioes([]);
       setFilteredRegioes([]);
     }
-  };
+  }, []);
 
-  // Função para procurar regiões
+  // Função para procurar regiões (botão Procurar)
   const handleProcurar = () => {
     console.log('=== DEBUG BUSCA ===');
     console.log('nomeBusca:', nomeBusca);
@@ -185,6 +272,9 @@ export default function RegioesPage() {
     console.log('situacaoBusca:', situacaoBusca);
     console.log('regioes array:', regioes);
     console.log('regioes length:', regioes?.length);
+    
+    // Fechar autocomplete ao usar o botão
+    setShowAutocomplete(false);
     
     if (!nomeBusca.trim() && !grupoFiltro && situacaoBusca === 'todos') {
       console.log('Campos de busca vazios, mostrando todas as regiões');
@@ -221,7 +311,7 @@ export default function RegioesPage() {
 
     // Filtrar por situação se não for "todos"
     if (situacaoBusca !== 'todos') {
-      const status = situacaoBusca === 'ativo' ? 'ATIVO' : 'INATIVO';
+      const status = situacaoBusca === 'ativo' ? 'ativo' : 'inativo';
       filtered = filtered.filter(regiao => {
         const match = regiao.status === status;
         console.log(`Região "${regiao.nome}" - Match situação: ${match}`);
@@ -431,7 +521,7 @@ export default function RegioesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, carregarGrupos, carregarRegioes]);
 
   // Recarregar dados quando a página ganhar foco (para pegar novos grupos cadastrados)
   useEffect(() => {
@@ -444,7 +534,7 @@ export default function RegioesPage() {
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [carregarGrupos, carregarRegioes]);
 
 
   const handleLogout = () => {
@@ -632,17 +722,53 @@ export default function RegioesPage() {
               {/* Formulário de busca */}
               <div className="p-6 border-b border-gray-200">
                 <div className="flex flex-wrap gap-4 items-end">
-                  <div className="flex-1 min-w-64">
+                  <div className="flex-1 min-w-64 relative">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Pesquisar por Nome
                     </label>
                     <input
                       type="text"
                       value={nomeBusca}
-                      onChange={(e) => setNomeBusca(formatTexto(e.target.value))}
+                      onChange={(e) => {
+                        const value = formatTexto(e.target.value);
+                        setNomeBusca(value);
+                        handleAutocompleteSearch(value);
+                      }}
+                      onFocus={() => {
+                        if (nomeBusca.trim()) {
+                          handleAutocompleteSearch(nomeBusca);
+                        }
+                      }}
+                      onBlur={() => {
+                        // Delay para permitir seleção do item
+                        setTimeout(() => setShowAutocomplete(false), 200);
+                      }}
                       placeholder="Digite o nome da região para buscar (apenas letras)..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     />
+                    
+                    {/* Dropdown do autocomplete */}
+                    {showAutocomplete && autocompleteResults.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {autocompleteResults.map((regiao) => (
+                          <div
+                            key={regiao.id}
+                            onClick={() => handleSelectAutocomplete(regiao)}
+                            className="px-4 py-3 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="font-medium text-gray-900">{regiao.nome}</div>
+                            <div className="text-sm text-gray-500">
+                              📍 {regiao.uf}{regiao.cidade ? ` - ${regiao.cidade}` : ''}
+                              {regiao.grupo_id && (
+                                <span className="ml-2 text-blue-600">
+                                  👥 {grupos.find(g => g.id === regiao.grupo_id)?.nome || 'Grupo'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   
                   <div>
@@ -840,7 +966,7 @@ export default function RegioesPage() {
                             </td>
                             <td className="px-4 py-3 text-sm">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                regiao.status === 'ATIVO' 
+                                regiao.status === 'ativo' 
                                   ? 'bg-green-100 text-green-800' 
                                   : 'bg-red-100 text-red-800'
                               }`}>
@@ -999,7 +1125,7 @@ export default function RegioesPage() {
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    Tem certeza que deseja excluir a região "{regiaoExcluindo?.nome}"?
+                    Tem certeza que deseja excluir a região &quot;{regiaoExcluindo?.nome}&quot;?
                   </p>
                 </div>
               </div>
