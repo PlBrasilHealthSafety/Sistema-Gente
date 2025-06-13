@@ -102,6 +102,7 @@ export default function RegioesPage() {
         const result = await response.json();
         // A API retorna {success: true, data: Array, message: string}
         const validData = result.success && Array.isArray(result.data) ? result.data : [];
+
         setGrupos(validData);
       } else {
         console.error('Erro na resposta da API de grupos. Status:', response.status);
@@ -151,6 +152,7 @@ export default function RegioesPage() {
         const validData = Array.isArray(data) ? data : [];
         console.log('Valid data:', validData);
         console.log('Valid data length:', validData.length);
+
         
         setRegioes(validData);
         setFilteredRegioes(validData);
@@ -729,7 +731,7 @@ export default function RegioesPage() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                         >
                           <option value="">Selecione um grupo</option>
-                          {grupos.filter(grupo => grupo.status === 'ATIVO').map(grupo => (
+                          {grupos.map(grupo => (
                             <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                           ))}
                         </select>
@@ -907,7 +909,7 @@ export default function RegioesPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
                       <option value="">Selecione um grupo</option>
-                      {grupos.filter(grupo => grupo.status === 'ATIVO').map(grupo => (
+                      {grupos.map(grupo => (
                         <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                       ))}
                     </select>

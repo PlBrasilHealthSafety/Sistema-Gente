@@ -164,7 +164,7 @@ export const getAvailableUFs = async (req: Request, res: Response) => {
 // Criar região (apenas SUPER_ADMIN e ADMIN)
 export const createRegiao = async (req: Request, res: Response) => {
   try {
-    const { nome, descricao, codigo, uf, cidade, status } = req.body as CreateRegiaoData;
+    const { nome, descricao, codigo, uf, cidade, grupo_id, status } = req.body as CreateRegiaoData;
     const userId = req.user!.id;
 
     // Validações básicas
@@ -203,6 +203,7 @@ export const createRegiao = async (req: Request, res: Response) => {
       codigo: codigo?.trim(),
       uf: uf?.toUpperCase(),
       cidade: cidade?.trim(),
+      grupo_id,
       status: status || StatusItem.ATIVO
     }, userId);
 
@@ -294,6 +295,7 @@ export const updateRegiao = async (req: Request, res: Response) => {
     if (updateData.codigo !== undefined) cleanedData.codigo = updateData.codigo?.trim();
     if (updateData.uf !== undefined) cleanedData.uf = updateData.uf?.toUpperCase();
     if (updateData.cidade !== undefined) cleanedData.cidade = updateData.cidade?.trim();
+    if (updateData.grupo_id !== undefined) cleanedData.grupo_id = updateData.grupo_id;
     if (updateData.status !== undefined) cleanedData.status = updateData.status;
 
     const regiao = await RegiaoModel.update(regiaoId, cleanedData, userId);

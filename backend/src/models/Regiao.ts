@@ -13,6 +13,7 @@ export class RegiaoModel {
         codigo VARCHAR(50) UNIQUE,
         uf VARCHAR(2),
         cidade VARCHAR(255),
+        grupo_id INTEGER REFERENCES grupos(id),
         status VARCHAR(20) NOT NULL DEFAULT 'ativo',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -30,6 +31,7 @@ export class RegiaoModel {
     await query('CREATE INDEX IF NOT EXISTS idx_regioes_status ON regioes(status);');
     await query('CREATE INDEX IF NOT EXISTS idx_regioes_uf ON regioes(uf);');
     await query('CREATE INDEX IF NOT EXISTS idx_regioes_cidade ON regioes(cidade);');
+    await query('CREATE INDEX IF NOT EXISTS idx_regioes_grupo_id ON regioes(grupo_id);');
   }
 
   // Buscar região por ID
@@ -60,14 +62,15 @@ export class RegiaoModel {
       codigo, 
       uf,
       cidade,
+      grupo_id,
       status = StatusItem.ATIVO
     } = regiaoData;
     
     const result = await query(
-      `INSERT INTO regioes (nome, descricao, codigo, uf, cidade, status, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO regioes (nome, descricao, codigo, uf, cidade, grupo_id, status, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [nome, descricao, codigo, uf, cidade, status, userId]
+      [nome, descricao, codigo, uf, cidade, grupo_id || null, status, userId]
     );
     
     return result.rows[0];
@@ -145,6 +148,12 @@ export class RegiaoModel {
     if (regiaoData.cidade !== undefined) {
       fields.push(`cidade = $${paramCount}`);
       values.push(regiaoData.cidade);
+      paramCount++;
+    }
+
+    if (regiaoData.grupo_id !== undefined) {
+      fields.push(`grupo_id = $${paramCount}`);
+      values.push(regiaoData.grupo_id);
       paramCount++;
     }
 

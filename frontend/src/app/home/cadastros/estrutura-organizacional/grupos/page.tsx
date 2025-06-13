@@ -64,6 +64,9 @@ export default function GruposPage() {
   const carregarGrupos = async () => {
     console.log('=== CARREGANDO GRUPOS ===');
     
+    // Limpar campo de pesquisa quando recarregar
+    setNomeBusca('');
+    
     try {
       const token = localStorage.getItem('token');
       console.log('Token:', token ? 'Existe' : 'Não existe');
