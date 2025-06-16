@@ -815,6 +815,8 @@ export default function EmpresasPage() {
         regiao_id: regiaoSelecionada
       };
 
+      console.log('Dados sendo enviados para a API:', empresaData);
+
       const response = await fetch('http://localhost:3001/api/empresas', {
         method: 'POST',
         headers: {
@@ -830,8 +832,21 @@ export default function EmpresasPage() {
         await carregarEmpresas();
         setShowNewCompanyModal(false);
       } else {
-        const error = await response.json();
-        showNotification('error', `Erro ao cadastrar empresa: ${error.message}`);
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        const responseText = await response.text();
+        console.log('Response text:', responseText);
+        
+        try {
+          const error = JSON.parse(responseText);
+          console.error('Erro da API (parsed):', error);
+          showNotification('error', `Erro ao cadastrar empresa: ${error.message || 'Erro desconhecido'}`);
+        } catch (parseError) {
+          console.error('Erro ao parsear resposta da API:', parseError);
+          console.error('Resposta raw:', responseText);
+          showNotification('error', `Erro ao cadastrar empresa. Status: ${response.status}. Resposta: ${responseText.substring(0, 100)}`);
+        }
       }
     } catch (error) {
       console.error('Erro ao cadastrar empresa:', error);

@@ -1,7 +1,7 @@
 // Enums
 export enum StatusItem {
-  ATIVO = 'ativo',
-  INATIVO = 'inativo'
+  ATIVO = 'ATIVO',
+  INATIVO = 'INATIVO'
 }
 
 // Interfaces para Grupos
@@ -73,24 +73,32 @@ export interface UpdateRegiaoData {
 // Interfaces para Empresas
 export interface Empresa {
   id: number;
+  codigo?: string;
   razao_social: string;
-  nome_fantasia?: string;
-  cnpj: string;
-  inscricao_estadual?: string;
-  inscricao_municipal?: string;
-  email?: string;
-  telefone?: string;
-  site?: string;
-  endereco?: string;
-  numero?: string;
-  complemento?: string;
-  bairro?: string;
-  cidade?: string;
-  uf?: string;
-  cep?: string;
+  nome_fantasia: string;
+  tipo_estabelecimento: 'MATRIZ' | 'FILIAL';
+  tipo_inscricao?: 'cnpj' | 'cpf';
+  numero_inscricao?: string;
+  cno?: string;
+  cnae_descricao?: string;
+  risco?: string;
+  endereco_cep?: string;
+  endereco_logradouro?: string;
+  endereco_numero?: string;
+  endereco_complemento?: string;
+  endereco_bairro?: string;
+  endereco_cidade?: string;
+  endereco_uf?: string;
+  contato_nome?: string;
+  contato_telefone?: string;
+  contato_email?: string;
+  representante_legal_nome?: string;
+  representante_legal_cpf?: string;
+  observacoes?: string;
+  observacoes_os?: string;
   status: StatusItem;
-  grupo_id?: number; // Referência ao grupo
-  regiao_id?: number; // Referência à região
+  grupo_id: number; // Referência ao grupo
+  regiao_id: number; // Referência à região
   created_at: Date;
   updated_at: Date;
   created_by: number;
@@ -98,42 +106,58 @@ export interface Empresa {
 }
 
 export interface CreateEmpresaData {
+  codigo?: string;
   razao_social: string;
-  nome_fantasia?: string;
-  cnpj: string;
-  inscricao_estadual?: string;
-  inscricao_municipal?: string;
-  email?: string;
-  telefone?: string;
-  site?: string;
-  endereco?: string;
-  numero?: string;
-  complemento?: string;
-  bairro?: string;
-  cidade?: string;
-  uf?: string;
-  cep?: string;
+  nome_fantasia: string;
+  tipo_estabelecimento: 'MATRIZ' | 'FILIAL';
+  tipo_inscricao?: 'cnpj' | 'cpf';
+  numero_inscricao?: string;
+  cno?: string;
+  cnae_descricao?: string;
+  risco?: string;
+  endereco_cep?: string;
+  endereco_logradouro?: string;
+  endereco_numero?: string;
+  endereco_complemento?: string;
+  endereco_bairro?: string;
+  endereco_cidade?: string;
+  endereco_uf?: string;
+  contato_nome?: string;
+  contato_telefone?: string;
+  contato_email?: string;
+  representante_legal_nome?: string;
+  representante_legal_cpf?: string;
+  observacoes?: string;
+  observacoes_os?: string;
   status?: StatusItem;
-  grupo_id?: number;
-  regiao_id?: number;
+  grupo_id: number;
+  regiao_id: number;
 }
 
 export interface UpdateEmpresaData {
+  codigo?: string;
   razao_social?: string;
   nome_fantasia?: string;
-  cnpj?: string;
-  inscricao_estadual?: string;
-  inscricao_municipal?: string;
-  email?: string;
-  telefone?: string;
-  site?: string;
-  endereco?: string;
-  numero?: string;
-  complemento?: string;
-  bairro?: string;
-  cidade?: string;
-  uf?: string;
-  cep?: string;
+  tipo_estabelecimento?: 'MATRIZ' | 'FILIAL';
+  tipo_inscricao?: 'cnpj' | 'cpf';
+  numero_inscricao?: string;
+  cno?: string;
+  cnae_descricao?: string;
+  risco?: string;
+  endereco_cep?: string;
+  endereco_logradouro?: string;
+  endereco_numero?: string;
+  endereco_complemento?: string;
+  endereco_bairro?: string;
+  endereco_cidade?: string;
+  endereco_uf?: string;
+  contato_nome?: string;
+  contato_telefone?: string;
+  contato_email?: string;
+  representante_legal_nome?: string;
+  representante_legal_cpf?: string;
+  observacoes?: string;
+  observacoes_os?: string;
   status?: StatusItem;
   grupo_id?: number;
   regiao_id?: number;
