@@ -367,6 +367,51 @@ export default function GruposPage() {
     setShowDeleteModal(true);
   };
 
+  // Função para inativar regiões associadas ao grupo
+  const inativarRegioesPorGrupo = async (grupoId: number, token: string) => {
+    try {
+      // Primeiro, buscar todas as regiões do grupo
+      const responseRegioes = await fetch(`http://localhost:3001/api/regioes?grupo_id=${grupoId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (responseRegioes.ok) {
+        const resultRegioes = await responseRegioes.json();
+        const regioes = resultRegioes.success && Array.isArray(resultRegioes.data) ? resultRegioes.data : [];
+        
+        // Inativar cada região do grupo
+        for (const regiao of regioes) {
+          if (regiao.grupo_id === grupoId && regiao.status === 'ativo') {
+            await fetch(`http://localhost:3001/api/regioes/${regiao.id}`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                nome: regiao.nome,
+                descricao: regiao.descricao,
+                uf: regiao.uf,
+                cidade: regiao.cidade,
+                grupo_id: regiao.grupo_id,
+                status: 'inativo'
+              })
+            });
+          }
+        }
+        
+        return regioes.filter((r: any) => r.grupo_id === grupoId && r.status === 'ativo').length;
+      }
+    } catch (error) {
+      console.error('Erro ao inativar regiões do grupo:', error);
+      return 0;
+    }
+    return 0;
+  };
+
   // Função para confirmar exclusão (soft delete - marcar como inativo)
   const handleConfirmarExclusao = async () => {
     if (!grupoExcluindo) return;
@@ -374,6 +419,8 @@ export default function GruposPage() {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // Primeiro, inativar o grupo
       const response = await fetch(`http://localhost:3001/api/grupos/${grupoExcluindo.id}`, {
         method: 'PUT',
         headers: {
@@ -388,7 +435,15 @@ export default function GruposPage() {
       });
 
       if (response.ok) {
-        showNotification('success', 'Grupo inativado com sucesso!');
+        // Após inativar o grupo, inativar todas as regiões associadas
+        const regioesInativadas = await inativarRegioesPorGrupo(grupoExcluindo.id, token || '');
+        
+        let mensagem = 'Grupo inativado com sucesso!';
+        if (regioesInativadas > 0) {
+          mensagem += ` ${regioesInativadas} região(ões) também foram inativadas automaticamente.`;
+        }
+        
+        showNotification('success', mensagem);
         await carregarGrupos();
         setShowDeleteModal(false);
         setGrupoExcluindo(null);
@@ -906,7 +961,7 @@ export default function GruposPage() {
               
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-yellow-800">
-                  <strong>Atenção:</strong> O grupo será marcado como inativo e não aparecerá mais nos seletores. Esta ação pode ser revertida alterando o status para ativo novamente.
+                  <strong>Atenção:</strong> O grupo será marcado como inativo e não aparecerá mais nos seletores. Todas as regiões associadas a este grupo também serão inativadas automaticamente. Esta ação pode ser revertida alterando o status para ativo novamente.
                 </p>
               </div>
               
