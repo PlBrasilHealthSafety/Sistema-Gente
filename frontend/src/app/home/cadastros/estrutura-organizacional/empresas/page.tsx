@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { 
@@ -92,7 +92,7 @@ export default function EmpresasPage() {
   const [pesquisaTexto, setPesquisaTexto] = useState('');
   const [grupoFiltro, setGrupoFiltro] = useState('');
   const [regiaoFiltro, setRegiaoFiltro] = useState('');
-  const [situacaoBusca, setSituacaoBusca] = useState('todos');
+  const [situacaoBusca, setSituacaoBusca] = useState('ativo');
   
   // Estados para CEP e endereço
   const [cep, setCep] = useState('');
@@ -169,6 +169,74 @@ export default function EmpresasPage() {
     }, 5000);
   };
 
+  // Função para aplicar filtros automaticamente
+  const aplicarFiltrosAutomaticos = useCallback((texto: string = pesquisaTexto, tipo: string = searchType, grupo: string = grupoFiltro, regiao: string = regiaoFiltro, situacao: string = situacaoBusca) => {
+    if (!Array.isArray(empresas) || empresas.length === 0) {
+      setFilteredEmpresas([]);
+      return;
+    }
+
+    let filtered = empresas;
+
+    // Filtrar por texto baseado no tipo de pesquisa
+    if (texto.trim()) {
+      filtered = filtered.filter(empresa => {
+        let match = false;
+        switch (tipo) {
+          case 'nome':
+            match = empresa.nome_fantasia.toLowerCase().includes(texto.toLowerCase());
+            break;
+          case 'n de inscrição':
+            match = empresa.numero_inscricao?.includes(texto) || false;
+            break;
+          case 'razao':
+            match = empresa.razao_social.toLowerCase().includes(texto.toLowerCase());
+            break;
+          case 'codigo':
+            match = empresa.codigo.includes(texto);
+            break;
+          case 'regiao':
+            match = empresa.regiao?.nome.toLowerCase().includes(texto.toLowerCase()) || false;
+            break;
+          default:
+            match = false;
+        }
+        return match;
+      });
+    }
+
+    // Filtrar por grupo se houver seleção
+    if (grupo) {
+      filtered = filtered.filter(empresa => 
+        empresa.grupo_id === parseInt(grupo)
+      );
+    }
+
+    // Filtrar por região se houver seleção
+    if (regiao) {
+      filtered = filtered.filter(empresa => 
+        empresa.regiao_id === parseInt(regiao)
+      );
+    }
+
+    // Filtrar por situação se não for "todos"
+    if (situacao && situacao !== 'todos') {
+      const status = situacao === 'ativo' ? 'ATIVO' : 'INATIVO';
+      filtered = filtered.filter(empresa => empresa.status === status);
+    }
+
+    setFilteredEmpresas(filtered);
+    
+    // Mostrar notificação apenas se houver filtros aplicados
+    if (texto.trim() || grupo || regiao || (situacao && situacao !== 'todos')) {
+      if (filtered.length === 0) {
+        showNotification('error', 'Nenhuma empresa encontrada com os critérios aplicados');
+      } else {
+        showNotification('success', `${filtered.length} empresa(s) encontrada(s)`);
+      }
+    }
+  }, [empresas, pesquisaTexto, searchType, grupoFiltro, regiaoFiltro, situacaoBusca]);
+
   // Função para obter o placeholder baseado no tipo de pesquisa
   const getPlaceholder = (type: string) => {
     switch (type) {
@@ -187,30 +255,12 @@ export default function EmpresasPage() {
     }
   };
 
+  // useEffect para aplicar filtros automaticamente quando situação, grupo ou região mudam
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-
-    if (!token || !userData) {
-      router.push('/login');
-      return;
+    if (empresas.length > 0) {
+      aplicarFiltrosAutomaticos(pesquisaTexto, searchType, grupoFiltro, regiaoFiltro, situacaoBusca);
     }
-
-    try {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      console.log('Usuário definido, carregando dados...'); // Debug
-      // Carregar dados após definir usuário
-      carregarEmpresas();
-      carregarGrupos();
-      carregarRegioes();
-    } catch (error) {
-      console.error('Erro ao carregar dados do usuário:', error);
-      router.push('/login');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router]);
+  }, [situacaoBusca, grupoFiltro, regiaoFiltro, empresas, aplicarFiltrosAutomaticos, pesquisaTexto, searchType]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -330,14 +380,14 @@ export default function EmpresasPage() {
   };
 
   // Função para carregar empresas
-  const carregarEmpresas = async () => {
+  const carregarEmpresas = useCallback(async () => {
     console.log('=== CARREGANDO EMPRESAS ===');
     
     // Limpar campos de pesquisa quando recarregar
     setPesquisaTexto('');
     setGrupoFiltro('');
     setRegiaoFiltro('');
-    setSituacaoBusca('todos');
+    setSituacaoBusca('ativo');
     
     try {
       const token = localStorage.getItem('token');
@@ -388,10 +438,10 @@ export default function EmpresasPage() {
       setEmpresas([]);
       setFilteredEmpresas([]);
     }
-  };
+  }, []);
 
   // Função para carregar grupos
-  const carregarGrupos = async () => {
+  const carregarGrupos = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/api/grupos', {
@@ -422,10 +472,10 @@ export default function EmpresasPage() {
       showNotification('error', 'Erro de conexão ao carregar grupos');
       setGrupos([]);
     }
-  };
+  }, []);
 
   // Função para carregar regiões
-  const carregarRegioes = async () => {
+  const carregarRegioes = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/api/regioes', {
@@ -456,7 +506,7 @@ export default function EmpresasPage() {
       showNotification('error', 'Erro de conexão ao carregar regiões');
       setRegioes([]);
     }
-  };
+  }, []);
 
   // Função para procurar empresas
   const handleProcurar = () => {
@@ -873,6 +923,32 @@ export default function EmpresasPage() {
     setShowDeleteModal(false);
     setEmpresaExcluindo(null);
   };
+
+  // useEffect para carregar dados iniciais
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+
+    if (!token || !userData) {
+      router.push('/login');
+      return;
+    }
+
+    try {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      console.log('Usuário definido, carregando dados...'); // Debug
+      // Carregar dados após definir usuário
+      carregarEmpresas();
+      carregarGrupos();
+      carregarRegioes();
+    } catch (error) {
+      console.error('Erro ao carregar dados do usuário:', error);
+      router.push('/login');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router, carregarEmpresas, carregarGrupos, carregarRegioes]);
 
   if (isLoading) {
     return (
