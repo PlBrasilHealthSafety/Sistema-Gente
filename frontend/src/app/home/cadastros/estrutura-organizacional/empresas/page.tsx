@@ -2174,7 +2174,7 @@ export default function EmpresasPage() {
                     <table className="w-full">
                       <thead className="bg-gray-100">
                         <tr>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CNPJ</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CPF ou CNPJ</th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Razão Social</th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome Fantasia</th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Código</th>
