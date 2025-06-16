@@ -2200,7 +2200,7 @@ export default function EmpresasPage() {
                                     ? 'bg-green-100 text-green-800' 
                                     : 'bg-red-100 text-red-800'
                                 }`}>
-                                  {empresa.status}
+                                  {empresa.status.toLowerCase()}
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-sm">
