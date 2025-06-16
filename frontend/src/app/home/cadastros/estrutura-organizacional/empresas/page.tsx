@@ -154,6 +154,7 @@ export default function EmpresasPage() {
   const [gruposAtivos, setGruposAtivos] = useState<Grupo[]>([]);
   const [regioesAtivas, setRegioesAtivas] = useState<Regiao[]>([]);
   const [gruposFiltradosPorRegiao, setGruposFiltradosPorRegiao] = useState<Grupo[]>([]);
+  const [regioesFiltradas, setRegioesFiltradas] = useState<Regiao[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<NotificationMessage>({
     type: 'success',
@@ -164,6 +165,13 @@ export default function EmpresasPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null);
   const [empresaExcluindo, setEmpresaExcluindo] = useState<Empresa | null>(null);
+
+  // Estados para o autocomplete
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [autocompleteResults, setAutocompleteResults] = useState<Empresa[]>([]);
+  
+  // Estados para filtros de pesquisa
+  const [regioesFiltroFiltradas, setRegioesFiltroFiltradas] = useState<Regiao[]>([]);
 
   // Função para exibir notificação
   const showNotification = (type: 'success' | 'error', message: string) => {
@@ -240,6 +248,83 @@ export default function EmpresasPage() {
       }
     }
   }, [empresas, pesquisaTexto, searchType, grupoFiltro, regiaoFiltro, situacaoBusca]);
+
+  // Função para filtrar empresas em tempo real (autocomplete)
+  const handleAutocompleteSearch = (value: string, tipo: string = searchType) => {
+    if (!value.trim()) {
+      setShowAutocomplete(false);
+      setAutocompleteResults([]);
+      // Aplicar filtros mesmo sem texto de busca
+      aplicarFiltrosAutomaticos('', tipo, grupoFiltro, regiaoFiltro, situacaoBusca);
+      return;
+    }
+
+    if (!Array.isArray(empresas)) {
+      setShowAutocomplete(false);
+      setAutocompleteResults([]);
+      return;
+    }
+
+    const filtered = empresas.filter(empresa => {
+      let match = false;
+      switch (tipo) {
+        case 'nome':
+          match = empresa.nome_fantasia.toLowerCase().includes(value.toLowerCase());
+          break;
+        case 'n de inscrição':
+          match = empresa.numero_inscricao?.includes(value) || false;
+          break;
+        case 'razao':
+          match = empresa.razao_social.toLowerCase().includes(value.toLowerCase());
+          break;
+        case 'codigo':
+          match = empresa.codigo.includes(value);
+          break;
+        case 'regiao':
+          match = empresa.regiao?.nome.toLowerCase().includes(value.toLowerCase()) || false;
+          break;
+        default:
+          match = false;
+      }
+      return match;
+    }).slice(0, 5); // Limitar a 5 resultados
+
+    setAutocompleteResults(filtered);
+    setShowAutocomplete(filtered.length > 0);
+    
+    // Aplicar filtros em tempo real
+    aplicarFiltrosAutomaticos(value, tipo, grupoFiltro, regiaoFiltro, situacaoBusca);
+  };
+
+  // Função para selecionar item do autocomplete
+  const handleSelectAutocomplete = (empresa: Empresa) => {
+    // Definir o texto baseado no tipo de pesquisa
+    let texto = '';
+    switch (searchType) {
+      case 'nome':
+        texto = empresa.nome_fantasia;
+        break;
+      case 'n de inscrição':
+        texto = empresa.numero_inscricao || '';
+        break;
+      case 'razao':
+        texto = empresa.razao_social;
+        break;
+      case 'codigo':
+        texto = empresa.codigo;
+        break;
+      case 'regiao':
+        texto = empresa.regiao?.nome || '';
+        break;
+      default:
+        texto = empresa.nome_fantasia;
+    }
+    
+    setPesquisaTexto(texto);
+    setShowAutocomplete(false);
+    // Aplicar filtro automaticamente
+    aplicarFiltrosAutomaticos(texto, searchType, grupoFiltro, regiaoFiltro, situacaoBusca);
+  };
 
   // Função para obter o placeholder baseado no tipo de pesquisa
   const getPlaceholder = (type: string) => {
@@ -392,6 +477,9 @@ export default function EmpresasPage() {
     setGrupoFiltro('');
     setRegiaoFiltro('');
     setSituacaoBusca('ativo');
+    setShowAutocomplete(false);
+    setAutocompleteResults([]);
+    setRegioesFiltroFiltradas(regioesAtivas); // Reset das regiões de filtro
     
     try {
       const token = localStorage.getItem('token');
@@ -515,6 +603,8 @@ export default function EmpresasPage() {
         const regioesAtivas = validData.filter((regiao: Regiao) => regiao.status === 'ativo');
         console.log('Regiões ativas filtradas:', regioesAtivas); // Debug
         setRegioesAtivas(regioesAtivas);
+        setRegioesFiltradas(regioesAtivas); // Inicialmente mostra todas as regiões ativas
+        setRegioesFiltroFiltradas(regioesAtivas); // Inicializar regiões de filtro
       } else {
         console.error('Erro na resposta da API de regiões. Status:', response.status);
         showNotification('error', `Erro ao carregar regiões: ${response.status}`);
@@ -529,7 +619,7 @@ export default function EmpresasPage() {
     }
   }, []);
 
-  // Função para procurar empresas
+  // Função para procurar empresas (botão Procurar)
   const handleProcurar = () => {
     console.log('=== DEBUG BUSCA ===');
     console.log('pesquisaTexto:', pesquisaTexto);
@@ -539,6 +629,9 @@ export default function EmpresasPage() {
     console.log('situacaoBusca:', situacaoBusca);
     console.log('empresas array:', empresas);
     console.log('empresas length:', empresas?.length);
+    
+    // Fechar autocomplete ao usar o botão
+    setShowAutocomplete(false);
     
     if (!pesquisaTexto.trim() && !grupoFiltro && !regiaoFiltro && situacaoBusca === 'todos') {
       console.log('Campos de busca vazios, mostrando todas as empresas');
@@ -775,6 +868,7 @@ export default function EmpresasPage() {
     setObservacaoOS('');
     setGrupoSelecionado('');
     setRegiaoSelecionada('');
+    setRegioesFiltradas(regioesAtivas); // Reset das regiões filtradas
     // Resetar grupos filtrados para mostrar todos os grupos ativos
     setGruposFiltradosPorRegiao(gruposAtivos);
     setCepError('');
@@ -829,6 +923,16 @@ export default function EmpresasPage() {
     setObservacaoOS(empresa.observacoes_os || '');
     setGrupoSelecionado(empresa.grupo_id ? empresa.grupo_id.toString() : '');
     setRegiaoSelecionada(empresa.regiao_id ? empresa.regiao_id.toString() : '');
+    
+    // Configurar regiões filtradas baseado no grupo da empresa
+    if (empresa.grupo_id) {
+      const regioesFiltradas = regioesAtivas.filter(regiao => 
+        regiao.grupo_id === empresa.grupo_id
+      );
+      setRegioesFiltradas(regioesFiltradas);
+    } else {
+      setRegioesFiltradas(regioesAtivas);
+    }
     
     // Configurar grupos filtrados baseado na região da empresa
     if (empresa.regiao_id) {
@@ -956,6 +1060,51 @@ export default function EmpresasPage() {
   };
 
   // Função para filtrar grupos baseado na região selecionada
+  // Função para filtrar regiões por grupo no filtro de pesquisa
+  const handleGrupoFiltroChange = (grupoId: string) => {
+    setGrupoFiltro(grupoId);
+    
+    if (grupoId) {
+      // Filtrar regiões que pertencem ao grupo selecionado
+      const regioesFiltradas = regioesAtivas.filter(regiao => 
+        regiao.grupo_id === parseInt(grupoId)
+      );
+      setRegioesFiltroFiltradas(regioesFiltradas);
+      
+      // Limpar seleção de região de filtro se grupo mudou
+      setRegiaoFiltro('');
+    } else {
+      // Se nenhum grupo selecionado, mostrar todas as regiões ativas
+      setRegioesFiltroFiltradas(regioesAtivas);
+      setRegiaoFiltro('');
+    }
+  };
+
+  // Função para filtrar regiões por grupo selecionado
+  const handleGrupoChange = (grupoId: string) => {
+    setGrupoSelecionado(grupoId);
+    
+    if (grupoId) {
+      // Filtrar regiões que pertencem ao grupo selecionado
+      const regioesFiltradas = regioesAtivas.filter(regiao => 
+        regiao.grupo_id === parseInt(grupoId)
+      );
+      setRegioesFiltradas(regioesFiltradas);
+      
+      // Se só há uma região para o grupo, auto-selecionar
+      if (regioesFiltradas.length === 1) {
+        setRegiaoSelecionada(regioesFiltradas[0].id.toString());
+      } else {
+        // Limpar seleção de região se grupo mudou
+        setRegiaoSelecionada('');
+      }
+    } else {
+      // Se nenhum grupo selecionado, mostrar todas as regiões ativas
+      setRegioesFiltradas(regioesAtivas);
+      setRegiaoSelecionada('');
+    }
+  };
+
   const handleRegiaoChange = (regiaoId: string) => {
     setRegiaoSelecionada(regiaoId);
     
@@ -1154,7 +1303,12 @@ export default function EmpresasPage() {
                       </label>
                       <select 
                         value={searchType}
-                        onChange={(e) => setSearchType(e.target.value)}
+                        onChange={(e) => {
+                          setSearchType(e.target.value);
+                          setPesquisaTexto(''); // Limpar texto ao mudar tipo
+                          setShowAutocomplete(false);
+                          setAutocompleteResults([]);
+                        }}
                         className="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                       >
                         <option value="nome">Nome Fantasia</option>
@@ -1164,17 +1318,57 @@ export default function EmpresasPage() {
                         <option value="regiao">Região</option>
                       </select>
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 relative">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         &nbsp;
                       </label>
                       <input
                         type="text"
                         value={pesquisaTexto}
-                        onChange={(e) => setPesquisaTexto(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setPesquisaTexto(value);
+                          handleAutocompleteSearch(value, searchType);
+                        }}
+                        onFocus={() => {
+                          if (pesquisaTexto.trim()) {
+                            handleAutocompleteSearch(pesquisaTexto, searchType);
+                          }
+                        }}
+                        onBlur={() => {
+                          // Delay para permitir seleção do item
+                          setTimeout(() => setShowAutocomplete(false), 200);
+                        }}
                         placeholder={getPlaceholder(searchType)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                       />
+                      
+                      {/* Dropdown do autocomplete */}
+                      {showAutocomplete && autocompleteResults.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {autocompleteResults.map((empresa) => (
+                            <div
+                              key={empresa.id}
+                              onClick={() => handleSelectAutocomplete(empresa)}
+                              className="px-4 py-3 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="font-medium text-gray-900">{empresa.nome_fantasia}</div>
+                              <div className="text-sm text-gray-500 mt-1">
+                                <span className="text-blue-600">📋 {empresa.codigo}</span>
+                                {empresa.numero_inscricao && (
+                                  <span className="ml-2 text-green-600">🆔 {empresa.numero_inscricao}</span>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-400 mt-1">
+                                {empresa.razao_social}
+                                {empresa.regiao && (
+                                  <span className="ml-2 text-purple-600">📍 {empresa.regiao.nome}</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -1184,7 +1378,7 @@ export default function EmpresasPage() {
                     </label>
                     <select 
                       value={grupoFiltro}
-                      onChange={(e) => setGrupoFiltro(e.target.value)}
+                      onChange={(e) => handleGrupoFiltroChange(e.target.value)}
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
                       <option value="">Todos os grupos</option>
@@ -1204,7 +1398,7 @@ export default function EmpresasPage() {
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
                       <option value="">Todas as regiões</option>
-                      {regioesAtivas && Array.isArray(regioesAtivas) && regioesAtivas.map(regiao => (
+                      {regioesFiltroFiltradas && Array.isArray(regioesFiltroFiltradas) && regioesFiltroFiltradas.map(regiao => (
                         <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
                       ))}
                     </select>
@@ -1423,7 +1617,7 @@ export default function EmpresasPage() {
                             <select 
                               value={grupoSelecionado}
                               onChange={(e) => {
-                                setGrupoSelecionado(e.target.value);
+                                handleGrupoChange(e.target.value);
                                 if (e.target.value && errors.grupoSelecionado) {
                                   setErrors({...errors, grupoSelecionado: ''});
                                 }
@@ -1459,7 +1653,7 @@ export default function EmpresasPage() {
                               }`}
                             >
                               <option value="">Selecione uma região</option>
-                              {regioesAtivas && Array.isArray(regioesAtivas) && regioesAtivas.map(regiao => (
+                              {regioesFiltradas && Array.isArray(regioesFiltradas) && regioesFiltradas.map(regiao => (
                                 <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
                               ))}
                             </select>
@@ -2087,7 +2281,7 @@ export default function EmpresasPage() {
                     <select 
                       value={grupoSelecionado}
                       onChange={(e) => {
-                        setGrupoSelecionado(e.target.value);
+                        handleGrupoChange(e.target.value);
                         if (e.target.value && errors.grupoSelecionado) {
                           setErrors({...errors, grupoSelecionado: ''});
                         }
@@ -2123,7 +2317,7 @@ export default function EmpresasPage() {
                       }`}
                     >
                       <option value="">Selecione uma região</option>
-                      {regioesAtivas && Array.isArray(regioesAtivas) && regioesAtivas.map(regiao => (
+                      {regioesFiltradas && Array.isArray(regioesFiltradas) && regioesFiltradas.map(regiao => (
                         <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
                       ))}
                     </select>
