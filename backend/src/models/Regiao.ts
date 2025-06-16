@@ -36,12 +36,27 @@ export class RegiaoModel {
 
   // Buscar região por ID
   static async findById(id: number): Promise<Regiao | null> {
-    const result = await query(
-      'SELECT * FROM regioes WHERE id = $1',
-      [id]
-    );
+    console.log(`[RegiaoModel] Buscando região por ID: ${id}`);
     
-    return result.rows.length > 0 ? result.rows[0] : null;
+    try {
+      const result = await query(
+        'SELECT * FROM regioes WHERE id = $1',
+        [id]
+      );
+      
+      console.log(`[RegiaoModel] Query result:`, {
+        rowCount: result.rowCount,
+        found: result.rows.length > 0
+      });
+      
+      const regiao = result.rows.length > 0 ? result.rows[0] : null;
+      console.log(`[RegiaoModel] Região encontrada:`, regiao ? `${regiao.nome} (ID: ${regiao.id})` : 'Não encontrada');
+      
+      return regiao;
+    } catch (error) {
+      console.error(`[RegiaoModel] Erro ao buscar região ${id}:`, error);
+      throw error;
+    }
   }
 
   // Buscar região por código
@@ -184,12 +199,27 @@ export class RegiaoModel {
 
   // Deletar região (soft delete - desativar)
   static async delete(id: number, userId: number): Promise<boolean> {
-    const result = await query(
-      'UPDATE regioes SET status = $1, updated_at = CURRENT_TIMESTAMP, updated_by = $2 WHERE id = $3',
-      [StatusItem.INATIVO, userId, id]
-    );
+    console.log(`[RegiaoModel] Executando soft delete da região ${id} pelo usuário ${userId}...`);
     
-    return (result.rowCount || 0) > 0;
+    try {
+      const result = await query(
+        'UPDATE regioes SET status = $1, updated_at = CURRENT_TIMESTAMP, updated_by = $2 WHERE id = $3',
+        [StatusItem.INATIVO, userId, id]
+      );
+      
+      console.log(`[RegiaoModel] Resultado da query:`, {
+        rowCount: result.rowCount,
+        command: result.command
+      });
+      
+      const success = (result.rowCount || 0) > 0;
+      console.log(`[RegiaoModel] Soft delete ${success ? 'realizado' : 'falhou'} para região ${id}`);
+      
+      return success;
+    } catch (error) {
+      console.error(`[RegiaoModel] Erro ao fazer soft delete da região ${id}:`, error);
+      throw error;
+    }
   }
 
   // Contar regiões por status
@@ -212,11 +242,23 @@ export class RegiaoModel {
 
   // Verificar se região está sendo usada por empresas
   static async isUsedByCompanies(id: number): Promise<boolean> {
-    const result = await query(
-      'SELECT COUNT(*) as count FROM empresas WHERE regiao_id = $1',
-      [id]
-    );
+    console.log(`[RegiaoModel] Verificando se região ${id} está sendo usada por empresas...`);
     
-    return parseInt(result.rows[0].count) > 0;
+    try {
+      const result = await query(
+        'SELECT COUNT(*) as count FROM empresas WHERE regiao_id = $1',
+        [id]
+      );
+      
+      console.log(`[RegiaoModel] Query result:`, result.rows[0]);
+      const count = parseInt(result.rows[0].count);
+      const isUsed = count > 0;
+      
+      console.log(`[RegiaoModel] Empresas encontradas: ${count}, Em uso: ${isUsed}`);
+      return isUsed;
+    } catch (error) {
+      console.error(`[RegiaoModel] Erro ao verificar uso da região ${id}:`, error);
+      throw error;
+    }
   }
 } 

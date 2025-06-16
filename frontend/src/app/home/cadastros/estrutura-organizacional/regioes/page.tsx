@@ -463,13 +463,13 @@ export default function RegioesPage() {
     setRegiaoEditando(null);
   };
 
-  // Função para abrir modal de exclusão
+  // Função para abrir modal de inativação
   const handleExcluirRegiao = (regiao: Regiao) => {
     setRegiaoExcluindo(regiao);
     setShowDeleteModal(true);
   };
 
-  // Função para confirmar exclusão
+  // Função para confirmar inativação (soft delete - marcar como inativo)
   const handleConfirmarExclusao = async () => {
     if (!regiaoExcluindo) return;
     
@@ -477,31 +477,39 @@ export default function RegioesPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/api/regioes/${regiaoExcluindo.id}`, {
-        method: 'DELETE',
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          nome: regiaoExcluindo.nome,
+          descricao: regiaoExcluindo.descricao,
+          uf: regiaoExcluindo.uf,
+          cidade: regiaoExcluindo.cidade,
+          grupo_id: regiaoExcluindo.grupo_id,
+          status: 'inativo'
+        })
       });
 
       if (response.ok) {
-        showNotification('success', 'Região excluída com sucesso!');
+        showNotification('success', 'Região inativada com sucesso!');
         await carregarRegioes();
         setShowDeleteModal(false);
         setRegiaoExcluindo(null);
       } else {
         const error = await response.json();
-        showNotification('error', `Erro ao excluir região: ${error.message}`);
+        showNotification('error', `Erro ao inativar região: ${error.message}`);
       }
     } catch (error) {
-      console.error('Erro ao excluir região:', error);
-      showNotification('error', 'Erro ao excluir região. Tente novamente.');
+      console.error('Erro ao inativar região:', error);
+      showNotification('error', 'Erro ao inativar região. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Função para cancelar exclusão
+  // Função para cancelar inativação
   const handleCancelarExclusao = () => {
     setShowDeleteModal(false);
     setRegiaoExcluindo(null);
@@ -1111,7 +1119,7 @@ export default function RegioesPage() {
         </div>
       )}
 
-      {/* Modal de Confirmação de Exclusão */}
+      {/* Modal de Confirmação de Inativação */}
       {showDeleteModal && (
         <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
@@ -1123,16 +1131,16 @@ export default function RegioesPage() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Inativação</h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    Tem certeza que deseja excluir a região &quot;{regiaoExcluindo?.nome}&quot;?
+                    Tem certeza que deseja inativar a região &quot;{regiaoExcluindo?.nome}&quot;?
                   </p>
                 </div>
               </div>
               
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-yellow-800">
-                  <strong>Atenção:</strong> Esta ação não pode ser desfeita. A região será permanentemente removida do sistema.
+                  <strong>Atenção:</strong> A região será marcada como inativa e não aparecerá mais nos seletores. Esta ação pode ser revertida alterando o status para ativo novamente.
                 </p>
               </div>
               
@@ -1148,7 +1156,7 @@ export default function RegioesPage() {
                   disabled={isSubmitting}
                   className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Excluindo...' : 'Sim, Excluir'}
+                  {isSubmitting ? 'Inativando...' : 'Sim, Inativar'}
                 </button>
               </div>
             </div>

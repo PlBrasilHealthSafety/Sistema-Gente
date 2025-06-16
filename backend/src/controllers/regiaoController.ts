@@ -340,7 +340,13 @@ export const deleteRegiao = async (req: Request, res: Response) => {
     const regiaoId = parseInt(id);
     const userId = req.user!.id;
 
+    console.log(`=== DELETAR REGIÃO ===`);
+    console.log(`ID recebido: ${id}`);
+    console.log(`ID parseado: ${regiaoId}`);
+    console.log(`User ID: ${userId}`);
+
     if (isNaN(regiaoId)) {
+      console.log(`Erro: ID da região inválido`);
       return res.status(400).json({
         success: false,
         message: 'ID da região inválido',
@@ -349,7 +355,10 @@ export const deleteRegiao = async (req: Request, res: Response) => {
     }
 
     // Verificar se região existe
+    console.log(`Verificando se região ${regiaoId} existe...`);
     const existingRegion = await RegiaoModel.findById(regiaoId);
+    console.log(`Região encontrada:`, existingRegion ? 'Sim' : 'Não');
+    
     if (!existingRegion) {
       return res.status(404).json({
         success: false,
@@ -359,8 +368,12 @@ export const deleteRegiao = async (req: Request, res: Response) => {
     }
 
     // Verificar se região está sendo usada por empresas
+    console.log(`Verificando se região ${regiaoId} está sendo usada por empresas...`);
     const isUsed = await RegiaoModel.isUsedByCompanies(regiaoId);
+    console.log(`Região em uso:`, isUsed ? 'Sim' : 'Não');
+    
     if (isUsed) {
+      console.log(`Erro: Região está sendo usada por empresas`);
       return res.status(409).json({
         success: false,
         message: 'Não é possível excluir uma região que possui empresas vinculadas',
@@ -368,7 +381,9 @@ export const deleteRegiao = async (req: Request, res: Response) => {
       });
     }
 
+    console.log(`Executando exclusão (soft delete) da região ${regiaoId}...`);
     const success = await RegiaoModel.delete(regiaoId, userId);
+    console.log(`Exclusão bem-sucedida:`, success ? 'Sim' : 'Não');
 
     if (!success) {
       return res.status(404).json({
@@ -378,12 +393,15 @@ export const deleteRegiao = async (req: Request, res: Response) => {
       });
     }
 
+    console.log(`=== REGIÃO ${regiaoId} EXCLUÍDA COM SUCESSO ===`);
     res.json({
       success: true,
       message: 'Região excluída com sucesso'
     });
   } catch (error) {
-    console.error('Erro ao excluir região:', error);
+    console.error('=== ERRO AO EXCLUIR REGIÃO ===');
+    console.error('Erro completo:', error);
+    console.error('Stack:', error instanceof Error ? error.stack : 'N/A');
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor ao excluir região',

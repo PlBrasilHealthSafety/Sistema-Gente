@@ -1030,45 +1030,53 @@ export default function EmpresasPage() {
     setEmpresaEditando(null);
   };
 
-  // Função para abrir modal de exclusão
+  // Função para abrir modal de inativação
   const handleExcluirEmpresa = (empresa: Empresa) => {
     setEmpresaExcluindo(empresa);
     setShowDeleteModal(true);
   };
 
-  // Função para confirmar exclusão
+  // Função para confirmar inativação
   const handleConfirmarExclusao = async () => {
     if (!empresaExcluindo) return;
     
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // Preparar dados da empresa com status inativo
+      const empresaData = {
+        ...empresaExcluindo,
+        status: 'INATIVO'
+      };
+      
       const response = await fetch(`http://localhost:3001/api/empresas/${empresaExcluindo.id}`, {
-        method: 'DELETE',
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify(empresaData)
       });
 
       if (response.ok) {
-        showNotification('success', 'Empresa excluída com sucesso!');
+        showNotification('success', 'Empresa inativada com sucesso!');
         await carregarEmpresas();
         setShowDeleteModal(false);
         setEmpresaExcluindo(null);
       } else {
         const error = await response.json();
-        showNotification('error', `Erro ao excluir empresa: ${error.message}`);
+        showNotification('error', `Erro ao inativar empresa: ${error.message}`);
       }
     } catch (error) {
-      console.error('Erro ao excluir empresa:', error);
-      showNotification('error', 'Erro ao excluir empresa. Tente novamente.');
+      console.error('Erro ao inativar empresa:', error);
+      showNotification('error', 'Erro ao inativar empresa. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Função para cancelar exclusão
+  // Função para cancelar inativação
   const handleCancelarExclusao = () => {
     setShowDeleteModal(false);
     setEmpresaExcluindo(null);
@@ -2415,7 +2423,7 @@ export default function EmpresasPage() {
         </div>
       )}
 
-      {/* Modal de Confirmação de Exclusão */}
+      {/* Modal de Confirmação de Inativação */}
       {showDeleteModal && (
         <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
@@ -2427,16 +2435,16 @@ export default function EmpresasPage() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Inativação</h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    Tem certeza que deseja excluir a empresa "{empresaExcluindo?.nome_fantasia}"?
+                    Tem certeza que deseja inativar a empresa "{empresaExcluindo?.nome_fantasia}"?
                   </p>
                 </div>
               </div>
               
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-yellow-800">
-                  <strong>Atenção:</strong> Esta ação não pode ser desfeita. A empresa será permanentemente removida do sistema.
+                  <strong>Atenção:</strong> A empresa será marcada como inativa e não aparecerá mais nos seletores ativos. Esta ação pode ser revertida alterando o status para ativo novamente.
                 </p>
               </div>
               
@@ -2452,7 +2460,7 @@ export default function EmpresasPage() {
                   disabled={isSubmitting}
                   className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Excluindo...' : 'Sim, Excluir'}
+                  {isSubmitting ? 'Inativando...' : 'Sim, Inativar'}
                 </button>
               </div>
             </div>
