@@ -107,20 +107,20 @@ export default function EmpresaPage() {
             <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm text-gray-600">Departamentos</p>
-                    <p className="text-2xl font-bold text-blue-500">15</p>
+                    <p className="text-sm text-gray-600">Ambientes</p>
+                    <p className="text-2xl font-bold text-blue-500">23</p>
                 </div>
-                <div className="text-3xl">🏢</div>
+                <div className="text-3xl">🏭</div>
                 </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm text-gray-600">Filiais</p>
-                    <p className="text-2xl font-bold text-green-500">8</p>
+                    <p className="text-sm text-gray-600">Exames Realizados</p>
+                    <p className="text-2xl font-bold text-green-500">3,456</p>
                 </div>
-                <div className="text-3xl">🌐</div>
+                <div className="text-3xl">🩺</div>
                 </div>
             </div>
 
@@ -173,61 +173,61 @@ export default function EmpresaPage() {
               </div>
             </div>
 
-            {/* Estrutura Organizacional */}
+            {/* Indicadores de Segurança e Saúde */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-[#1D3C44] mb-4">Estrutura Organizacional</h2>
+              <h2 className="text-xl font-semibold text-[#1D3C44] mb-4">Indicadores de Segurança e Saúde</h2>
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                   <div className="flex items-center">
-                    <span className="text-2xl mr-3">👨‍💼</span>
+                    <span className="text-2xl mr-3">🛡️</span>
                     <div>
-                      <div className="font-medium text-[#1D3C44]">Diretoria</div>
-                      <div className="text-sm text-gray-600">3 membros</div>
+                      <div className="font-medium text-[#1D3C44]">Acidentes no Mês</div>
+                      <div className="text-sm text-gray-600">2 ocorrências registradas</div>
                     </div>
                   </div>
-                    <button className="text-[#00A298] hover:text-[#00A298]/80 text-sm font-medium">
-                      Ver detalhes
-                    </button>
+                  <div className="text-right">
+                    <span className="text-xs px-2 py-1 bg-orange-100 text-orange-800 rounded-full">Atenção</span>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                   <div className="flex items-center">
-                      <span className="text-2xl mr-3">👥</span>
+                    <span className="text-2xl mr-3">📋</span>
                     <div>
-                      <div className="font-medium text-[#1D3C44]">Gerência</div>
-                      <div className="text-sm text-gray-600">12 gerentes</div>
+                      <div className="font-medium text-[#1D3C44]">Treinamentos Pendentes</div>
+                      <div className="text-sm text-gray-600">87 funcionários aguardando</div>
                     </div>
                   </div>
-                    <button className="text-[#00A298] hover:text-[#00A298]/80 text-sm font-medium">
-                      Ver detalhes
-                    </button>
+                  <div className="text-right">
+                    <span className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded-full">Urgente</span>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                   <div className="flex items-center">
-                      <span className="text-2xl mr-3">👷</span>
+                    <span className="text-2xl mr-3">🩺</span>
                     <div>
-                      <div className="font-medium text-[#1D3C44]">Operacional</div>
-                      <div className="text-sm text-gray-600">1,232 funcionários</div>
+                      <div className="font-medium text-[#1D3C44]">Exames Vencidos</div>
+                      <div className="text-sm text-gray-600">23 exames a renovar</div>
                     </div>
                   </div>
-                    <button className="text-[#00A298] hover:text-[#00A298]/80 text-sm font-medium">
-                      Ver detalhes
-                    </button>
+                  <div className="text-right">
+                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">Pendente</span>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                   <div className="flex items-center">
-                    <span className="text-2xl mr-3">🎓</span>
+                    <span className="text-2xl mr-3">✅</span>
                     <div>
-                      <div className="font-medium text-[#1D3C44]">Estagiários</div>
-                      <div className="text-sm text-gray-600">45 estagiários</div>
+                      <div className="font-medium text-[#1D3C44]">Taxa de Conformidade</div>
+                      <div className="text-sm text-gray-600">94% em cumprimento das NRs</div>
                     </div>
                   </div>
-                    <button className="text-[#00A298] hover:text-[#00A298]/80 text-sm font-medium">
-                      Ver detalhes
-                    </button>
+                  <div className="text-right">
+                    <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">Excelente</span>
+                  </div>
                 </div>
               </div>
             </div>

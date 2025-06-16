@@ -606,9 +606,7 @@ export default function EmpresasPage() {
       newErrors.numeroInscricao = 'Número de inscrição é obrigatório';
     }
 
-    if (!cno.trim()) {
-      newErrors.cno = 'CNO é obrigatório';
-    }
+
 
     setErrors(newErrors);
 
@@ -1165,9 +1163,6 @@ export default function EmpresasPage() {
                       {/* Seção Estabelecimento */}
                       <div className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm">
                         <div className="flex items-center mb-6">
-                          <div className="bg-[#00A298] text-white p-2 rounded-lg mr-3">
-                            🏢
-                          </div>
                           <h4 className="text-lg font-semibold text-[#1D3C44]">Estabelecimento</h4>
                         </div>
                         
@@ -1253,26 +1248,17 @@ export default function EmpresasPage() {
 
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
-                              CNO <span className="text-red-500">*</span>
+                              CNO
                             </label>
                             <input
                               type="text"
                               value={cno}
-                              onChange={(e) => {
-                                handleCnoChange(e);
-                                if (e.target.value.trim() && errors.cno) {
-                                  setErrors({...errors, cno: ''});
-                                }
-                              }}
+                              onChange={handleCnoChange}
                               maxLength={14}
-                              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all ${
-                                errors.cno ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                              }`}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all"
                               placeholder="Digite o CNO (máx. 14 dígitos)"
                             />
-                            {errors.cno && (
-                              <p className="text-red-500 text-xs mt-1">{errors.cno}</p>
-                            )}
+
                           </div>
                         </div>
                       </div>
@@ -1280,9 +1266,6 @@ export default function EmpresasPage() {
                                              {/* Seção Dados cadastrais */}
                        <div className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm">
                          <div className="flex items-center mb-6">
-                           <div className="bg-[#00A298] text-white p-2 rounded-lg mr-3">
-                             📊
-                           </div>
                            <h4 className="text-lg font-semibold text-[#1D3C44]">Dados cadastrais</h4>
                          </div>
                          
