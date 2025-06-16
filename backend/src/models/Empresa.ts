@@ -31,14 +31,14 @@ export class EmpresaModel {
         representante_legal_cpf VARCHAR(14),
         observacoes TEXT,
         observacoes_os TEXT,
-        status VARCHAR(20) NOT NULL DEFAULT 'ATIVO',
+        status VARCHAR(20) NOT NULL DEFAULT 'ativo',
         grupo_id INTEGER NOT NULL REFERENCES grupos(id) ON DELETE RESTRICT,
         regiao_id INTEGER NOT NULL REFERENCES regioes(id) ON DELETE RESTRICT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_by INTEGER NOT NULL REFERENCES users(id),
         updated_by INTEGER REFERENCES users(id),
-        CONSTRAINT empresas_status_check CHECK (status IN ('ATIVO', 'INATIVO')),
+        CONSTRAINT empresas_status_check CHECK (status IN ('ativo', 'inativo')),
         CONSTRAINT empresas_tipo_estabelecimento_check CHECK (tipo_estabelecimento IN ('MATRIZ', 'FILIAL')),
         CONSTRAINT empresas_tipo_inscricao_check CHECK (tipo_inscricao IN ('cnpj', 'cpf') OR tipo_inscricao IS NULL)
       );

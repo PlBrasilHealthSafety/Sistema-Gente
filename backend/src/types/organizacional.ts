@@ -1,7 +1,7 @@
 // Enums
 export enum StatusItem {
-  ATIVO = 'ATIVO',
-  INATIVO = 'INATIVO'
+  ATIVO = 'ativo',
+  INATIVO = 'inativo'
 }
 
 // Interfaces para Grupos
