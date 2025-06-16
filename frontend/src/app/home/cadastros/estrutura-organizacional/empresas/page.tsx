@@ -53,7 +53,7 @@ interface Empresa {
   nome_fantasia: string;
   razao_social: string;
   tipo_estabelecimento: 'MATRIZ' | 'FILIAL';
-  tipo_inscricao?: 'CNPJ' | 'CPF';
+  tipo_inscricao?: 'cnpj' | 'cpf';
   numero_inscricao?: string;
   cno?: string;
   endereco_cep?: string;
@@ -74,7 +74,7 @@ interface Empresa {
   regiao_id?: number;
   grupo?: Grupo;
   regiao?: Regiao;
-  status: 'ATIVO' | 'INATIVO';
+  status: 'ativo' | 'inativo';
   created_by: number;
   updated_by: number;
   created_at: string;
@@ -233,7 +233,7 @@ export default function EmpresasPage() {
 
     // Filtrar por situação se não for "todos"
     if (situacao && situacao !== 'todos') {
-      const status = situacao === 'ativo' ? 'ATIVO' : 'INATIVO';
+      const status = situacao === 'ativo' ? 'ativo' : 'inativo';
       filtered = filtered.filter(empresa => empresa.status === status);
     }
 
@@ -696,7 +696,7 @@ export default function EmpresasPage() {
 
     // Filtrar por situação se não for "todos"
     if (situacaoBusca !== 'todos') {
-      const status = situacaoBusca === 'ativo' ? 'ATIVO' : 'INATIVO';
+      const status = situacaoBusca === 'ativo' ? 'ativo' : 'inativo';
       filtered = filtered.filter(empresa => {
         const match = empresa.status === status;
         console.log(`Empresa "${empresa.nome_fantasia}" - Match situação: ${match}`);
@@ -1047,7 +1047,7 @@ export default function EmpresasPage() {
       // Preparar dados da empresa com status inativo
       const empresaData = {
         ...empresaExcluindo,
-        status: 'INATIVO'
+        status: 'inativo'
       };
       
       const response = await fetch(`http://localhost:3001/api/empresas/${empresaExcluindo.id}`, {
@@ -2204,7 +2204,7 @@ export default function EmpresasPage() {
                               <td className="px-4 py-3 text-sm">{empresa.regiao?.nome || '-'}</td>
                               <td className="px-4 py-3 text-sm">
                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  empresa.status === 'ATIVO' 
+                                  empresa.status === 'ativo' 
                                     ? 'bg-green-100 text-green-800' 
                                     : 'bg-red-100 text-red-800'
                                 }`}>

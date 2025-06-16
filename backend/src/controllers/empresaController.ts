@@ -15,29 +15,27 @@ const isValidCNPJ = (cnpj: string): boolean => {
   // Verifica se não são todos iguais
   if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false;
   
-  // Validação dos dígitos verificadores
+  // Validação do primeiro dígito verificador
   const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-  const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-  
   let sum = 0;
   for (let i = 0; i < 12; i++) {
     sum += parseInt(cleanCNPJ[i]) * weights1[i];
   }
+  let digit1 = sum % 11;
+  digit1 = digit1 < 2 ? 0 : 11 - digit1;
   
-  let firstDigit = 11 - (sum % 11);
-  if (firstDigit >= 10) firstDigit = 0;
+  if (parseInt(cleanCNPJ[12]) !== digit1) return false;
   
-  if (parseInt(cleanCNPJ[12]) !== firstDigit) return false;
-  
+  // Validação do segundo dígito verificador
+  const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
   sum = 0;
   for (let i = 0; i < 13; i++) {
     sum += parseInt(cleanCNPJ[i]) * weights2[i];
   }
+  let digit2 = sum % 11;
+  digit2 = digit2 < 2 ? 0 : 11 - digit2;
   
-  let secondDigit = 11 - (sum % 11);
-  if (secondDigit >= 10) secondDigit = 0;
-  
-  return parseInt(cleanCNPJ[13]) === secondDigit;
+  return parseInt(cleanCNPJ[13]) === digit2;
 };
 
 // Função auxiliar para validar CPF
@@ -51,26 +49,25 @@ const isValidCPF = (cpf: string): boolean => {
   // Verifica se não são todos iguais
   if (/^(\d)\1{10}$/.test(cleanCPF)) return false;
   
-  // Validação dos dígitos verificadores
+  // Validação do primeiro dígito verificador
   let sum = 0;
   for (let i = 0; i < 9; i++) {
     sum += parseInt(cleanCPF[i]) * (10 - i);
   }
+  let digit1 = (sum * 10) % 11;
+  if (digit1 === 10) digit1 = 0;
   
-  let firstDigit = 11 - (sum % 11);
-  if (firstDigit >= 10) firstDigit = 0;
+  if (parseInt(cleanCPF[9]) !== digit1) return false;
   
-  if (parseInt(cleanCPF[9]) !== firstDigit) return false;
-  
+  // Validação do segundo dígito verificador
   sum = 0;
   for (let i = 0; i < 10; i++) {
     sum += parseInt(cleanCPF[i]) * (11 - i);
   }
+  let digit2 = (sum * 10) % 11;
+  if (digit2 === 10) digit2 = 0;
   
-  let secondDigit = 11 - (sum % 11);
-  if (secondDigit >= 10) secondDigit = 0;
-  
-  return parseInt(cleanCPF[10]) === secondDigit;
+  return parseInt(cleanCPF[10]) === digit2;
 };
 
 // Função para formatar CNPJ
