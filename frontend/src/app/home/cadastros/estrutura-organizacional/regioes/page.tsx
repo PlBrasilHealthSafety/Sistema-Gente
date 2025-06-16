@@ -52,13 +52,14 @@ export default function RegioesPage() {
   const [showNewRegionModal, setShowNewRegionModal] = useState(false);
   const [nomeRegiao, setNomeRegiao] = useState('');
   const [nomeBusca, setNomeBusca] = useState('');
-  const [situacaoBusca, setSituacaoBusca] = useState('todos');
+  const [situacaoBusca, setSituacaoBusca] = useState('ativo');
   const [descricaoRegiao, setDescricaoRegiao] = useState('');
   const [ufRegiao, setUfRegiao] = useState('');
   const [cidadeRegiao, setCidadeRegiao] = useState('');
   const [regioes, setRegioes] = useState<Regiao[]>([]);
   const [filteredRegioes, setFilteredRegioes] = useState<Regiao[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
+  const [gruposAtivos, setGruposAtivos] = useState<Grupo[]>([]);
   const [grupoSelecionado, setGrupoSelecionado] = useState('');
   const [grupoFiltro, setGrupoFiltro] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -189,15 +190,21 @@ export default function RegioesPage() {
         const validData = result.success && Array.isArray(result.data) ? result.data : [];
 
         setGrupos(validData);
+        
+        // Filtrar apenas grupos ativos para os seletores
+        const gruposAtivos = validData.filter((grupo: Grupo) => grupo.status === 'ativo');
+        setGruposAtivos(gruposAtivos);
       } else {
         console.error('Erro na resposta da API de grupos. Status:', response.status);
         showNotification('error', `Erro ao carregar grupos: ${response.status}`);
         setGrupos([]);
+        setGruposAtivos([]);
       }
     } catch (error) {
       console.error('Erro ao carregar grupos:', error);
       showNotification('error', 'Erro de conexão ao carregar grupos');
       setGrupos([]);
+      setGruposAtivos([]);
     }
   }, []);
 
@@ -207,7 +214,7 @@ export default function RegioesPage() {
     
     // Limpar campos de pesquisa quando recarregar
     setNomeBusca('');
-    setSituacaoBusca('todos');
+    setSituacaoBusca('ativo');
     setGrupoFiltro('');
     setShowAutocomplete(false);
     setAutocompleteResults([]);
@@ -774,7 +781,7 @@ export default function RegioesPage() {
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
                       <option value="">Todos os grupos</option>
-                      {grupos.map(grupo => (
+                      {gruposAtivos.map(grupo => (
                         <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                       ))}
                     </select>
@@ -850,7 +857,7 @@ export default function RegioesPage() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                         >
                           <option value="">Selecione um grupo</option>
-                          {grupos.map(grupo => (
+                          {gruposAtivos.map(grupo => (
                             <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                           ))}
                         </select>
@@ -1028,7 +1035,7 @@ export default function RegioesPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
                       <option value="">Selecione um grupo</option>
-                      {grupos.map(grupo => (
+                      {gruposAtivos.map(grupo => (
                         <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                       ))}
                     </select>

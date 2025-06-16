@@ -34,7 +34,7 @@ interface Grupo {
   nome: string;
   descricao?: string;
   grupo_pai_id?: number;
-  status: 'ATIVO' | 'INATIVO';
+  status: 'ativo' | 'inativo';
 }
 
 interface Regiao {
@@ -43,7 +43,8 @@ interface Regiao {
   descricao?: string;
   uf: string;
   cidade?: string;
-  status: 'ATIVO' | 'INATIVO';
+  grupo_id?: number;
+  status: 'ativo' | 'inativo';
 }
 
 interface Empresa {
@@ -150,6 +151,9 @@ export default function EmpresasPage() {
   const [filteredEmpresas, setFilteredEmpresas] = useState<Empresa[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [regioes, setRegioes] = useState<Regiao[]>([]);
+  const [gruposAtivos, setGruposAtivos] = useState<Grupo[]>([]);
+  const [regioesAtivas, setRegioesAtivas] = useState<Regiao[]>([]);
+  const [gruposFiltradosPorRegiao, setGruposFiltradosPorRegiao] = useState<Grupo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<NotificationMessage>({
     type: 'success',
@@ -462,15 +466,25 @@ export default function EmpresasPage() {
             : [];
         console.log('Grupos carregados:', validData); // Debug
         setGrupos(validData);
+        
+        // Filtrar apenas grupos ativos para os seletores
+        const gruposAtivos = validData.filter((grupo: Grupo) => grupo.status === 'ativo');
+        console.log('Grupos ativos filtrados:', gruposAtivos); // Debug
+        setGruposAtivos(gruposAtivos);
+        setGruposFiltradosPorRegiao(gruposAtivos); // Inicialmente mostra todos os grupos ativos
       } else {
         console.error('Erro na resposta da API de grupos. Status:', response.status);
         showNotification('error', `Erro ao carregar grupos: ${response.status}`);
         setGrupos([]);
+        setGruposAtivos([]);
+        setGruposFiltradosPorRegiao([]);
       }
     } catch (error) {
       console.error('Erro ao carregar grupos:', error);
       showNotification('error', 'Erro de conexão ao carregar grupos');
       setGrupos([]);
+      setGruposAtivos([]);
+      setGruposFiltradosPorRegiao([]);
     }
   }, []);
 
@@ -496,15 +510,22 @@ export default function EmpresasPage() {
             : [];
         console.log('Regiões carregadas:', validData); // Debug
         setRegioes(validData);
+        
+        // Filtrar apenas regiões ativas para os seletores
+        const regioesAtivas = validData.filter((regiao: Regiao) => regiao.status === 'ativo');
+        console.log('Regiões ativas filtradas:', regioesAtivas); // Debug
+        setRegioesAtivas(regioesAtivas);
       } else {
         console.error('Erro na resposta da API de regiões. Status:', response.status);
         showNotification('error', `Erro ao carregar regiões: ${response.status}`);
         setRegioes([]);
+        setRegioesAtivas([]);
       }
     } catch (error) {
       console.error('Erro ao carregar regiões:', error);
       showNotification('error', 'Erro de conexão ao carregar regiões');
       setRegioes([]);
+      setRegioesAtivas([]);
     }
   }, []);
 
@@ -754,6 +775,8 @@ export default function EmpresasPage() {
     setObservacaoOS('');
     setGrupoSelecionado('');
     setRegiaoSelecionada('');
+    // Resetar grupos filtrados para mostrar todos os grupos ativos
+    setGruposFiltradosPorRegiao(gruposAtivos);
     setCepError('');
     setCnaeDescricao('');
     setRisco('');
@@ -806,6 +829,14 @@ export default function EmpresasPage() {
     setObservacaoOS(empresa.observacoes_os || '');
     setGrupoSelecionado(empresa.grupo_id ? empresa.grupo_id.toString() : '');
     setRegiaoSelecionada(empresa.regiao_id ? empresa.regiao_id.toString() : '');
+    
+    // Configurar grupos filtrados baseado na região da empresa
+    if (empresa.regiao_id) {
+      handleRegiaoChange(empresa.regiao_id.toString());
+    } else {
+      setGruposFiltradosPorRegiao(gruposAtivos);
+    }
+    
     setShowEditCompanyModal(true);
   };
 
@@ -922,6 +953,33 @@ export default function EmpresasPage() {
   const handleCancelarExclusao = () => {
     setShowDeleteModal(false);
     setEmpresaExcluindo(null);
+  };
+
+  // Função para filtrar grupos baseado na região selecionada
+  const handleRegiaoChange = (regiaoId: string) => {
+    setRegiaoSelecionada(regiaoId);
+    
+    if (regiaoId) {
+      // Encontrar a região selecionada
+      const regiaoSelecionadaObj = regioesAtivas.find(regiao => regiao.id === parseInt(regiaoId));
+      
+      if (regiaoSelecionadaObj && regiaoSelecionadaObj.grupo_id) {
+        // Se a região tem um grupo associado, mostrar apenas esse grupo
+        const grupoAssociado = gruposAtivos.find(grupo => grupo.id === regiaoSelecionadaObj.grupo_id);
+        setGruposFiltradosPorRegiao(grupoAssociado ? [grupoAssociado] : []);
+        
+        // Auto-selecionar o grupo associado
+        setGrupoSelecionado(regiaoSelecionadaObj.grupo_id.toString());
+      } else {
+        // Se a região não tem grupo associado, mostrar todos os grupos ativos
+        setGruposFiltradosPorRegiao(gruposAtivos);
+        setGrupoSelecionado('');
+      }
+    } else {
+      // Se nenhuma região selecionada, mostrar todos os grupos ativos
+      setGruposFiltradosPorRegiao(gruposAtivos);
+      setGrupoSelecionado('');
+    }
   };
 
   // useEffect para carregar dados iniciais
@@ -1130,7 +1188,7 @@ export default function EmpresasPage() {
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
                       <option value="">Todos os grupos</option>
-                      {grupos && Array.isArray(grupos) && grupos.map(grupo => (
+                      {gruposAtivos && Array.isArray(gruposAtivos) && gruposAtivos.map(grupo => (
                         <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                       ))}
                     </select>
@@ -1146,7 +1204,7 @@ export default function EmpresasPage() {
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
                       <option value="">Todas as regiões</option>
-                      {regioes && Array.isArray(regioes) && regioes.map(regiao => (
+                      {regioesAtivas && Array.isArray(regioesAtivas) && regioesAtivas.map(regiao => (
                         <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
                       ))}
                     </select>
@@ -1375,7 +1433,7 @@ export default function EmpresasPage() {
                               }`}
                             >
                               <option value="">Selecione um grupo</option>
-                              {grupos && Array.isArray(grupos) && grupos.map(grupo => (
+                              {gruposFiltradosPorRegiao && Array.isArray(gruposFiltradosPorRegiao) && gruposFiltradosPorRegiao.map(grupo => (
                                 <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                               ))}
                             </select>
@@ -1391,7 +1449,7 @@ export default function EmpresasPage() {
                             <select 
                               value={regiaoSelecionada}
                               onChange={(e) => {
-                                setRegiaoSelecionada(e.target.value);
+                                handleRegiaoChange(e.target.value);
                                 if (e.target.value && errors.regiaoSelecionada) {
                                   setErrors({...errors, regiaoSelecionada: ''});
                                 }
@@ -1401,7 +1459,7 @@ export default function EmpresasPage() {
                               }`}
                             >
                               <option value="">Selecione uma região</option>
-                              {regioes && Array.isArray(regioes) && regioes.map(regiao => (
+                              {regioesAtivas && Array.isArray(regioesAtivas) && regioesAtivas.map(regiao => (
                                 <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
                               ))}
                             </select>
@@ -2039,7 +2097,7 @@ export default function EmpresasPage() {
                       }`}
                     >
                       <option value="">Selecione um grupo</option>
-                      {grupos && Array.isArray(grupos) && grupos.map(grupo => (
+                      {gruposFiltradosPorRegiao && Array.isArray(gruposFiltradosPorRegiao) && gruposFiltradosPorRegiao.map(grupo => (
                         <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
                       ))}
                     </select>
@@ -2055,7 +2113,7 @@ export default function EmpresasPage() {
                     <select 
                       value={regiaoSelecionada}
                       onChange={(e) => {
-                        setRegiaoSelecionada(e.target.value);
+                        handleRegiaoChange(e.target.value);
                         if (e.target.value && errors.regiaoSelecionada) {
                           setErrors({...errors, regiaoSelecionada: ''});
                         }
@@ -2065,7 +2123,7 @@ export default function EmpresasPage() {
                       }`}
                     >
                       <option value="">Selecione uma região</option>
-                      {regioes && Array.isArray(regioes) && regioes.map(regiao => (
+                      {regioesAtivas && Array.isArray(regioesAtivas) && regioesAtivas.map(regiao => (
                         <option key={regiao.id} value={regiao.id}>{regiao.nome}</option>
                       ))}
                     </select>

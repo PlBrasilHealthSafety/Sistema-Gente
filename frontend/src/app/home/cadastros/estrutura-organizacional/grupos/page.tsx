@@ -55,7 +55,7 @@ export default function GruposPage() {
   // Estados para o autocomplete
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [autocompleteResults, setAutocompleteResults] = useState<Grupo[]>([]);
-  const [situacaoBusca, setSituacaoBusca] = useState('todos');
+  const [situacaoBusca, setSituacaoBusca] = useState('ativo');
 
   // Função para exibir notificação
   const showNotification = (type: 'success' | 'error', message: string) => {
@@ -147,7 +147,7 @@ export default function GruposPage() {
     
     // Limpar campos de pesquisa quando recarregar
     setNomeBusca('');
-    setSituacaoBusca('todos');
+    setSituacaoBusca('ativo');
     setShowAutocomplete(false);
     setAutocompleteResults([]);
     
@@ -212,7 +212,7 @@ export default function GruposPage() {
     // Fechar autocomplete ao usar o botão
     setShowAutocomplete(false);
     
-    if (!nomeBusca.trim()) {
+    if (!nomeBusca.trim() && situacaoBusca === 'todos') {
       console.log('Campo busca vazio, mostrando todos os grupos');
       setFilteredGrupos(grupos || []);
       return;
@@ -225,11 +225,26 @@ export default function GruposPage() {
     }
 
     console.log('Iniciando filtro...');
-    const filtered = grupos.filter(grupo => {
-      const match = grupo.nome.toLowerCase().includes(nomeBusca.toLowerCase());
-      console.log(`Grupo "${grupo.nome}" - Match: ${match}`);
-      return match;
-    });
+    let filtered = grupos;
+
+    // Filtrar por nome se houver busca
+    if (nomeBusca.trim()) {
+      filtered = filtered.filter(grupo => {
+        const match = grupo.nome.toLowerCase().includes(nomeBusca.toLowerCase());
+        console.log(`Grupo "${grupo.nome}" - Match nome: ${match}`);
+        return match;
+      });
+    }
+
+    // Filtrar por situação se não for "todos"
+    if (situacaoBusca !== 'todos') {
+      const status = situacaoBusca === 'ativo' ? 'ativo' : 'inativo';
+      filtered = filtered.filter(grupo => {
+        const match = grupo.status === status;
+        console.log(`Grupo "${grupo.nome}" - Match situação: ${match}`);
+        return match;
+      });
+    }
     
     console.log('Grupos filtrados:', filtered);
     setFilteredGrupos(filtered);
@@ -352,7 +367,7 @@ export default function GruposPage() {
     setShowDeleteModal(true);
   };
 
-  // Função para confirmar exclusão
+  // Função para confirmar exclusão (soft delete - marcar como inativo)
   const handleConfirmarExclusao = async () => {
     if (!grupoExcluindo) return;
     
@@ -360,25 +375,30 @@ export default function GruposPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/api/grupos/${grupoExcluindo.id}`, {
-        method: 'DELETE',
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          nome: grupoExcluindo.nome,
+          descricao: grupoExcluindo.descricao,
+          status: 'inativo'
+        })
       });
 
       if (response.ok) {
-        showNotification('success', 'Grupo excluído com sucesso!');
+        showNotification('success', 'Grupo inativado com sucesso!');
         await carregarGrupos();
         setShowDeleteModal(false);
         setGrupoExcluindo(null);
       } else {
         const error = await response.json();
-        showNotification('error', `Erro ao excluir grupo: ${error.message}`);
+        showNotification('error', `Erro ao inativar grupo: ${error.message}`);
       }
     } catch (error) {
-      console.error('Erro ao excluir grupo:', error);
-      showNotification('error', 'Erro ao excluir grupo. Tente novamente.');
+      console.error('Erro ao inativar grupo:', error);
+      showNotification('error', 'Erro ao inativar grupo. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -877,16 +897,16 @@ export default function GruposPage() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Inativação</h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    Tem certeza que deseja excluir o grupo &quot;{grupoExcluindo?.nome}&quot;?
+                    Tem certeza que deseja inativar o grupo &quot;{grupoExcluindo?.nome}&quot;?
                   </p>
                 </div>
               </div>
               
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-yellow-800">
-                  <strong>Atenção:</strong> Esta ação não pode ser desfeita. O grupo será permanentemente removido do sistema.
+                  <strong>Atenção:</strong> O grupo será marcado como inativo e não aparecerá mais nos seletores. Esta ação pode ser revertida alterando o status para ativo novamente.
                 </p>
               </div>
               
@@ -902,7 +922,7 @@ export default function GruposPage() {
                   disabled={isSubmitting}
                   className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Excluindo...' : 'Sim, Excluir'}
+                  {isSubmitting ? 'Inativando...' : 'Sim, Inativar'}
                 </button>
               </div>
             </div>
