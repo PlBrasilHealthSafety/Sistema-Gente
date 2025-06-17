@@ -132,6 +132,9 @@ export default function EmpresasPage() {
     errors,
     regioesFiltradas,
     gruposFiltradosPorRegiao,
+    showPontoFocal,
+    pontoFocalDescricao,
+    pontoFocalObservacoes,
     
     // Setters
     setActiveTab,
@@ -146,6 +149,9 @@ export default function EmpresasPage() {
     setObservacaoOS,
     setEmail,
     setEndereco,
+    setShowPontoFocal,
+    setPontoFocalDescricao,
+    setPontoFocalObservacoes,
     
     // Handlers
     handleCepChange,
@@ -1233,6 +1239,58 @@ export default function EmpresasPage() {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                               placeholder="Digite observações específicas para ordens de serviço..."
                             />
+                            
+                            {/* Botão para expandir Ponto Focal */}
+                            <div className="mt-3 flex items-center">
+                              <button
+                                type="button"
+                                onClick={() => setShowPontoFocal(!showPontoFocal)}
+                                className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 hover:border-[#1D3C44] cursor-pointer ${
+                                  showPontoFocal 
+                                    ? 'bg-[#00A298] border-[#00A298] text-white' 
+                                    : 'border-[#00A298] text-[#00A298] hover:bg-[#00A298]/10'
+                                }`}
+                              >
+                                <span className="text-sm font-bold">
+                                  {showPontoFocal ? '−' : '+'}
+                                </span>
+                              </button>
+                              <span className="ml-2 text-sm font-medium text-gray-700">
+                                Ponto Focal
+                              </span>
+                            </div>
+
+                            {/* Seção expandível do Ponto Focal */}
+                            {showPontoFocal && (
+                              <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
+                                <div className="space-y-4">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Descrição do Ponto Focal
+                                    </label>
+                                    <textarea
+                                      rows={3}
+                                      value={pontoFocalDescricao}
+                                      onChange={(e) => setPontoFocalDescricao(e.target.value)}
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                                      placeholder="Digite a descrição do ponto focal..."
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Observações Importantes
+                                    </label>
+                                    <textarea
+                                      rows={2}
+                                      value={pontoFocalObservacoes}
+                                      onChange={(e) => setPontoFocalObservacoes(e.target.value)}
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                                      placeholder="Observações rápidas..."
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1441,6 +1499,60 @@ export default function EmpresasPage() {
                       <p className="text-red-500 text-xs mt-1">{errors.risco}</p>
                     )}
                   </div>
+                </div>
+
+                {/* Seção Ponto Focal */}
+                <div className="mt-6 p-4 bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-center mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowPontoFocal(!showPontoFocal)}
+                      className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 hover:border-[#1D3C44] cursor-pointer ${
+                        showPontoFocal 
+                          ? 'bg-[#00A298] border-[#00A298] text-white' 
+                          : 'border-[#00A298] text-[#00A298] hover:bg-[#00A298]/10'
+                      }`}
+                    >
+                      <span className="text-sm font-bold">
+                        {showPontoFocal ? '−' : '+'}
+                      </span>
+                    </button>
+                    <span className="ml-2 text-sm font-medium text-gray-700">
+                      Ponto Focal
+                    </span>
+                  </div>
+
+                  {/* Seção expandível do Ponto Focal */}
+                  {showPontoFocal && (
+                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Descrição do Ponto Focal
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={pontoFocalDescricao}
+                            onChange={(e) => setPontoFocalDescricao(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                            placeholder="Digite a descrição do ponto focal..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Observações Importantes
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={pontoFocalObservacoes}
+                            onChange={(e) => setPontoFocalObservacoes(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                            placeholder="Observações rápidas para reuniões..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex gap-3 mt-6">

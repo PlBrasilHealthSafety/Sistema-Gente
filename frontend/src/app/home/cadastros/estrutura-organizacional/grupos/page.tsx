@@ -24,6 +24,7 @@ interface Grupo {
   id: number;
   nome: string;
   descricao?: string;
+  ponto_focal_descricao?: string;
   status: 'ativo' | 'inativo';
   created_by: number;
   updated_by: number;
@@ -41,6 +42,7 @@ export default function GruposPage() {
   const [descricaoGrupo, setDescricaoGrupo] = useState('');
   const [showPontoFocal, setShowPontoFocal] = useState(false);
   const [pontoFocalDescricao, setPontoFocalDescricao] = useState('');
+  const [pontoFocalObservacoes, setPontoFocalObservacoes] = useState('');
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [filteredGrupos, setFilteredGrupos] = useState<Grupo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -303,6 +305,7 @@ export default function GruposPage() {
     setDescricaoGrupo('');
     setShowPontoFocal(false);
     setPontoFocalDescricao('');
+    setPontoFocalObservacoes('');
   };
 
   // Função para retornar (fechar modal)
@@ -318,6 +321,7 @@ export default function GruposPage() {
     setDescricaoGrupo(grupo.descricao || '');
     setShowPontoFocal(false);
     setPontoFocalDescricao('');
+    setPontoFocalObservacoes('');
     setShowEditGroupModal(true);
   };
 
@@ -811,17 +815,31 @@ export default function GruposPage() {
                     {/* Seção Ponto Focal Expandível */}
                     {showPontoFocal && (
                       <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Descrição do Ponto Focal
-                          </label>
-                          <textarea
-                            value={pontoFocalDescricao}
-                            onChange={(e) => setPontoFocalDescricao(e.target.value)}
-                            rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                            placeholder="Digite informações sobre o ponto focal do grupo..."
-                          />
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Descrição do Ponto Focal
+                            </label>
+                            <textarea
+                              value={pontoFocalDescricao}
+                              onChange={(e) => setPontoFocalDescricao(e.target.value)}
+                              rows={3}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              placeholder="Digite informações sobre o ponto focal do grupo..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Observações Importantes
+                            </label>
+                            <textarea
+                              value={pontoFocalObservacoes}
+                              onChange={(e) => setPontoFocalObservacoes(e.target.value)}
+                              rows={2}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              placeholder="Observações rápidas para reuniões..."
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
@@ -858,6 +876,7 @@ export default function GruposPage() {
                     <thead className="bg-gray-100">
                       <tr>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ponto Focal</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
                       </tr>
@@ -874,6 +893,20 @@ export default function GruposPage() {
                                 )}
 
                               </div>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {grupo.ponto_focal_descricao ? (
+                                <div className="flex justify-center">
+                                  <div 
+                                    className="w-6 h-6 bg-[#00A298] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1D3C44] transition-colors duration-200"
+                                    title={`Ponto Focal: ${grupo.ponto_focal_descricao.substring(0, 100)}${grupo.ponto_focal_descricao.length > 100 ? '...' : ''}`}
+                                  >
+                                    <span className="text-white text-xs">💚</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-gray-300">-</span>
+                              )}
                             </td>
                             <td className="px-4 py-3 text-sm">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -898,7 +931,7 @@ export default function GruposPage() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
+                          <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
                             {nomeBusca ? 'Nenhum grupo encontrado com o nome pesquisado' : 'Não existem dados para mostrar'}
                           </td>
                         </tr>
@@ -967,18 +1000,31 @@ export default function GruposPage() {
                 {/* Seção Ponto Focal Expandível */}
                 {showPontoFocal && (
                   <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
-                    <h5 className="text-sm font-semibold text-[#1D3C44] mb-3">Ponto Focal</h5>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Descrição do Ponto Focal
-                      </label>
-                      <textarea
-                        value={pontoFocalDescricao}
-                        onChange={(e) => setPontoFocalDescricao(e.target.value)}
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                        placeholder="Digite informações sobre o ponto focal do grupo..."
-                      />
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Descrição do Ponto Focal
+                        </label>
+                        <textarea
+                          value={pontoFocalDescricao}
+                          onChange={(e) => setPontoFocalDescricao(e.target.value)}
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          placeholder="Digite informações sobre o ponto focal do grupo..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Observações Importantes
+                        </label>
+                        <textarea
+                          value={pontoFocalObservacoes}
+                          onChange={(e) => setPontoFocalObservacoes(e.target.value)}
+                          rows={2}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          placeholder="Observações rápidas..."
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
