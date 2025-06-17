@@ -111,22 +111,17 @@ export default function Header() {
             />
           </div>
 
-                      <div className="flex-1 relative flex justify-center items-center">
-              <button onClick={handleLogoClick} className="cursor-pointer group">
-                <Image
-                  src="/sistemagente_logo.png"
-                  alt="Sistema GENTE"
-                  width={150}
-                  height={15}
-                  className="object-contain group-hover:opacity-100 transition-opacity"
-                />
-              </button>
-              <div className="hidden lg:block absolute left-1/2 ml-20">
-                <p className="text-xs font-medium text-[#00A298] leading-tight whitespace-nowrap">
-                  Recuperar o tempo perdido com o que realmente importa!
-                </p>
-              </div>
-            </div>
+          <div className="flex-1 flex justify-center items-center">
+            <button onClick={handleLogoClick} className="cursor-pointer group">
+              <Image
+                src="/sistemagente_logo.png"
+                alt="Sistema GENTE"
+                width={150}
+                height={15}
+                className="object-contain group-hover:opacity-100 transition-opacity"
+              />
+            </button>
+          </div>
 
           <div className="flex items-center space-x-4 w-1/3 justify-end">
             {user && (

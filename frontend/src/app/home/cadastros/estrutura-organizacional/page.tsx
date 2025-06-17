@@ -186,7 +186,7 @@ export default function EstruturaOrganizacionalPage() {
                 <button
                   onClick={carregarTotais}
                   disabled={isLoading}
-                  className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {isLoading ? 'Carregando...' : 'Atualizar'}
                 </button>

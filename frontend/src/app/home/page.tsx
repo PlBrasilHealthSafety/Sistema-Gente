@@ -139,7 +139,7 @@ export default function HomePage() {
           
           <div className="text-center mt-6 pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-500 mb-2">
-              PLBrasil Health&Safety - Sistema GENTE v1.0.0-beta
+              PLBrasil Health&Safety - Sistema GENTE v1.1.0-beta
             </p>
             <p className="text-xs text-gray-400">
               Desenvolvido com ❤️ para revolucionar a gestão de pessoas

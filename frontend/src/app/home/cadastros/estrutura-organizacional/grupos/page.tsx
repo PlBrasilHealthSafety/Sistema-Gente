@@ -39,6 +39,8 @@ export default function GruposPage() {
   const [nomeGrupo, setNomeGrupo] = useState('');
   const [nomeBusca, setNomeBusca] = useState('');
   const [descricaoGrupo, setDescricaoGrupo] = useState('');
+  const [showPontoFocal, setShowPontoFocal] = useState(false);
+  const [pontoFocalDescricao, setPontoFocalDescricao] = useState('');
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [filteredGrupos, setFilteredGrupos] = useState<Grupo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -299,7 +301,8 @@ export default function GruposPage() {
   const handleLimpar = () => {
     setNomeGrupo('');
     setDescricaoGrupo('');
-
+    setShowPontoFocal(false);
+    setPontoFocalDescricao('');
   };
 
   // Função para retornar (fechar modal)
@@ -313,6 +316,8 @@ export default function GruposPage() {
     setGrupoEditando(grupo);
     setNomeGrupo(grupo.nome);
     setDescricaoGrupo(grupo.descricao || '');
+    setShowPontoFocal(false);
+    setPontoFocalDescricao('');
     setShowEditGroupModal(true);
   };
 
@@ -789,6 +794,38 @@ export default function GruposPage() {
                       />
                     </div>
 
+                    {/* Botão Ponto Focal */}
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowPontoFocal(!showPontoFocal)}
+                        className="flex items-center space-x-2 text-[#00A298] hover:text-[#1D3C44] font-medium text-sm transition-colors duration-200 cursor-pointer"
+                      >
+                        <div className={`w-6 h-6 border-2 border-[#00A298] rounded-full flex items-center justify-center transition-all duration-200 ${showPontoFocal ? 'bg-[#00A298] text-white' : 'text-[#00A298]'}`}>
+                          <span className="text-sm font-bold">{showPontoFocal ? '−' : '+'}</span>
+                        </div>
+                        <span>Ponto Focal</span>
+                      </button>
+                    </div>
+
+                    {/* Seção Ponto Focal Expandível */}
+                    {showPontoFocal && (
+                      <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Descrição do Ponto Focal
+                          </label>
+                          <textarea
+                            value={pontoFocalDescricao}
+                            onChange={(e) => setPontoFocalDescricao(e.target.value)}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                            placeholder="Digite informações sobre o ponto focal do grupo..."
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex gap-3 mt-6">
                       <button 
                         onClick={handleIncluir}
@@ -912,6 +949,39 @@ export default function GruposPage() {
                     placeholder="Digite uma descrição para o grupo..."
                   />
                 </div>
+
+                {/* Botão Ponto Focal */}
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowPontoFocal(!showPontoFocal)}
+                    className="flex items-center space-x-2 text-[#00A298] hover:text-[#1D3C44] font-medium text-sm transition-colors duration-200 cursor-pointer"
+                  >
+                    <div className={`w-6 h-6 border-2 border-[#00A298] rounded-full flex items-center justify-center transition-all duration-200 ${showPontoFocal ? 'bg-[#00A298] text-white' : 'text-[#00A298]'}`}>
+                      <span className="text-sm font-bold">{showPontoFocal ? '−' : '+'}</span>
+                    </div>
+                    <span>Ponto Focal</span>
+                  </button>
+                </div>
+
+                {/* Seção Ponto Focal Expandível */}
+                {showPontoFocal && (
+                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
+                    <h5 className="text-sm font-semibold text-[#1D3C44] mb-3">Ponto Focal</h5>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Descrição do Ponto Focal
+                      </label>
+                      <textarea
+                        value={pontoFocalDescricao}
+                        onChange={(e) => setPontoFocalDescricao(e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        placeholder="Digite informações sobre o ponto focal do grupo..."
+                      />
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex gap-3 mt-6">
                   <button

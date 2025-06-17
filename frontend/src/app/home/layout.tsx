@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+import Footer from '@/components/Footer';
 
 export default function HomeLayout({
   children,
@@ -43,9 +44,10 @@ export default function HomeLayout({
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-[#00A298]/15">
       <Header />
       <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
-      <main className={`transition-all duration-300 pt-16 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} p-6`}>
+      <main className={`transition-all duration-300 pt-16 pb-16 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} p-6`}>
         {children}
       </main>
+      <Footer />
     </div>
   );
 } 
