@@ -4,10 +4,8 @@ import { validateEmpresaForm, hasFormErrors } from '../utils/validations';
 import { 
   formatCEP, 
   formatCPF, 
-  formatCNPJ, 
   formatTelefone, 
   formatTexto, 
-  formatNumeros,
   isValidCPF,
   isValidTelefone,
   formatarNumeroInscricao,
@@ -351,6 +349,12 @@ export const useFormularioEmpresa = () => {
     setErrors(prev => ({ ...prev, [field]: '' }));
   }, []);
 
+  // Função para inicializar os arrays filtrados
+  const initializeForm = useCallback((regioesAtivas: Regiao[], gruposAtivos: Grupo[]) => {
+    setRegioesFiltradas(regioesAtivas);
+    setGruposFiltradosPorRegiao(gruposAtivos);
+  }, []);
+
   return {
     // Estados
     activeTab,
@@ -396,6 +400,12 @@ export const useFormularioEmpresa = () => {
     setTipoInscricao,
     setCnaeDescricao,
     setRisco,
+    setNomeRepresentante,
+    setCpfRepresentante,
+    setNumeroInscricao,
+    setCno,
+    setGrupoSelecionado,
+    setRegiaoSelecionada,
     setRegioesFiltradas,
     setGruposFiltradosPorRegiao,
 
@@ -416,6 +426,7 @@ export const useFormularioEmpresa = () => {
     limparFormulario,
     carregarEmpresa,
     clearFieldError,
+    initializeForm,
 
     // Validações inline
     isValidCPF: (cpf: string) => isValidCPF(cpf),
