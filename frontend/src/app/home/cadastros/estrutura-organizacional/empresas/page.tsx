@@ -55,8 +55,10 @@ export default function EmpresasPage() {
   const [showNewCompanyModal, setShowNewCompanyModal] = useState(false);
   const [showEditCompanyModal, setShowEditCompanyModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewCompanyModal, setShowViewCompanyModal] = useState(false);
   const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null);
   const [empresaExcluindo, setEmpresaExcluindo] = useState<Empresa | null>(null);
+  const [empresaVisualizando, setEmpresaVisualizando] = useState<Empresa | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Estado para notificação
@@ -393,6 +395,18 @@ export default function EmpresasPage() {
   const handleCancelarExclusao = () => {
     setShowDeleteModal(false);
     setEmpresaExcluindo(null);
+  };
+
+  // Função para abrir modal de visualização
+  const handleVisualizarEmpresa = (empresa: Empresa) => {
+    setEmpresaVisualizando(empresa);
+    setShowViewCompanyModal(true);
+  };
+
+  // Função para fechar modal de visualização
+  const handleFecharVisualizacao = () => {
+    setShowViewCompanyModal(false);
+    setEmpresaVisualizando(null);
   };
 
   // useEffect para carregar dados iniciais
@@ -1360,6 +1374,7 @@ export default function EmpresasPage() {
                   pesquisaTexto={pesquisaTexto}
                   onEditar={handleEditarEmpresa}
                   onExcluir={handleExcluirEmpresa}
+                  onVisualizar={handleVisualizarEmpresa}
                   permissions={{
                     canEdit: permissions.empresas.canEdit,
                     canDelete: permissions.empresas.canDelete,
@@ -1371,6 +1386,221 @@ export default function EmpresasPage() {
           </div>
         </main>
       </div>
+
+      {/* Modal de Visualização */}
+      {showViewCompanyModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Visualizar Empresa</h3>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Dados da empresa</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nome Fantasia
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.nome_fantasia || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Razão Social
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.razao_social || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CPF ou CNPJ
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.numero_inscricao || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Código
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.codigo || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Grupo
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.grupo?.nome || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Região
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.regiao?.nome || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CNAE e Descrição
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.cnae_descricao || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Risco
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.risco || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Endereço
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.endereco_logradouro ? 
+                        `${empresaVisualizando.endereco_logradouro}${empresaVisualizando.endereco_numero ? `, ${empresaVisualizando.endereco_numero}` : ''}${empresaVisualizando.endereco_complemento ? `, ${empresaVisualizando.endereco_complemento}` : ''}${empresaVisualizando.endereco_bairro ? `, ${empresaVisualizando.endereco_bairro}` : ''}${empresaVisualizando.endereco_cidade ? `, ${empresaVisualizando.endereco_cidade}` : ''}${empresaVisualizando.endereco_uf ? ` - ${empresaVisualizando.endereco_uf}` : ''}`
+                        : 'Não informado'
+                      }
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CEP
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.endereco_cep || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.contato_email || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Telefone
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.contato_telefone || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                {/* Seção Ponto Focal (apenas se houver dados e usuário tiver permissão) */}
+                {permissions.canViewSensitive && (empresaVisualizando?.ponto_focal_nome || empresaVisualizando?.ponto_focal_descricao || empresaVisualizando?.ponto_focal_observacoes) && (
+                  <div className="mt-6 p-4 bg-white border border-gray-200 rounded-lg">
+                    <h5 className="text-sm font-medium text-gray-700 mb-3">Informações do Ponto Focal</h5>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Nome do Ponto Focal
+                        </label>
+                        <input
+                          type="text"
+                          value={empresaVisualizando?.ponto_focal_nome || ''}
+                          readOnly
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Descrição do Ponto Focal
+                        </label>
+                        <textarea
+                          value={empresaVisualizando?.ponto_focal_descricao || ''}
+                          readOnly
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Observações Importantes
+                        </label>
+                        <textarea
+                          value={empresaVisualizando?.ponto_focal_observacoes || ''}
+                          readOnly
+                          rows={2}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleFecharVisualizacao}
+                    className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    FECHAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Edição */}
       {showEditCompanyModal && (

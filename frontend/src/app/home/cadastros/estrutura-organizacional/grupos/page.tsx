@@ -65,6 +65,8 @@ export default function GruposPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [grupoEditando, setGrupoEditando] = useState<Grupo | null>(null);
   const [grupoExcluindo, setGrupoExcluindo] = useState<Grupo | null>(null);
+  const [showViewGroupModal, setShowViewGroupModal] = useState(false);
+  const [grupoVisualizando, setGrupoVisualizando] = useState<Grupo | null>(null);
 
   // Estados para o autocomplete
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -511,6 +513,18 @@ export default function GruposPage() {
     setGrupoExcluindo(null);
   };
 
+  // Função para abrir modal de visualização
+  const handleVisualizarGrupo = (grupo: Grupo) => {
+    setGrupoVisualizando(grupo);
+    setShowViewGroupModal(true);
+  };
+
+  // Função para fechar modal de visualização
+  const handleFecharVisualizacao = () => {
+    setShowViewGroupModal(false);
+    setGrupoVisualizando(null);
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -928,14 +942,12 @@ export default function GruposPage() {
                   <table className="w-full">
                     <thead className="bg-gray-100">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-1/2">Nome</th>
                         {permissions.canViewSensitive && (
-                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ponto Focal</th>
+                          <th className="px-2 py-3 text-center text-sm font-medium text-gray-700 w-100">Ponto Focal</th>
                         )}
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
-                        {(permissions.grupos.canEdit || permissions.grupos.canDelete) && (
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
-                        )}
+                        <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-32">Situação</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-48">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -951,12 +963,12 @@ export default function GruposPage() {
 
                               </div>
                             </td>
-                                                          {permissions.canViewSensitive && (
-                                <td className="px-4 py-3 text-center">
-                                  <PontoFocalTooltip data={grupo} />
-                                </td>
-                              )}
-                            <td className="px-4 py-3 text-sm">
+                            {permissions.canViewSensitive && (
+                              <td className="px-4 py-3 text-center">
+                                <PontoFocalTooltip data={grupo} />
+                              </td>
+                            )}
+                            <td className="px-12 py-3 text-sm text-center">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 grupo.status === 'ativo' 
                                   ? 'bg-green-100 text-green-800' 
@@ -965,31 +977,31 @@ export default function GruposPage() {
                                 {grupo.status}
                               </span>
                             </td>
-                            {(permissions.grupos.canEdit || permissions.grupos.canDelete) && (
-                              <td className="px-4 py-3 text-sm">
-                                <div className="flex space-x-2">
-                                  {permissions.grupos.canEdit && (
-                                    <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarGrupo(grupo)}>
-                                      Editar
-                                    </button>
-                                  )}
-                                  {permissions.grupos.canDelete && (
-                                    <button className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" onClick={() => handleExcluirGrupo(grupo)}>
-                                      Excluir
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                            )}
+                                        <td className="px-4 py-3 text-sm">
+              <div className="flex space-x-2 justify-center">
+                <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarGrupo(grupo)}>
+                  Visualizar
+                </button>
+                {permissions.grupos.canEdit && (
+                  <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarGrupo(grupo)}>
+                    Editar
+                  </button>
+                )}
+                {permissions.grupos.canDelete && (
+                  <button className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" onClick={() => handleExcluirGrupo(grupo)}>
+                    Excluir
+                  </button>
+                )}
+              </div>
+            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
                           <td 
                             colSpan={
-                              2 + 
-                              (permissions.canViewSensitive ? 1 : 0) + 
-                              (permissions.grupos.canEdit || permissions.grupos.canDelete ? 1 : 0)
+                              3 + 
+                              (permissions.canViewSensitive ? 1 : 0)
                             } 
                             className="px-4 py-8 text-center text-gray-500"
                           >
@@ -1006,7 +1018,99 @@ export default function GruposPage() {
         </main>
       </div>
 
-              {/* Modal de Edição */}
+              {/* Modal de Visualização */}
+        {showViewGroupModal && (
+          <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Visualizar Grupo</h3>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nome
+                    </label>
+                    <input
+                      type="text"
+                      value={grupoVisualizando?.nome || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descrição
+                  </label>
+                  <textarea
+                    value={grupoVisualizando?.descricao || ''}
+                    readOnly
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                  />
+                </div>
+
+                {/* Seção Ponto Focal (apenas se houver dados) */}
+                {permissions.canViewSensitive && (grupoVisualizando?.ponto_focal_nome || grupoVisualizando?.ponto_focal_descricao || grupoVisualizando?.ponto_focal_observacoes) && (
+                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <h5 className="text-sm font-medium text-gray-700 mb-3">Informações do Ponto Focal</h5>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Nome do Ponto Focal
+                        </label>
+                        <input
+                          type="text"
+                          value={grupoVisualizando?.ponto_focal_nome || ''}
+                          readOnly
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Descrição do Ponto Focal
+                        </label>
+                        <textarea
+                          value={grupoVisualizando?.ponto_focal_descricao || ''}
+                          readOnly
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Observações Importantes
+                        </label>
+                        <textarea
+                          value={grupoVisualizando?.ponto_focal_observacoes || ''}
+                          readOnly
+                          rows={2}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleFecharVisualizacao}
+                    className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    FECHAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição */}
         {showEditGroupModal && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">

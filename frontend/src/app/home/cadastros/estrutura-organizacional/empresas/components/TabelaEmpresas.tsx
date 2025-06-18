@@ -11,13 +11,14 @@ interface TabelaEmpresasProps {
   empresas: Empresa[];
   onEditar: (empresa: Empresa) => void;
   onExcluir: (empresa: Empresa) => void;
+  onVisualizar: (empresa: Empresa) => void;
   pesquisaTexto?: string;
   permissions: Permissions;
 }
 
 
 
-export default function TabelaEmpresas({ empresas, onEditar, onExcluir, pesquisaTexto, permissions }: TabelaEmpresasProps) {
+export default function TabelaEmpresas({ empresas, onEditar, onExcluir, onVisualizar, pesquisaTexto, permissions }: TabelaEmpresasProps) {
   return (
     <div className="p-6">
       <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -34,9 +35,7 @@ export default function TabelaEmpresas({ empresas, onEditar, onExcluir, pesquisa
                 <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ponto Focal</th>
               )}
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
-              {(permissions.canEdit || permissions.canDelete) && (
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
-              )}
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -63,37 +62,40 @@ export default function TabelaEmpresas({ empresas, onEditar, onExcluir, pesquisa
                       {empresa.status.toLowerCase()}
                     </span>
                   </td>
-                  {(permissions.canEdit || permissions.canDelete) && (
-                    <td className="px-4 py-3 text-sm">
-                      <div className="flex space-x-2">
-                        {permissions.canEdit && (
-                          <button 
-                            className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" 
-                            onClick={() => onEditar(empresa)}
-                          >
-                            Editar
-                          </button>
-                        )}
-                        {permissions.canDelete && (
-                          <button 
-                            className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
-                            onClick={() => onExcluir(empresa)}
-                          >
-                            Excluir
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  )}
+                  <td className="px-4 py-3 text-sm">
+                    <div className="flex space-x-2">
+                      <button 
+                        className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" 
+                        onClick={() => onVisualizar(empresa)}
+                      >
+                        Visualizar
+                      </button>
+                      {permissions.canEdit && (
+                        <button 
+                          className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" 
+                          onClick={() => onEditar(empresa)}
+                        >
+                          Editar
+                        </button>
+                      )}
+                      {permissions.canDelete && (
+                        <button 
+                          className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
+                          onClick={() => onExcluir(empresa)}
+                        >
+                          Excluir
+                        </button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td 
                   colSpan={
-                    7 + 
-                    (permissions.canViewSensitive ? 1 : 0) + 
-                    (permissions.canEdit || permissions.canDelete ? 1 : 0)
+                    8 + 
+                    (permissions.canViewSensitive ? 1 : 0)
                   } 
                   className="px-4 py-8 text-center text-gray-500"
                 >

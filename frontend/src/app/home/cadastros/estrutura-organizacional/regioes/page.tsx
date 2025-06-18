@@ -76,6 +76,8 @@ export default function RegioesPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [regiaoEditando, setRegiaoEditando] = useState<Regiao | null>(null);
   const [regiaoExcluindo, setRegiaoExcluindo] = useState<Regiao | null>(null);
+  const [showViewRegionModal, setShowViewRegionModal] = useState(false);
+  const [regiaoVisualizando, setRegiaoVisualizando] = useState<Regiao | null>(null);
   
   // Estados para o autocomplete
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -400,6 +402,18 @@ export default function RegioesPage() {
   const handleRetornar = () => {
     handleLimpar();
     setShowNewRegionModal(false);
+  };
+
+  // Função para abrir modal de visualização
+  const handleVisualizarRegiao = (regiao: Regiao) => {
+    setRegiaoVisualizando(regiao);
+    setShowViewRegionModal(true);
+  };
+
+  // Função para fechar modal de visualização
+  const handleFecharVisualizacao = () => {
+    setShowViewRegionModal(false);
+    setRegiaoVisualizando(null);
   };
 
   // Função para abrir modal de edição
@@ -954,9 +968,7 @@ export default function RegioesPage() {
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Grupo</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
-                        {(permissions.regioes.canEdit || permissions.regioes.canDelete) && (
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
-                        )}
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -989,31 +1001,29 @@ export default function RegioesPage() {
                                 {regiao.status}
                               </span>
                             </td>
-                            {(permissions.regioes.canEdit || permissions.regioes.canDelete) && (
-                              <td className="px-4 py-3 text-sm">
-                                <div className="flex space-x-2">
-                                  {permissions.regioes.canEdit && (
-                                    <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarRegiao(regiao)}>
-                                      Editar
-                                    </button>
-                                  )}
-                                  {permissions.regioes.canDelete && (
-                                    <button className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" onClick={() => handleExcluirRegiao(regiao)}>
-                                      Excluir
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                            )}
+                            <td className="px-4 py-3 text-sm">
+                              <div className="flex space-x-2">
+                                <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarRegiao(regiao)}>
+                                  Visualizar
+                                </button>
+                                {permissions.regioes.canEdit && (
+                                  <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarRegiao(regiao)}>
+                                    Editar
+                                  </button>
+                                )}
+                                {permissions.regioes.canDelete && (
+                                  <button className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" onClick={() => handleExcluirRegiao(regiao)}>
+                                    Excluir
+                                  </button>
+                                )}
+                              </div>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
                           <td 
-                            colSpan={
-                              3 + 
-                              (permissions.regioes.canEdit || permissions.regioes.canDelete ? 1 : 0)
-                            } 
+                            colSpan={4} 
                             className="px-4 py-8 text-center text-gray-500"
                           >
                             {nomeBusca ? 'Nenhuma região encontrada com o nome pesquisado' : 'Não existem dados para mostrar'}
@@ -1028,6 +1038,95 @@ export default function RegioesPage() {
           </div>
         </main>
       </div>
+
+      {/* Modal de Visualização */}
+      {showViewRegionModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Visualizar Região</h3>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nome
+                    </label>
+                    <input
+                      type="text"
+                      value={regiaoVisualizando?.nome || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Grupo
+                    </label>
+                    <input
+                      type="text"
+                      value={regiaoVisualizando?.grupo_id ? 
+                        grupos.find(g => g.id === regiaoVisualizando?.grupo_id)?.nome || 'Grupo não encontrado'
+                        : 'Nenhum grupo associado'
+                      }
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      UF (Estado)
+                    </label>
+                    <input
+                      type="text"
+                      value={regiaoVisualizando?.uf || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cidade
+                    </label>
+                    <input
+                      type="text"
+                      value={regiaoVisualizando?.cidade || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descrição
+                  </label>
+                  <textarea
+                    value={regiaoVisualizando?.descricao || 'Não informado'}
+                    readOnly
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                  />
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleFecharVisualizacao}
+                    className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    FECHAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Edição */}
       {showEditRegionModal && (
