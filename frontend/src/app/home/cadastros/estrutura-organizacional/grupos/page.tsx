@@ -944,10 +944,10 @@ export default function GruposPage() {
                       <tr>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-1/2">Nome</th>
                         {permissions.canViewSensitive && (
-                          <th className="px-2 py-3 text-center text-sm font-medium text-gray-700 w-100">Ponto Focal</th>
+                          <th className="px-11 py-3 text-center text-sm font-medium text-gray-700 w-100">Ponto Focal</th>
                         )}
                         <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-32">Situação</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-48">Ações</th>
+                        <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-48">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -964,7 +964,7 @@ export default function GruposPage() {
                               </div>
                             </td>
                             {permissions.canViewSensitive && (
-                              <td className="px-4 py-3 text-center">
+                              <td className="px-12 py-3 text-center">
                                 <PontoFocalTooltip data={grupo} />
                               </td>
                             )}
@@ -977,7 +977,7 @@ export default function GruposPage() {
                                 {grupo.status}
                               </span>
                             </td>
-                                        <td className="px-4 py-3 text-sm">
+                                        <td className="px-12 py-3 text-sm">
               <div className="flex space-x-2 justify-center">
                 <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarGrupo(grupo)}>
                   Visualizar

@@ -965,10 +965,10 @@ export default function RegioesPage() {
                   <table className="w-full">
                     <thead className="bg-gray-100">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Grupo</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-1/2">Nome</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-32">Grupo</th>
+                        <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-32">Situação</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-48">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -986,13 +986,13 @@ export default function RegioesPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-500">
+                            <td className="px-4 py-3 text-sm text-center text-gray-500">
                               {regiao.grupo_id ? 
                                 grupos.find(g => g.id === regiao.grupo_id)?.nome || 'Grupo não encontrado'
                                 : '-'
                               }
                             </td>
-                            <td className="px-4 py-3 text-sm">
+                            <td className="px-12 py-3 text-sm text-center">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 regiao.status === 'ativo' 
                                   ? 'bg-green-100 text-green-800' 
@@ -1002,7 +1002,7 @@ export default function RegioesPage() {
                               </span>
                             </td>
                             <td className="px-4 py-3 text-sm">
-                              <div className="flex space-x-2">
+                              <div className="flex space-x-2 justify-center">
                                 <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarRegiao(regiao)}>
                                   Visualizar
                                 </button>
