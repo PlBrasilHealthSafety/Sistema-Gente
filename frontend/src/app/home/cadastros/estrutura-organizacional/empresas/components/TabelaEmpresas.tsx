@@ -35,7 +35,7 @@ export default function TabelaEmpresas({ empresas, onEditar, onExcluir, onVisual
                 <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ponto Focal</th>
               )}
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
+              <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -63,7 +63,7 @@ export default function TabelaEmpresas({ empresas, onEditar, onExcluir, onVisual
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 justify-center">
                       <button 
                         className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" 
                         onClick={() => onVisualizar(empresa)}
