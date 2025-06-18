@@ -225,18 +225,6 @@ export class GrupoModel {
       paramCount++;
     }
 
-    if (grupoData.ponto_focal_descricao !== undefined) {
-      fields.push(`ponto_focal_descricao = $${paramCount}`);
-      values.push(grupoData.ponto_focal_descricao);
-      paramCount++;
-    }
-
-    if (grupoData.ponto_focal_observacoes !== undefined) {
-      fields.push(`ponto_focal_observacoes = $${paramCount}`);
-      values.push(grupoData.ponto_focal_observacoes);
-      paramCount++;
-    }
-
     if (fields.length === 0) {
       return await this.findById(id);
     }

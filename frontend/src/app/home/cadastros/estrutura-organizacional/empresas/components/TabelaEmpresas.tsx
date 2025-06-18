@@ -1,4 +1,5 @@
 import { Empresa } from '../types/empresa.types';
+import PontoFocalTooltip from '@/components/PontoFocalTooltip';
 
 interface Permissions {
   canEdit: boolean;
@@ -13,6 +14,8 @@ interface TabelaEmpresasProps {
   pesquisaTexto?: string;
   permissions: Permissions;
 }
+
+
 
 export default function TabelaEmpresas({ empresas, onEditar, onExcluir, pesquisaTexto, permissions }: TabelaEmpresasProps) {
   return (
@@ -46,22 +49,11 @@ export default function TabelaEmpresas({ empresas, onEditar, onExcluir, pesquisa
                   <td className="px-4 py-3 text-sm">{empresa.codigo}</td>
                   <td className="px-4 py-3 text-sm">{empresa.grupo?.nome || '-'}</td>
                   <td className="px-4 py-3 text-sm">{empresa.regiao?.nome || '-'}</td>
-                  {permissions.canViewSensitive && (
-                    <td className="px-4 py-3 text-center">
-                      {empresa.ponto_focal_descricao ? (
-                        <div className="flex justify-center">
-                          <div 
-                            className="w-6 h-6 bg-[#00A298] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1D3C44] transition-colors duration-200"
-                            title={`Ponto Focal: ${empresa.ponto_focal_descricao.substring(0, 100)}${empresa.ponto_focal_descricao.length > 100 ? '...' : ''}`}
-                          >
-                            <span className="text-white text-xs">💚</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-gray-300">-</span>
-                      )}
-                    </td>
-                  )}
+                                      {permissions.canViewSensitive && (
+                      <td className="px-4 py-3 text-center">
+                        <PontoFocalTooltip data={empresa} />
+                      </td>
+                    )}
                   <td className="px-4 py-3 text-sm">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       empresa.status === 'ativo' 

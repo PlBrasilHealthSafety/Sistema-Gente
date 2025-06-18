@@ -90,6 +90,7 @@ export const usePermissions = (user: user | null): Permissions => {
 
     switch (user.role) {
       case 'super_admin':
+      case 'SUPER_ADMIN':
         // super_admin: Acesso total a tudo
         return {
           canCreate: true,
@@ -113,6 +114,7 @@ export const usePermissions = (user: user | null): Permissions => {
           },
         };
 
+      case 'admin':
       case 'ADMIN':
         // ADMIN: Pode gerenciar apenas suas entidades associadas
         return {
@@ -138,6 +140,7 @@ export const usePermissions = (user: user | null): Permissions => {
         };
 
       case 'user':
+      case 'USER':
         // user: Apenas visualização
         return {
           canCreate: false,

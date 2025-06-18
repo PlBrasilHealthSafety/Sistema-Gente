@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { formatTexto } from '@/utils/masks';
 import { usePermissions } from '@/hooks/usePermissions';
+import PontoFocalTooltip from '@/components/PontoFocalTooltip';
 
 interface NotificationMessage {
   type: 'success' | 'error';
@@ -25,13 +26,17 @@ interface Grupo {
   id: number;
   nome: string;
   descricao?: string;
+  ponto_focal_nome?: string;
   ponto_focal_descricao?: string;
+  ponto_focal_observacoes?: string;
   status: 'ativo' | 'inativo';
   created_by: number;
   updated_by: number;
   created_at: string;
   updated_at: string;
 }
+
+
 
 export default function GruposPage() {
   const router = useRouter();
@@ -299,6 +304,9 @@ export default function GruposPage() {
         body: JSON.stringify({
           nome: nomeGrupo,
           descricao: descricaoGrupo || null,
+          ponto_focal_nome: showPontoFocal ? pontoFocalNome || null : null,
+          ponto_focal_descricao: showPontoFocal ? pontoFocalDescricao || null : null,
+          ponto_focal_observacoes: showPontoFocal ? pontoFocalObservacoes || null : null,
         })
       });
 
@@ -340,10 +348,14 @@ export default function GruposPage() {
     setGrupoEditando(grupo);
     setNomeGrupo(grupo.nome);
     setDescricaoGrupo(grupo.descricao || '');
-    setShowPontoFocal(false);
-    setPontoFocalNome('');
-    setPontoFocalDescricao('');
-    setPontoFocalObservacoes('');
+    
+    // Verificar se tem ponto focal cadastrado
+    const hasPontoFocal = !!(grupo.ponto_focal_nome || grupo.ponto_focal_descricao || grupo.ponto_focal_observacoes);
+    setShowPontoFocal(hasPontoFocal);
+    setPontoFocalNome(grupo.ponto_focal_nome || '');
+    setPontoFocalDescricao(grupo.ponto_focal_descricao || '');
+    setPontoFocalObservacoes(grupo.ponto_focal_observacoes || '');
+    
     setShowEditGroupModal(true);
   };
 
@@ -365,6 +377,9 @@ export default function GruposPage() {
         body: JSON.stringify({
           nome: nomeGrupo,
           descricao: descricaoGrupo || null,
+          ponto_focal_nome: showPontoFocal ? pontoFocalNome || null : null,
+          ponto_focal_descricao: showPontoFocal ? pontoFocalDescricao || null : null,
+          ponto_focal_observacoes: showPontoFocal ? pontoFocalObservacoes || null : null,
         })
       });
       if (response.ok) {
@@ -936,22 +951,11 @@ export default function GruposPage() {
 
                               </div>
                             </td>
-                            {permissions.canViewSensitive && (
-                              <td className="px-4 py-3 text-center">
-                                {grupo.ponto_focal_descricao ? (
-                                  <div className="flex justify-center">
-                                    <div 
-                                      className="w-6 h-6 bg-[#00A298] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1D3C44] transition-colors duration-200"
-                                      title={`Ponto Focal: ${grupo.ponto_focal_descricao.substring(0, 100)}${grupo.ponto_focal_descricao.length > 100 ? '...' : ''}`}
-                                    >
-                                      <span className="text-white text-xs">💚</span>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-300">-</span>
-                                )}
-                              </td>
-                            )}
+                                                          {permissions.canViewSensitive && (
+                                <td className="px-4 py-3 text-center">
+                                  <PontoFocalTooltip data={grupo} />
+                                </td>
+                              )}
                             <td className="px-4 py-3 text-sm">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 grupo.status === 'ativo' 
