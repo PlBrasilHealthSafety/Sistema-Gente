@@ -1,13 +1,20 @@
 import { Empresa } from '../types/empresa.types';
 
+interface Permissions {
+  canEdit: boolean;
+  canDelete: boolean;
+  canViewSensitive: boolean;
+}
+
 interface TabelaEmpresasProps {
   empresas: Empresa[];
   onEditar: (empresa: Empresa) => void;
   onExcluir: (empresa: Empresa) => void;
   pesquisaTexto?: string;
+  permissions: Permissions;
 }
 
-export default function TabelaEmpresas({ empresas, onEditar, onExcluir, pesquisaTexto }: TabelaEmpresasProps) {
+export default function TabelaEmpresas({ empresas, onEditar, onExcluir, pesquisaTexto, permissions }: TabelaEmpresasProps) {
   return (
     <div className="p-6">
       <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -20,9 +27,13 @@ export default function TabelaEmpresas({ empresas, onEditar, onExcluir, pesquisa
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Código</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Grupo</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Região</th>
-              <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ponto Focal</th>
+              {permissions.canViewSensitive && (
+                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ponto Focal</th>
+              )}
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
+              {(permissions.canEdit || permissions.canDelete) && (
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -35,20 +46,22 @@ export default function TabelaEmpresas({ empresas, onEditar, onExcluir, pesquisa
                   <td className="px-4 py-3 text-sm">{empresa.codigo}</td>
                   <td className="px-4 py-3 text-sm">{empresa.grupo?.nome || '-'}</td>
                   <td className="px-4 py-3 text-sm">{empresa.regiao?.nome || '-'}</td>
-                  <td className="px-4 py-3 text-center">
-                    {empresa.ponto_focal_descricao ? (
-                      <div className="flex justify-center">
-                        <div 
-                          className="w-6 h-6 bg-[#00A298] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1D3C44] transition-colors duration-200"
-                          title={`Ponto Focal: ${empresa.ponto_focal_descricao.substring(0, 100)}${empresa.ponto_focal_descricao.length > 100 ? '...' : ''}`}
-                        >
-                          <span className="text-white text-xs">💚</span>
+                  {permissions.canViewSensitive && (
+                    <td className="px-4 py-3 text-center">
+                      {empresa.ponto_focal_descricao ? (
+                        <div className="flex justify-center">
+                          <div 
+                            className="w-6 h-6 bg-[#00A298] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1D3C44] transition-colors duration-200"
+                            title={`Ponto Focal: ${empresa.ponto_focal_descricao.substring(0, 100)}${empresa.ponto_focal_descricao.length > 100 ? '...' : ''}`}
+                          >
+                            <span className="text-white text-xs">💚</span>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <span className="text-gray-300">-</span>
-                    )}
-                  </td>
+                      ) : (
+                        <span className="text-gray-300">-</span>
+                      )}
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-sm">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       empresa.status === 'ativo' 
@@ -58,27 +71,40 @@ export default function TabelaEmpresas({ empresas, onEditar, onExcluir, pesquisa
                       {empresa.status.toLowerCase()}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm">
-                    <div className="flex space-x-2">
-                      <button 
-                        className="text-blue-600 hover:text-blue-800 text-xs font-medium" 
-                        onClick={() => onEditar(empresa)}
-                      >
-                        Editar
-                      </button>
-                      <button 
-                        className="text-red-600 hover:text-red-800 text-xs font-medium" 
-                        onClick={() => onExcluir(empresa)}
-                      >
-                        Excluir
-                      </button>
-                    </div>
-                  </td>
+                  {(permissions.canEdit || permissions.canDelete) && (
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex space-x-2">
+                        {permissions.canEdit && (
+                          <button 
+                            className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" 
+                            onClick={() => onEditar(empresa)}
+                          >
+                            Editar
+                          </button>
+                        )}
+                        {permissions.canDelete && (
+                          <button 
+                            className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
+                            onClick={() => onExcluir(empresa)}
+                          >
+                            Excluir
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                <td 
+                  colSpan={
+                    7 + 
+                    (permissions.canViewSensitive ? 1 : 0) + 
+                    (permissions.canEdit || permissions.canDelete ? 1 : 0)
+                  } 
+                  className="px-4 py-8 text-center text-gray-500"
+                >
                   {pesquisaTexto ? 'Nenhuma empresa encontrada com os critérios pesquisados' : 'Não existem dados para mostrar'}
                 </td>
               </tr>

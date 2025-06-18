@@ -11,6 +11,7 @@ import { User, Empresa, Grupo, Regiao } from './types/empresa.types';
 import { useEmpresas } from './hooks/useEmpresas';
 import { useFiltros } from './hooks/useFiltros';
 import { useFormularioEmpresa } from './hooks/useFormularioEmpresa';
+import { usePermissions } from '@/hooks/usePermissions';
 
 // Importar formatadores (remover os não usados)
 import { 
@@ -39,6 +40,9 @@ export default function EmpresasPage() {
   // Estados principais
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Hook de permissões
+  const permissions = usePermissions(user);
   
   // Estados para dados carregados
   const [, setGrupos] = useState<Grupo[]>([]);
@@ -1240,28 +1244,30 @@ export default function EmpresasPage() {
                               placeholder="Digite observações específicas para ordens de serviço..."
                             />
                             
-                            {/* Botão para expandir Ponto Focal */}
-                            <div className="mt-3 flex items-center">
-                              <button
-                                type="button"
-                                onClick={() => setShowPontoFocal(!showPontoFocal)}
-                                className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 hover:border-[#1D3C44] cursor-pointer ${
-                                  showPontoFocal 
-                                    ? 'bg-[#00A298] border-[#00A298] text-white' 
-                                    : 'border-[#00A298] text-[#00A298] hover:bg-[#00A298]/10'
-                                }`}
-                              >
-                                <span className="text-sm font-bold">
-                                  {showPontoFocal ? '−' : '+'}
+                            {/* Botão para expandir Ponto Focal - apenas para usuários com permissão */}
+                            {permissions.canViewSensitive && (
+                              <div className="mt-3 flex items-center">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPontoFocal(!showPontoFocal)}
+                                  className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 hover:border-[#1D3C44] cursor-pointer ${
+                                    showPontoFocal 
+                                      ? 'bg-[#00A298] border-[#00A298] text-white' 
+                                      : 'border-[#00A298] text-[#00A298] hover:bg-[#00A298]/10'
+                                  }`}
+                                >
+                                  <span className="text-sm font-bold">
+                                    {showPontoFocal ? '−' : '+'}
+                                  </span>
+                                </button>
+                                <span className="ml-2 text-sm font-medium text-gray-700">
+                                  Ponto Focal
                                 </span>
-                              </button>
-                              <span className="ml-2 text-sm font-medium text-gray-700">
-                                Ponto Focal
-                              </span>
-                            </div>
+                              </div>
+                            )}
 
                             {/* Seção expandível do Ponto Focal */}
-                            {showPontoFocal && (
+                            {permissions.canViewSensitive && showPontoFocal && (
                               <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
                                 <div className="space-y-4">
                                   <div>
@@ -1297,13 +1303,15 @@ export default function EmpresasPage() {
 
                       {/* Botões de ação */}
                       <div className="flex gap-3 pt-4 border-t border-gray-200">
-                        <button 
-                          onClick={handleIncluir}
-                          disabled={isSubmitting}
-                          className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
-                        </button>
+                        {permissions.empresas.canCreate && (
+                          <button 
+                            onClick={handleIncluir}
+                            disabled={isSubmitting}
+                            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
+                          </button>
+                        )}
                         <button 
                           onClick={handleLimpar}
                           className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
@@ -1338,6 +1346,11 @@ export default function EmpresasPage() {
                   pesquisaTexto={pesquisaTexto}
                   onEditar={handleEditarEmpresa}
                   onExcluir={handleExcluirEmpresa}
+                  permissions={{
+                    canEdit: permissions.empresas.canEdit,
+                    canDelete: permissions.empresas.canDelete,
+                    canViewSensitive: permissions.canViewSensitive
+                  }}
                 />
               )}
             </div>
@@ -1501,59 +1514,61 @@ export default function EmpresasPage() {
                   </div>
                 </div>
 
-                {/* Seção Ponto Focal */}
-                <div className="mt-6 p-4 bg-white border border-gray-200 rounded-lg">
-                  <div className="flex items-center mb-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowPontoFocal(!showPontoFocal)}
-                      className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 hover:border-[#1D3C44] cursor-pointer ${
-                        showPontoFocal 
-                          ? 'bg-[#00A298] border-[#00A298] text-white' 
-                          : 'border-[#00A298] text-[#00A298] hover:bg-[#00A298]/10'
-                      }`}
-                    >
-                      <span className="text-sm font-bold">
-                        {showPontoFocal ? '−' : '+'}
+                {/* Seção Ponto Focal - apenas para usuários com permissão */}
+                {permissions.canViewSensitive && (
+                  <div className="mt-6 p-4 bg-white border border-gray-200 rounded-lg">
+                    <div className="flex items-center mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowPontoFocal(!showPontoFocal)}
+                        className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 hover:border-[#1D3C44] cursor-pointer ${
+                          showPontoFocal 
+                            ? 'bg-[#00A298] border-[#00A298] text-white' 
+                            : 'border-[#00A298] text-[#00A298] hover:bg-[#00A298]/10'
+                        }`}
+                      >
+                        <span className="text-sm font-bold">
+                          {showPontoFocal ? '−' : '+'}
+                        </span>
+                      </button>
+                      <span className="ml-2 text-sm font-medium text-gray-700">
+                        Ponto Focal
                       </span>
-                    </button>
-                    <span className="ml-2 text-sm font-medium text-gray-700">
-                      Ponto Focal
-                    </span>
-                  </div>
+                    </div>
 
-                  {/* Seção expandível do Ponto Focal */}
-                  {showPontoFocal && (
-                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Descrição do Ponto Focal
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={pontoFocalDescricao}
-                            onChange={(e) => setPontoFocalDescricao(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                            placeholder="Digite a descrição do ponto focal..."
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Observações Importantes
-                          </label>
-                          <textarea
-                            rows={2}
-                            value={pontoFocalObservacoes}
-                            onChange={(e) => setPontoFocalObservacoes(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                            placeholder="Observações rápidas para reuniões..."
-                          />
+                    {/* Seção expandível do Ponto Focal */}
+                    {showPontoFocal && (
+                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Descrição do Ponto Focal
+                            </label>
+                            <textarea
+                              rows={3}
+                              value={pontoFocalDescricao}
+                              onChange={(e) => setPontoFocalDescricao(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              placeholder="Digite a descrição do ponto focal..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Observações Importantes
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={pontoFocalObservacoes}
+                              onChange={(e) => setPontoFocalObservacoes(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              placeholder="Observações rápidas para reuniões..."
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
                 
                 <div className="flex gap-3 mt-6">
                   <button

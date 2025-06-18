@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { formatTexto } from '@/utils/masks';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface NotificationMessage {
   type: 'success' | 'error';
@@ -36,6 +37,9 @@ export default function GruposPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Hook de permissões
+  const permissions = usePermissions(user);
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [nomeGrupo, setNomeGrupo] = useState('');
   const [nomeBusca, setNomeBusca] = useState('');
@@ -67,6 +71,21 @@ export default function GruposPage() {
     setTimeout(() => {
       setNotification(prev => ({ ...prev, show: false }));
     }, 5000);
+  };
+
+  // Função para destacar texto pesquisado
+  const destacarTexto = (texto: string, busca: string) => {
+    if (!busca.trim()) return texto;
+    
+    const regex = new RegExp(`(${busca.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const partes = texto.split(regex);
+    
+    return partes.map((parte, index) => {
+      if (parte.toLowerCase() === busca.toLowerCase()) {
+        return <span key={index} className="bg-gray-200 text-gray-700 font-medium">{parte}</span>;
+      }
+      return parte;
+    });
   };
 
   // Função para aplicar filtros automaticamente
@@ -709,9 +728,9 @@ export default function GruposPage() {
                             onClick={() => handleSelectAutocomplete(grupo)}
                             className="px-4 py-3 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
                           >
-                            <div className="font-medium text-gray-900">{grupo.nome}</div>
+                            <div className="font-medium text-gray-900">{destacarTexto(grupo.nome, nomeBusca)}</div>
                             {grupo.descricao && (
-                              <div className="text-sm text-gray-500">{grupo.descricao}</div>
+                              <div className="text-sm text-gray-500">{destacarTexto(grupo.descricao, nomeBusca)}</div>
                             )}
                             <div className="text-xs text-blue-600 mt-1">
                               Status: {grupo.status}
@@ -798,22 +817,24 @@ export default function GruposPage() {
                       />
                     </div>
 
-                    {/* Botão Ponto Focal */}
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        onClick={() => setShowPontoFocal(!showPontoFocal)}
-                        className="flex items-center space-x-2 text-[#00A298] hover:text-[#1D3C44] font-medium text-sm transition-colors duration-200 cursor-pointer"
-                      >
-                        <div className={`w-6 h-6 border-2 border-[#00A298] rounded-full flex items-center justify-center transition-all duration-200 ${showPontoFocal ? 'bg-[#00A298] text-white' : 'text-[#00A298]'}`}>
-                          <span className="text-sm font-bold">{showPontoFocal ? '−' : '+'}</span>
-                        </div>
-                        <span>Ponto Focal</span>
-                      </button>
-                    </div>
+                    {/* Botão Ponto Focal - apenas para usuários com permissão */}
+                    {permissions.canViewSensitive && (
+                      <div className="mt-4">
+                        <button
+                          type="button"
+                          onClick={() => setShowPontoFocal(!showPontoFocal)}
+                          className="flex items-center space-x-2 text-[#00A298] hover:text-[#1D3C44] font-medium text-sm transition-colors duration-200 cursor-pointer"
+                        >
+                          <div className={`w-6 h-6 border-2 border-[#00A298] rounded-full flex items-center justify-center transition-all duration-200 ${showPontoFocal ? 'bg-[#00A298] text-white' : 'text-[#00A298]'}`}>
+                            <span className="text-sm font-bold">{showPontoFocal ? '−' : '+'}</span>
+                          </div>
+                          <span>Ponto Focal</span>
+                        </button>
+                      </div>
+                    )}
 
                     {/* Seção Ponto Focal Expandível */}
-                    {showPontoFocal && (
+                    {permissions.canViewSensitive && showPontoFocal && (
                       <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
                         <div className="space-y-4">
                           <div>
@@ -837,7 +858,7 @@ export default function GruposPage() {
                               onChange={(e) => setPontoFocalObservacoes(e.target.value)}
                               rows={2}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                              placeholder="Observações rápidas para reuniões..."
+                              placeholder="Observações rápidas..."
                             />
                           </div>
                         </div>
@@ -845,13 +866,15 @@ export default function GruposPage() {
                     )}
 
                     <div className="flex gap-3 mt-6">
-                      <button 
-                        onClick={handleIncluir}
-                        disabled={isSubmitting}
-                        className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
-                      </button>
+                      {permissions.grupos.canCreate && (
+                        <button 
+                          onClick={handleIncluir}
+                          disabled={isSubmitting}
+                          className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
+                        </button>
+                      )}
                       <button 
                         onClick={handleLimpar}
                         className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
@@ -876,9 +899,13 @@ export default function GruposPage() {
                     <thead className="bg-gray-100">
                       <tr>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ponto Focal</th>
+                        {permissions.canViewSensitive && (
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ponto Focal</th>
+                        )}
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
+                        {(permissions.grupos.canEdit || permissions.grupos.canDelete) && (
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -887,27 +914,29 @@ export default function GruposPage() {
                           <tr key={grupo.id} className="border-b border-gray-200 hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm">
                               <div>
-                                <div className="font-medium text-gray-900">{grupo.nome}</div>
+                                <div className="font-medium text-gray-900">{destacarTexto(grupo.nome, nomeBusca)}</div>
                                 {grupo.descricao && (
-                                  <div className="text-gray-500 text-xs mt-1">{grupo.descricao}</div>
+                                  <div className="text-gray-500 text-xs mt-1">{destacarTexto(grupo.descricao, nomeBusca)}</div>
                                 )}
 
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-center">
-                              {grupo.ponto_focal_descricao ? (
-                                <div className="flex justify-center">
-                                  <div 
-                                    className="w-6 h-6 bg-[#00A298] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1D3C44] transition-colors duration-200"
-                                    title={`Ponto Focal: ${grupo.ponto_focal_descricao.substring(0, 100)}${grupo.ponto_focal_descricao.length > 100 ? '...' : ''}`}
-                                  >
-                                    <span className="text-white text-xs">💚</span>
+                            {permissions.canViewSensitive && (
+                              <td className="px-4 py-3 text-center">
+                                {grupo.ponto_focal_descricao ? (
+                                  <div className="flex justify-center">
+                                    <div 
+                                      className="w-6 h-6 bg-[#00A298] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1D3C44] transition-colors duration-200"
+                                      title={`Ponto Focal: ${grupo.ponto_focal_descricao.substring(0, 100)}${grupo.ponto_focal_descricao.length > 100 ? '...' : ''}`}
+                                    >
+                                      <span className="text-white text-xs">💚</span>
+                                    </div>
                                   </div>
-                                </div>
-                              ) : (
-                                <span className="text-gray-300">-</span>
-                              )}
-                            </td>
+                                ) : (
+                                  <span className="text-gray-300">-</span>
+                                )}
+                              </td>
+                            )}
                             <td className="px-4 py-3 text-sm">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 grupo.status === 'ativo' 
@@ -917,21 +946,34 @@ export default function GruposPage() {
                                 {grupo.status}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex space-x-2">
-                                <button className="text-blue-600 hover:text-blue-800 text-xs font-medium" onClick={() => handleEditarGrupo(grupo)}>
-                                  Editar
-                                </button>
-                                <button className="text-red-600 hover:text-red-800 text-xs font-medium" onClick={() => handleExcluirGrupo(grupo)}>
-                                  Excluir
-                                </button>
-                              </div>
-                            </td>
+                            {(permissions.grupos.canEdit || permissions.grupos.canDelete) && (
+                              <td className="px-4 py-3 text-sm">
+                                <div className="flex space-x-2">
+                                  {permissions.grupos.canEdit && (
+                                    <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarGrupo(grupo)}>
+                                      Editar
+                                    </button>
+                                  )}
+                                  {permissions.grupos.canDelete && (
+                                    <button className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" onClick={() => handleExcluirGrupo(grupo)}>
+                                      Excluir
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                          <td 
+                            colSpan={
+                              2 + 
+                              (permissions.canViewSensitive ? 1 : 0) + 
+                              (permissions.grupos.canEdit || permissions.grupos.canDelete ? 1 : 0)
+                            } 
+                            className="px-4 py-8 text-center text-gray-500"
+                          >
                             {nomeBusca ? 'Nenhum grupo encontrado com o nome pesquisado' : 'Não existem dados para mostrar'}
                           </td>
                         </tr>
@@ -983,22 +1025,24 @@ export default function GruposPage() {
                   />
                 </div>
 
-                {/* Botão Ponto Focal */}
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowPontoFocal(!showPontoFocal)}
-                    className="flex items-center space-x-2 text-[#00A298] hover:text-[#1D3C44] font-medium text-sm transition-colors duration-200 cursor-pointer"
-                  >
-                    <div className={`w-6 h-6 border-2 border-[#00A298] rounded-full flex items-center justify-center transition-all duration-200 ${showPontoFocal ? 'bg-[#00A298] text-white' : 'text-[#00A298]'}`}>
-                      <span className="text-sm font-bold">{showPontoFocal ? '−' : '+'}</span>
-                    </div>
-                    <span>Ponto Focal</span>
-                  </button>
-                </div>
+                {/* Botão Ponto Focal - apenas para usuários com permissão */}
+                {permissions.canViewSensitive && (
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowPontoFocal(!showPontoFocal)}
+                      className="flex items-center space-x-2 text-[#00A298] hover:text-[#1D3C44] font-medium text-sm transition-colors duration-200 cursor-pointer"
+                    >
+                      <div className={`w-6 h-6 border-2 border-[#00A298] rounded-full flex items-center justify-center transition-all duration-200 ${showPontoFocal ? 'bg-[#00A298] text-white' : 'text-[#00A298]'}`}>
+                        <span className="text-sm font-bold">{showPontoFocal ? '−' : '+'}</span>
+                      </div>
+                      <span>Ponto Focal</span>
+                    </button>
+                  </div>
+                )}
 
                 {/* Seção Ponto Focal Expandível */}
-                {showPontoFocal && (
+                {permissions.canViewSensitive && showPontoFocal && (
                   <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
                     <div className="space-y-4">
                       <div>

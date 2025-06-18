@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { formatTexto } from '@/utils/masks';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface NotificationMessage {
   type: 'success' | 'error';
@@ -49,6 +50,9 @@ export default function RegioesPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Hook de permissões
+  const permissions = usePermissions(user);
   const [showNewRegionModal, setShowNewRegionModal] = useState(false);
   const [nomeRegiao, setNomeRegiao] = useState('');
   const [nomeBusca, setNomeBusca] = useState('');
@@ -915,13 +919,15 @@ export default function RegioesPage() {
                     </div>
 
                     <div className="flex gap-3 mt-6">
-                      <button 
-                        onClick={handleIncluir}
-                        disabled={isSubmitting}
-                        className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
-                      </button>
+                      {permissions.regioes.canCreate && (
+                        <button 
+                          onClick={handleIncluir}
+                          disabled={isSubmitting}
+                          className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
+                        </button>
+                      )}
                       <button 
                         onClick={handleLimpar}
                         className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
@@ -948,7 +954,9 @@ export default function RegioesPage() {
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Grupo</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Situação</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
+                        {(permissions.regioes.canEdit || permissions.regioes.canDelete) && (
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ações</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -981,21 +989,33 @@ export default function RegioesPage() {
                                 {regiao.status}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex space-x-2">
-                                <button className="text-blue-600 hover:text-blue-800 text-xs font-medium" onClick={() => handleEditarRegiao(regiao)}>
-                                  Editar
-                                </button>
-                                <button className="text-red-600 hover:text-red-800 text-xs font-medium" onClick={() => handleExcluirRegiao(regiao)}>
-                                  Excluir
-                                </button>
-                              </div>
-                            </td>
+                            {(permissions.regioes.canEdit || permissions.regioes.canDelete) && (
+                              <td className="px-4 py-3 text-sm">
+                                <div className="flex space-x-2">
+                                  {permissions.regioes.canEdit && (
+                                    <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarRegiao(regiao)}>
+                                      Editar
+                                    </button>
+                                  )}
+                                  {permissions.regioes.canDelete && (
+                                    <button className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" onClick={() => handleExcluirRegiao(regiao)}>
+                                      Excluir
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                          <td 
+                            colSpan={
+                              3 + 
+                              (permissions.regioes.canEdit || permissions.regioes.canDelete ? 1 : 0)
+                            } 
+                            className="px-4 py-8 text-center text-gray-500"
+                          >
                             {nomeBusca ? 'Nenhuma região encontrada com o nome pesquisado' : 'Não existem dados para mostrar'}
                           </td>
                         </tr>
