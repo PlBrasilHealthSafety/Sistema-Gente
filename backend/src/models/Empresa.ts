@@ -31,6 +31,9 @@ export class EmpresaModel {
         representante_legal_cpf VARCHAR(14),
         observacoes TEXT,
         observacoes_os TEXT,
+        ponto_focal_nome VARCHAR(255),
+        ponto_focal_descricao TEXT,
+        ponto_focal_observacoes TEXT,
         status VARCHAR(20) NOT NULL DEFAULT 'ativo',
         grupo_id INTEGER NOT NULL REFERENCES grupos(id) ON DELETE RESTRICT,
         regiao_id INTEGER NOT NULL REFERENCES regioes(id) ON DELETE RESTRICT,
@@ -181,6 +184,9 @@ export class EmpresaModel {
       representante_legal_cpf,
       observacoes,
       observacoes_os,
+      ponto_focal_nome,
+      ponto_focal_descricao,
+      ponto_focal_observacoes,
       status = StatusItem.ATIVO,
       grupo_id,
       regiao_id
@@ -200,15 +206,15 @@ export class EmpresaModel {
         cno, cnae_descricao, risco, endereco_cep, endereco_logradouro, endereco_numero,
         endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf,
         contato_nome, contato_telefone, contato_email, representante_legal_nome, representante_legal_cpf,
-        observacoes, observacoes_os, status, grupo_id, regiao_id, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
+        observacoes, observacoes_os, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, status, grupo_id, regiao_id, created_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)
        RETURNING *`,
       [
         finalCodigo, razao_social, nome_fantasia, tipo_estabelecimento, tipo_inscricao, numero_inscricao,
         cno, cnae_descricao, risco, endereco_cep, endereco_logradouro, endereco_numero,
         endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf,
         contato_nome, contato_telefone, contato_email, representante_legal_nome, representante_legal_cpf,
-        observacoes, observacoes_os, status, grupo_id, regiao_id, userId
+        observacoes, observacoes_os, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, status, grupo_id, regiao_id, userId
       ]
     );
     
@@ -367,6 +373,9 @@ export class EmpresaModel {
       representante_legal_cpf: empresaData.representante_legal_cpf,
       observacoes: empresaData.observacoes,
       observacoes_os: empresaData.observacoes_os,
+      ponto_focal_nome: empresaData.ponto_focal_nome,
+      ponto_focal_descricao: empresaData.ponto_focal_descricao,
+      ponto_focal_observacoes: empresaData.ponto_focal_observacoes,
       status: empresaData.status,
       grupo_id: empresaData.grupo_id,
       regiao_id: empresaData.regiao_id

@@ -45,6 +45,7 @@ export default function GruposPage() {
   const [nomeBusca, setNomeBusca] = useState('');
   const [descricaoGrupo, setDescricaoGrupo] = useState('');
   const [showPontoFocal, setShowPontoFocal] = useState(false);
+  const [pontoFocalNome, setPontoFocalNome] = useState('');
   const [pontoFocalDescricao, setPontoFocalDescricao] = useState('');
   const [pontoFocalObservacoes, setPontoFocalObservacoes] = useState('');
   const [grupos, setGrupos] = useState<Grupo[]>([]);
@@ -323,6 +324,7 @@ export default function GruposPage() {
     setNomeGrupo('');
     setDescricaoGrupo('');
     setShowPontoFocal(false);
+    setPontoFocalNome('');
     setPontoFocalDescricao('');
     setPontoFocalObservacoes('');
   };
@@ -339,6 +341,7 @@ export default function GruposPage() {
     setNomeGrupo(grupo.nome);
     setDescricaoGrupo(grupo.descricao || '');
     setShowPontoFocal(false);
+    setPontoFocalNome('');
     setPontoFocalDescricao('');
     setPontoFocalObservacoes('');
     setShowEditGroupModal(true);
@@ -839,6 +842,18 @@ export default function GruposPage() {
                         <div className="space-y-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Nome do Ponto Focal
+                            </label>
+                            <input
+                              type="text"
+                              value={pontoFocalNome}
+                              onChange={(e) => setPontoFocalNome(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              placeholder="Digite o nome do ponto focal..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
                               Descrição do Ponto Focal
                             </label>
                             <textarea
@@ -1045,6 +1060,18 @@ export default function GruposPage() {
                 {permissions.canViewSensitive && showPontoFocal && (
                   <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
                     <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Nome do Ponto Focal
+                        </label>
+                        <input
+                          type="text"
+                          value={pontoFocalNome}
+                          onChange={(e) => setPontoFocalNome(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          placeholder="Digite o nome do ponto focal..."
+                        />
+                      </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Descrição do Ponto Focal

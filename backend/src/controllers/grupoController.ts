@@ -175,7 +175,7 @@ export const getSubgroups = async (req: Request, res: Response) => {
 // Criar grupo (apenas SUPER_ADMIN e ADMIN)
 export const createGrupo = async (req: Request, res: Response) => {
   try {
-    const { nome, descricao, codigo, status, grupo_pai_id } = req.body as CreateGrupoData;
+    const { nome, descricao, codigo, status, grupo_pai_id, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes } = req.body as CreateGrupoData;
     const userId = req.user!.id;
 
     // Validações básicas
@@ -216,7 +216,10 @@ export const createGrupo = async (req: Request, res: Response) => {
       descricao: descricao?.trim(),
       codigo: codigo?.trim(),
       status: status || StatusItem.ATIVO,
-      grupo_pai_id
+      grupo_pai_id,
+      ponto_focal_nome: ponto_focal_nome?.trim(),
+      ponto_focal_descricao: ponto_focal_descricao?.trim(),
+      ponto_focal_observacoes: ponto_focal_observacoes?.trim()
     }, userId);
 
     res.status(201).json({
@@ -319,6 +322,9 @@ export const updateGrupo = async (req: Request, res: Response) => {
     if (updateData.codigo !== undefined) cleanedData.codigo = updateData.codigo?.trim();
     if (updateData.status !== undefined) cleanedData.status = updateData.status;
     if (updateData.grupo_pai_id !== undefined) cleanedData.grupo_pai_id = updateData.grupo_pai_id;
+    if (updateData.ponto_focal_nome !== undefined) cleanedData.ponto_focal_nome = updateData.ponto_focal_nome?.trim();
+    if (updateData.ponto_focal_descricao !== undefined) cleanedData.ponto_focal_descricao = updateData.ponto_focal_descricao?.trim();
+    if (updateData.ponto_focal_observacoes !== undefined) cleanedData.ponto_focal_observacoes = updateData.ponto_focal_observacoes?.trim();
 
     const grupo = await GrupoModel.update(grupoId, cleanedData, userId);
 

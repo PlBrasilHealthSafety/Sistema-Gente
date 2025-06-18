@@ -56,6 +56,7 @@ export const useFormularioEmpresa = () => {
   
   // Estados para Ponto Focal
   const [showPontoFocal, setShowPontoFocal] = useState(false);
+  const [pontoFocalNome, setPontoFocalNome] = useState('');
   const [pontoFocalDescricao, setPontoFocalDescricao] = useState('');
   const [pontoFocalObservacoes, setPontoFocalObservacoes] = useState('');
   
@@ -245,6 +246,7 @@ export const useFormularioEmpresa = () => {
       representante_legal_cpf: cpfRepresentante || null,
       observacoes: observacao || null,
       observacoes_os: observacaoOS || null,
+      ponto_focal_nome: pontoFocalNome || null,
       ponto_focal_descricao: pontoFocalDescricao || null,
       ponto_focal_observacoes: pontoFocalObservacoes || null,
       grupo_id: grupoSelecionado,
@@ -253,7 +255,7 @@ export const useFormularioEmpresa = () => {
   }, [
     nomeFantasia, razaoSocial, tipoEstabelecimento, tipoInscricao, numeroInscricao,
     cno, cnaeDescricao, risco, cep, endereco, contato, telefone, email,
-    nomeRepresentante, cpfRepresentante, observacao, observacaoOS, pontoFocalDescricao, pontoFocalObservacoes,
+    nomeRepresentante, cpfRepresentante, observacao, observacaoOS, pontoFocalNome, pontoFocalDescricao, pontoFocalObservacoes,
     grupoSelecionado, regiaoSelecionada
   ]);
 
@@ -292,6 +294,7 @@ export const useFormularioEmpresa = () => {
     setClassificacaoPorte('ME');
     setActiveTab('dados-empresa');
     setShowPontoFocal(false);
+    setPontoFocalNome('');
     setPontoFocalDescricao('');
     setPontoFocalObservacoes('');
     setErrors({
@@ -336,9 +339,10 @@ export const useFormularioEmpresa = () => {
     setCpfRepresentante(empresa.representante_legal_cpf || '');
     setObservacao(empresa.observacoes || '');
     setObservacaoOS(empresa.observacoes_os || '');
+    setPontoFocalNome(empresa.ponto_focal_nome || '');
     setPontoFocalDescricao(empresa.ponto_focal_descricao || '');
     setPontoFocalObservacoes(empresa.ponto_focal_observacoes || '');
-    setShowPontoFocal(!!(empresa.ponto_focal_descricao || empresa.ponto_focal_observacoes));
+    setShowPontoFocal(!!(empresa.ponto_focal_nome || empresa.ponto_focal_descricao || empresa.ponto_focal_observacoes));
     setGrupoSelecionado(empresa.grupo_id ? empresa.grupo_id.toString() : '');
     setRegiaoSelecionada(empresa.regiao_id ? empresa.regiao_id.toString() : '');
     
@@ -399,6 +403,7 @@ export const useFormularioEmpresa = () => {
     regioesFiltradas,
     gruposFiltradosPorRegiao,
     showPontoFocal,
+    pontoFocalNome,
     pontoFocalDescricao,
     pontoFocalObservacoes,
 
@@ -427,6 +432,7 @@ export const useFormularioEmpresa = () => {
     setRegioesFiltradas,
     setGruposFiltradosPorRegiao,
     setShowPontoFocal,
+    setPontoFocalNome,
     setPontoFocalDescricao,
     setPontoFocalObservacoes,
 

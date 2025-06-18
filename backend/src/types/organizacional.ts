@@ -12,6 +12,9 @@ export interface Grupo {
   codigo?: string;
   status: StatusItem;
   grupo_pai_id?: number; // Para hierarquia de grupos
+  ponto_focal_nome?: string; // Nome do ponto focal
+  ponto_focal_descricao?: string; // Descrição do ponto focal
+  ponto_focal_observacoes?: string; // Observações importantes do ponto focal
   created_at: Date;
   updated_at: Date;
   created_by: number; // ID do usuário que criou
@@ -24,6 +27,9 @@ export interface CreateGrupoData {
   codigo?: string;
   status?: StatusItem;
   grupo_pai_id?: number;
+  ponto_focal_nome?: string;
+  ponto_focal_descricao?: string;
+  ponto_focal_observacoes?: string;
 }
 
 export interface UpdateGrupoData {
@@ -32,6 +38,9 @@ export interface UpdateGrupoData {
   codigo?: string;
   status?: StatusItem;
   grupo_pai_id?: number;
+  ponto_focal_nome?: string;
+  ponto_focal_descricao?: string;
+  ponto_focal_observacoes?: string;
 }
 
 // Interfaces para Regiões
@@ -96,6 +105,9 @@ export interface Empresa {
   representante_legal_cpf?: string;
   observacoes?: string;
   observacoes_os?: string;
+  ponto_focal_nome?: string; // Nome do ponto focal
+  ponto_focal_descricao?: string; // Descrição do ponto focal
+  ponto_focal_observacoes?: string; // Observações importantes do ponto focal
   status: StatusItem;
   grupo_id: number; // Referência ao grupo
   regiao_id: number; // Referência à região
@@ -129,6 +141,9 @@ export interface CreateEmpresaData {
   representante_legal_cpf?: string;
   observacoes?: string;
   observacoes_os?: string;
+  ponto_focal_nome?: string;
+  ponto_focal_descricao?: string;
+  ponto_focal_observacoes?: string;
   status?: StatusItem;
   grupo_id: number;
   regiao_id: number;
@@ -158,6 +173,9 @@ export interface UpdateEmpresaData {
   representante_legal_cpf?: string;
   observacoes?: string;
   observacoes_os?: string;
+  ponto_focal_nome?: string;
+  ponto_focal_descricao?: string;
+  ponto_focal_observacoes?: string;
   status?: StatusItem;
   grupo_id?: number;
   regiao_id?: number;

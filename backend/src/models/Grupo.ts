@@ -13,6 +13,9 @@ export class GrupoModel {
         codigo VARCHAR(50) UNIQUE,
         status VARCHAR(20) NOT NULL DEFAULT 'ativo',
         grupo_pai_id INTEGER REFERENCES grupos(id) ON DELETE SET NULL,
+        ponto_focal_nome VARCHAR(255),
+        ponto_focal_descricao TEXT,
+        ponto_focal_observacoes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_by INTEGER NOT NULL REFERENCES users(id),
@@ -57,14 +60,17 @@ export class GrupoModel {
       descricao, 
       codigo, 
       status = StatusItem.ATIVO, 
-      grupo_pai_id 
+      grupo_pai_id,
+      ponto_focal_nome,
+      ponto_focal_descricao,
+      ponto_focal_observacoes
     } = grupoData;
     
     const result = await query(
-      `INSERT INTO grupos (nome, descricao, codigo, status, grupo_pai_id, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO grupos (nome, descricao, codigo, status, grupo_pai_id, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [nome, descricao, codigo, status, grupo_pai_id, userId]
+      [nome, descricao, codigo, status, grupo_pai_id, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, userId]
     );
     
     return result.rows[0];
@@ -195,9 +201,39 @@ export class GrupoModel {
       paramCount++;
     }
 
+    if (grupoData.ponto_focal_nome !== undefined) {
+      fields.push(`ponto_focal_nome = $${paramCount}`);
+      values.push(grupoData.ponto_focal_nome);
+      paramCount++;
+    }
+
+    if (grupoData.ponto_focal_descricao !== undefined) {
+      fields.push(`ponto_focal_descricao = $${paramCount}`);
+      values.push(grupoData.ponto_focal_descricao);
+      paramCount++;
+    }
+
+    if (grupoData.ponto_focal_observacoes !== undefined) {
+      fields.push(`ponto_focal_observacoes = $${paramCount}`);
+      values.push(grupoData.ponto_focal_observacoes);
+      paramCount++;
+    }
+
     if (grupoData.grupo_pai_id !== undefined) {
       fields.push(`grupo_pai_id = $${paramCount}`);
       values.push(grupoData.grupo_pai_id);
+      paramCount++;
+    }
+
+    if (grupoData.ponto_focal_descricao !== undefined) {
+      fields.push(`ponto_focal_descricao = $${paramCount}`);
+      values.push(grupoData.ponto_focal_descricao);
+      paramCount++;
+    }
+
+    if (grupoData.ponto_focal_observacoes !== undefined) {
+      fields.push(`ponto_focal_observacoes = $${paramCount}`);
+      values.push(grupoData.ponto_focal_observacoes);
       paramCount++;
     }
 

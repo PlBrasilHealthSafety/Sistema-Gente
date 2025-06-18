@@ -61,6 +61,7 @@ export interface Empresa {
   representante_legal_cpf?: string;
   observacoes?: string;
   observacoes_os?: string;
+  ponto_focal_nome?: string;
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
   grupo_id?: number;
@@ -121,6 +122,7 @@ export interface EmpresaFormData {
   representante_legal_cpf?: string | null;
   observacoes?: string | null;
   observacoes_os?: string | null;
+  ponto_focal_nome?: string | null;
   ponto_focal_descricao?: string | null;
   ponto_focal_observacoes?: string | null;
   grupo_id: string;
