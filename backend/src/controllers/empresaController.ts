@@ -414,6 +414,7 @@ export const createEmpresa = async (req: Request, res: Response) => {
       ponto_focal_nome: empresaData.ponto_focal_nome?.trim(),
       ponto_focal_descricao: empresaData.ponto_focal_descricao?.trim(),
       ponto_focal_observacoes: empresaData.ponto_focal_observacoes?.trim(),
+      ponto_focal_principal: empresaData.ponto_focal_principal || false,
       status: empresaData.status || StatusItem.ATIVO,
       grupo_id: empresaData.grupo_id,
       regiao_id: empresaData.regiao_id
@@ -582,6 +583,7 @@ export const updateEmpresa = async (req: Request, res: Response) => {
     if (updateData.ponto_focal_nome !== undefined) cleanedData.ponto_focal_nome = updateData.ponto_focal_nome?.trim();
     if (updateData.ponto_focal_descricao !== undefined) cleanedData.ponto_focal_descricao = updateData.ponto_focal_descricao?.trim();
     if (updateData.ponto_focal_observacoes !== undefined) cleanedData.ponto_focal_observacoes = updateData.ponto_focal_observacoes?.trim();
+    if (updateData.ponto_focal_principal !== undefined) cleanedData.ponto_focal_principal = updateData.ponto_focal_principal;
     if (updateData.status !== undefined) cleanedData.status = updateData.status;
     if (updateData.grupo_id !== undefined) cleanedData.grupo_id = updateData.grupo_id;
     if (updateData.regiao_id !== undefined) cleanedData.regiao_id = updateData.regiao_id;

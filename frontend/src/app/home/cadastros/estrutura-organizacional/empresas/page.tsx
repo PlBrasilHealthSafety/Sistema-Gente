@@ -142,6 +142,7 @@ export default function EmpresasPage() {
     pontoFocalNome,
     pontoFocalDescricao,
     pontoFocalObservacoes,
+    pontoFocalPrincipal,
     
     // Setters
     setActiveTab,
@@ -160,6 +161,7 @@ export default function EmpresasPage() {
     setPontoFocalNome,
     setPontoFocalDescricao,
     setPontoFocalObservacoes,
+    setPontoFocalPrincipal,
     
     // Handlers
     handleCepChange,
@@ -1322,6 +1324,18 @@ export default function EmpresasPage() {
                                       placeholder="Observações rápidas..."
                                     />
                                   </div>
+                                  <div className="flex items-center space-x-2 pt-2">
+                                    <input
+                                      type="checkbox"
+                                      id="pontoFocalPrincipal"
+                                      checked={pontoFocalPrincipal}
+                                      onChange={(e) => setPontoFocalPrincipal(e.target.checked)}
+                                      className="w-4 h-4 text-[#00A298] bg-gray-100 border-gray-300 rounded focus:ring-[#00A298] focus:ring-2"
+                                    />
+                                    <label htmlFor="pontoFocalPrincipal" className="text-sm font-medium text-gray-700 cursor-pointer">
+                                      Marcar como Ponto Focal Principal
+                                    </label>
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -1584,6 +1598,18 @@ export default function EmpresasPage() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                         />
                       </div>
+                      <div className="flex items-center space-x-2 pt-2">
+                        <input
+                          type="checkbox"
+                          id="pontoFocalPrincipalView"
+                          checked={empresaVisualizando?.ponto_focal_principal || false}
+                          readOnly
+                          className="w-4 h-4 text-[#00A298] bg-gray-100 border-gray-300 rounded cursor-not-allowed"
+                        />
+                        <label htmlFor="pontoFocalPrincipalView" className="text-sm font-medium text-gray-700">
+                          Ponto Focal Principal
+                        </label>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1819,6 +1845,18 @@ export default function EmpresasPage() {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                               placeholder="Observações rápidas para reuniões..."
                             />
+                          </div>
+                          <div className="flex items-center space-x-2 pt-2">
+                            <input
+                              type="checkbox"
+                              id="pontoFocalPrincipalEdit"
+                              checked={pontoFocalPrincipal}
+                              onChange={(e) => setPontoFocalPrincipal(e.target.checked)}
+                              className="w-4 h-4 text-[#00A298] bg-gray-100 border-gray-300 rounded focus:ring-[#00A298] focus:ring-2"
+                            />
+                            <label htmlFor="pontoFocalPrincipalEdit" className="text-sm font-medium text-gray-700 cursor-pointer">
+                              Marcar como Ponto Focal Principal
+                            </label>
                           </div>
                         </div>
                       </div>

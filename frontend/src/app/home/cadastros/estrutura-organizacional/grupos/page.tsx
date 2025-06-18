@@ -29,6 +29,7 @@ interface Grupo {
   ponto_focal_nome?: string;
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
+  ponto_focal_principal?: boolean;
   status: 'ativo' | 'inativo';
   created_by: number;
   updated_by: number;
@@ -53,6 +54,7 @@ export default function GruposPage() {
   const [pontoFocalNome, setPontoFocalNome] = useState('');
   const [pontoFocalDescricao, setPontoFocalDescricao] = useState('');
   const [pontoFocalObservacoes, setPontoFocalObservacoes] = useState('');
+  const [pontoFocalPrincipal, setPontoFocalPrincipal] = useState(false);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [filteredGrupos, setFilteredGrupos] = useState<Grupo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -309,6 +311,7 @@ export default function GruposPage() {
           ponto_focal_nome: showPontoFocal ? pontoFocalNome || null : null,
           ponto_focal_descricao: showPontoFocal ? pontoFocalDescricao || null : null,
           ponto_focal_observacoes: showPontoFocal ? pontoFocalObservacoes || null : null,
+          ponto_focal_principal: showPontoFocal ? pontoFocalPrincipal : false,
         })
       });
 
@@ -337,6 +340,7 @@ export default function GruposPage() {
     setPontoFocalNome('');
     setPontoFocalDescricao('');
     setPontoFocalObservacoes('');
+    setPontoFocalPrincipal(false);
   };
 
   // Função para retornar (fechar modal)
@@ -357,6 +361,7 @@ export default function GruposPage() {
     setPontoFocalNome(grupo.ponto_focal_nome || '');
     setPontoFocalDescricao(grupo.ponto_focal_descricao || '');
     setPontoFocalObservacoes(grupo.ponto_focal_observacoes || '');
+    setPontoFocalPrincipal(grupo.ponto_focal_principal || false);
     
     setShowEditGroupModal(true);
   };
@@ -382,6 +387,7 @@ export default function GruposPage() {
           ponto_focal_nome: showPontoFocal ? pontoFocalNome || null : null,
           ponto_focal_descricao: showPontoFocal ? pontoFocalDescricao || null : null,
           ponto_focal_observacoes: showPontoFocal ? pontoFocalObservacoes || null : null,
+          ponto_focal_principal: showPontoFocal ? pontoFocalPrincipal : false,
         })
       });
       if (response.ok) {
@@ -905,6 +911,18 @@ export default function GruposPage() {
                               placeholder="Observações rápidas..."
                             />
                           </div>
+                          <div className="flex items-center space-x-2 pt-2">
+                            <input
+                              type="checkbox"
+                              id="pontoFocalPrincipal"
+                              checked={pontoFocalPrincipal}
+                              onChange={(e) => setPontoFocalPrincipal(e.target.checked)}
+                              className="w-4 h-4 text-[#00A298] bg-gray-100 border-gray-300 rounded focus:ring-[#00A298] focus:ring-2"
+                            />
+                            <label htmlFor="pontoFocalPrincipal" className="text-sm font-medium text-gray-700 cursor-pointer">
+                              Marcar como Ponto Focal Principal
+                            </label>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1092,6 +1110,18 @@ export default function GruposPage() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                         />
                       </div>
+                      <div className="flex items-center space-x-2 pt-2">
+                        <input
+                          type="checkbox"
+                          id="pontoFocalPrincipalView"
+                          checked={grupoVisualizando?.ponto_focal_principal || false}
+                          readOnly
+                          className="w-4 h-4 text-[#00A298] bg-gray-100 border-gray-300 rounded cursor-not-allowed"
+                        />
+                        <label htmlFor="pontoFocalPrincipalView" className="text-sm font-medium text-gray-700">
+                          Ponto Focal Principal
+                        </label>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1203,6 +1233,18 @@ export default function GruposPage() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                           placeholder="Observações rápidas..."
                         />
+                      </div>
+                      <div className="flex items-center space-x-2 pt-2">
+                        <input
+                          type="checkbox"
+                          id="pontoFocalPrincipalEdit"
+                          checked={pontoFocalPrincipal}
+                          onChange={(e) => setPontoFocalPrincipal(e.target.checked)}
+                          className="w-4 h-4 text-[#00A298] bg-gray-100 border-gray-300 rounded focus:ring-[#00A298] focus:ring-2"
+                        />
+                        <label htmlFor="pontoFocalPrincipalEdit" className="text-sm font-medium text-gray-700 cursor-pointer">
+                          Marcar como Ponto Focal Principal
+                        </label>
                       </div>
                     </div>
                   </div>

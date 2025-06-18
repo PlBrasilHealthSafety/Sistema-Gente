@@ -4,6 +4,7 @@ interface PontoFocalData {
   ponto_focal_nome?: string;
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
+  ponto_focal_principal?: boolean;
 }
 
 interface PontoFocalTooltipProps {
@@ -14,12 +15,15 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const hasPontoFocal = data.ponto_focal_nome || data.ponto_focal_descricao || data.ponto_focal_observacoes;
+  const isPrincipal = data.ponto_focal_principal;
   
   // Debug temporário
   console.log('PontoFocalTooltip - Data:', data);
   console.log('PontoFocalTooltip - hasPontoFocal:', hasPontoFocal);
+  console.log('PontoFocalTooltip - isPrincipal:', isPrincipal);
 
-  if (!hasPontoFocal) {
+  // Só mostra o ícone se tem ponto focal E está marcado como principal
+  if (!hasPontoFocal || !isPrincipal) {
     return <span className="text-gray-300">-</span>;
   }
 
@@ -46,7 +50,7 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
           <div className="bg-gray-800 text-white text-xs rounded-lg py-3 px-4 shadow-lg max-w-xs w-64">
             <div className="space-y-2">
               <div className="text-yellow-300 font-semibold border-b border-gray-600 pb-1">
-                💡 Ponto Focal
+                🌟 Ponto Focal Principal
               </div>
               
               {data.ponto_focal_nome && (

@@ -64,6 +64,7 @@ export interface Empresa {
   ponto_focal_nome?: string;
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
+  ponto_focal_principal?: boolean;
   grupo_id?: number;
   regiao_id?: number;
   grupo?: Grupo;
@@ -125,6 +126,7 @@ export interface EmpresaFormData {
   ponto_focal_nome?: string | null;
   ponto_focal_descricao?: string | null;
   ponto_focal_observacoes?: string | null;
+  ponto_focal_principal?: boolean;
   grupo_id: string;
   regiao_id: string;
 } 

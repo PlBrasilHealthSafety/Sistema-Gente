@@ -15,6 +15,7 @@ export interface Grupo {
   ponto_focal_nome?: string; // Nome do ponto focal
   ponto_focal_descricao?: string; // Descrição do ponto focal
   ponto_focal_observacoes?: string; // Observações importantes do ponto focal
+  ponto_focal_principal?: boolean; // Se é o ponto focal principal
   created_at: Date;
   updated_at: Date;
   created_by: number; // ID do usuário que criou
@@ -30,6 +31,7 @@ export interface CreateGrupoData {
   ponto_focal_nome?: string;
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
+  ponto_focal_principal?: boolean;
 }
 
 export interface UpdateGrupoData {
@@ -41,6 +43,7 @@ export interface UpdateGrupoData {
   ponto_focal_nome?: string;
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
+  ponto_focal_principal?: boolean;
 }
 
 // Interfaces para Regiões
@@ -108,6 +111,7 @@ export interface Empresa {
   ponto_focal_nome?: string; // Nome do ponto focal
   ponto_focal_descricao?: string; // Descrição do ponto focal
   ponto_focal_observacoes?: string; // Observações importantes do ponto focal
+  ponto_focal_principal?: boolean; // Se é o ponto focal principal
   status: StatusItem;
   grupo_id: number; // Referência ao grupo
   regiao_id: number; // Referência à região
@@ -144,6 +148,7 @@ export interface CreateEmpresaData {
   ponto_focal_nome?: string;
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
+  ponto_focal_principal?: boolean;
   status?: StatusItem;
   grupo_id: number;
   regiao_id: number;
@@ -176,6 +181,7 @@ export interface UpdateEmpresaData {
   ponto_focal_nome?: string;
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
+  ponto_focal_principal?: boolean;
   status?: StatusItem;
   grupo_id?: number;
   regiao_id?: number;

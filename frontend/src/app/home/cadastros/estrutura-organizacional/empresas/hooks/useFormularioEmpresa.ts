@@ -59,6 +59,7 @@ export const useFormularioEmpresa = () => {
   const [pontoFocalNome, setPontoFocalNome] = useState('');
   const [pontoFocalDescricao, setPontoFocalDescricao] = useState('');
   const [pontoFocalObservacoes, setPontoFocalObservacoes] = useState('');
+  const [pontoFocalPrincipal, setPontoFocalPrincipal] = useState(false);
   
   // Estados para erros
   const [errors, setErrors] = useState<FormErrors>({
@@ -249,13 +250,14 @@ export const useFormularioEmpresa = () => {
       ponto_focal_nome: pontoFocalNome || null,
       ponto_focal_descricao: pontoFocalDescricao || null,
       ponto_focal_observacoes: pontoFocalObservacoes || null,
+      ponto_focal_principal: pontoFocalPrincipal,
       grupo_id: grupoSelecionado,
       regiao_id: regiaoSelecionada
     };
   }, [
     nomeFantasia, razaoSocial, tipoEstabelecimento, tipoInscricao, numeroInscricao,
     cno, cnaeDescricao, risco, cep, endereco, contato, telefone, email,
-    nomeRepresentante, cpfRepresentante, observacao, observacaoOS, pontoFocalNome, pontoFocalDescricao, pontoFocalObservacoes,
+    nomeRepresentante, cpfRepresentante, observacao, observacaoOS, pontoFocalNome, pontoFocalDescricao, pontoFocalObservacoes, pontoFocalPrincipal,
     grupoSelecionado, regiaoSelecionada
   ]);
 
@@ -297,6 +299,7 @@ export const useFormularioEmpresa = () => {
     setPontoFocalNome('');
     setPontoFocalDescricao('');
     setPontoFocalObservacoes('');
+    setPontoFocalPrincipal(false);
     setErrors({
       nomeFantasia: '',
       razaoSocial: '',
@@ -342,6 +345,7 @@ export const useFormularioEmpresa = () => {
     setPontoFocalNome(empresa.ponto_focal_nome || '');
     setPontoFocalDescricao(empresa.ponto_focal_descricao || '');
     setPontoFocalObservacoes(empresa.ponto_focal_observacoes || '');
+    setPontoFocalPrincipal(empresa.ponto_focal_principal || false);
     setShowPontoFocal(!!(empresa.ponto_focal_nome || empresa.ponto_focal_descricao || empresa.ponto_focal_observacoes));
     setGrupoSelecionado(empresa.grupo_id ? empresa.grupo_id.toString() : '');
     setRegiaoSelecionada(empresa.regiao_id ? empresa.regiao_id.toString() : '');
@@ -406,6 +410,7 @@ export const useFormularioEmpresa = () => {
     pontoFocalNome,
     pontoFocalDescricao,
     pontoFocalObservacoes,
+    pontoFocalPrincipal,
 
     // Setters
     setActiveTab,
@@ -435,6 +440,7 @@ export const useFormularioEmpresa = () => {
     setPontoFocalNome,
     setPontoFocalDescricao,
     setPontoFocalObservacoes,
+    setPontoFocalPrincipal,
 
     // Handlers
     handleCepChange,

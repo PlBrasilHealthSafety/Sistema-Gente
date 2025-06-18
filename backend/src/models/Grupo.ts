@@ -16,6 +16,7 @@ export class GrupoModel {
         ponto_focal_nome VARCHAR(255),
         ponto_focal_descricao TEXT,
         ponto_focal_observacoes TEXT,
+        ponto_focal_principal BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_by INTEGER NOT NULL REFERENCES users(id),
@@ -63,14 +64,15 @@ export class GrupoModel {
       grupo_pai_id,
       ponto_focal_nome,
       ponto_focal_descricao,
-      ponto_focal_observacoes
+      ponto_focal_observacoes,
+      ponto_focal_principal
     } = grupoData;
     
     const result = await query(
-      `INSERT INTO grupos (nome, descricao, codigo, status, grupo_pai_id, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO grupos (nome, descricao, codigo, status, grupo_pai_id, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, ponto_focal_principal, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [nome, descricao, codigo, status, grupo_pai_id, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, userId]
+      [nome, descricao, codigo, status, grupo_pai_id, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, ponto_focal_principal, userId]
     );
     
     return result.rows[0];
@@ -216,6 +218,12 @@ export class GrupoModel {
     if (grupoData.ponto_focal_observacoes !== undefined) {
       fields.push(`ponto_focal_observacoes = $${paramCount}`);
       values.push(grupoData.ponto_focal_observacoes);
+      paramCount++;
+    }
+
+    if (grupoData.ponto_focal_principal !== undefined) {
+      fields.push(`ponto_focal_principal = $${paramCount}`);
+      values.push(grupoData.ponto_focal_principal);
       paramCount++;
     }
 
