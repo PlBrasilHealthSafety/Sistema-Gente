@@ -174,24 +174,38 @@ export default function FormularioBusca({
           </select>
         </div>
 
-        <div className="flex gap-6 ml-auto">
+        {/* Botões alinhados na mesma linha */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            &nbsp;
+          </label>
           <button 
             onClick={onProcurar}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer text-xs"
+            className="bg-green-600 hover:bg-green-700 text-white px-2 py-1.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer text-xs"
           >
             PROCURAR
           </button>
-          
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            &nbsp;
+          </label>
           <button 
             onClick={onNovaEmpresa}
-            className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-3 py-1.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer text-xs"
+            className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-2 py-1.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer text-xs"
           >
             NOVA EMPRESA
           </button>
-          
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            &nbsp;
+          </label>
           <button 
             onClick={onRecarregar}
-            className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer text-xs"
+            className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer text-xs"
           >
             RECARREGAR
           </button>
