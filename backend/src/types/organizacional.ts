@@ -35,6 +35,37 @@ export interface UpdateGrupoPontoFocalData {
   ordem?: number;
 }
 
+// Interface para Pontos Focais das Empresas
+export interface EmpresaPontoFocal {
+  id: number;
+  empresa_id: number;
+  nome: string;
+  descricao?: string;
+  observacoes?: string;
+  is_principal: boolean;
+  ordem: number;
+  created_at: Date;
+  updated_at: Date;
+  created_by: number;
+  updated_by?: number;
+}
+
+export interface CreateEmpresaPontoFocalData {
+  nome: string;
+  descricao?: string;
+  observacoes?: string;
+  is_principal?: boolean;
+  ordem?: number;
+}
+
+export interface UpdateEmpresaPontoFocalData {
+  nome?: string;
+  descricao?: string;
+  observacoes?: string;
+  is_principal?: boolean;
+  ordem?: number;
+}
+
 // Interfaces para Grupos
 export interface Grupo {
   id: number;
@@ -142,10 +173,11 @@ export interface Empresa {
   representante_legal_cpf?: string;
   observacoes?: string;
   observacoes_os?: string;
-  ponto_focal_nome?: string; // Nome do ponto focal
-  ponto_focal_descricao?: string; // Descrição do ponto focal
-  ponto_focal_observacoes?: string; // Observações importantes do ponto focal
-  ponto_focal_principal?: boolean; // Se é o ponto focal principal
+  ponto_focal_nome?: string; // Nome do ponto focal (mantido para compatibilidade)
+  ponto_focal_descricao?: string; // Descrição do ponto focal (mantido para compatibilidade)
+  ponto_focal_observacoes?: string; // Observações importantes do ponto focal (mantido para compatibilidade)
+  ponto_focal_principal?: boolean; // Se é o ponto focal principal (mantido para compatibilidade)
+  pontos_focais?: EmpresaPontoFocal[]; // Array de múltiplos pontos focais
   status: StatusItem;
   grupo_id: number; // Referência ao grupo
   regiao_id: number; // Referência à região
@@ -183,6 +215,7 @@ export interface CreateEmpresaData {
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
   ponto_focal_principal?: boolean;
+  pontos_focais?: CreateEmpresaPontoFocalData[]; // Array de pontos focais para criar
   status?: StatusItem;
   grupo_id: number;
   regiao_id: number;
@@ -216,6 +249,7 @@ export interface UpdateEmpresaData {
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
   ponto_focal_principal?: boolean;
+  pontos_focais?: CreateEmpresaPontoFocalData[]; // Array de pontos focais para atualizar
   status?: StatusItem;
   grupo_id?: number;
   regiao_id?: number;

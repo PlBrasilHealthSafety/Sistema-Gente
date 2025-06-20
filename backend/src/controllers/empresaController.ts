@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { EmpresaModel } from '../models/Empresa';
+import { EmpresaPontoFocalModel } from '../models/EmpresaPontoFocal';
 import { GrupoModel } from '../models/Grupo';
 import { RegiaoModel } from '../models/Regiao';
-import { CreateEmpresaData, UpdateEmpresaData, StatusItem } from '../types/organizacional';
+import { CreateEmpresaData, UpdateEmpresaData, StatusItem, CreateEmpresaPontoFocalData } from '../types/organizacional';
 
 // Função auxiliar para validar CNPJ
 const isValidCNPJ = (cnpj: string): boolean => {
@@ -422,6 +423,23 @@ export const createEmpresa = async (req: Request, res: Response) => {
 
     const empresa = await EmpresaModel.create(cleanedData, userId);
     
+    // Criar múltiplos pontos focais se fornecidos
+    if (empresaData.pontos_focais && Array.isArray(empresaData.pontos_focais) && empresaData.pontos_focais.length > 0) {
+      for (let i = 0; i < empresaData.pontos_focais.length; i++) {
+        const pontoFocal = empresaData.pontos_focais[i];
+        if (pontoFocal.nome && pontoFocal.nome.trim()) {
+          const pontoFocalData: CreateEmpresaPontoFocalData = {
+            nome: pontoFocal.nome.trim(),
+            descricao: pontoFocal.descricao?.trim() || undefined,
+            observacoes: pontoFocal.observacoes?.trim() || undefined,
+            is_principal: (pontoFocal as any).isPrincipal || (pontoFocal as any).is_principal || false,
+            ordem: i + 1
+          };
+          await EmpresaPontoFocalModel.create(empresa.id, pontoFocalData, userId);
+        }
+      }
+    }
+    
     console.log('Empresa criada com sucesso:', empresa);
 
     res.status(201).json({
@@ -596,6 +614,27 @@ export const updateEmpresa = async (req: Request, res: Response) => {
         message: 'Empresa não encontrada após atualização',
         error: 'COMPANY_NOT_FOUND'
       });
+    }
+
+    // Atualizar múltiplos pontos focais se fornecidos
+    if (updateData.pontos_focais && Array.isArray(updateData.pontos_focais)) {
+      // Remover pontos focais existentes da empresa
+      await EmpresaPontoFocalModel.deleteByEmpresaId(empresaId);
+      
+      // Criar novos pontos focais
+      for (let i = 0; i < updateData.pontos_focais.length; i++) {
+        const pontoFocal = updateData.pontos_focais[i];
+        if (pontoFocal.nome && pontoFocal.nome.trim()) {
+          const pontoFocalData: CreateEmpresaPontoFocalData = {
+            nome: pontoFocal.nome.trim(),
+            descricao: pontoFocal.descricao?.trim() || undefined,
+            observacoes: pontoFocal.observacoes?.trim() || undefined,
+            is_principal: (pontoFocal as any).isPrincipal || (pontoFocal as any).is_principal || false,
+            ordem: i + 1
+          };
+          await EmpresaPontoFocalModel.create(empresaId, pontoFocalData, userId);
+        }
+      }
     }
 
     res.json({

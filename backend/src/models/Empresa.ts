@@ -1,5 +1,6 @@
 import { query } from '../config/database';
 import { Empresa, CreateEmpresaData, UpdateEmpresaData, StatusItem, EmpresaWithRelations } from '../types/organizacional';
+import { EmpresaPontoFocalModel } from './EmpresaPontoFocal';
 
 export class EmpresaModel {
   
@@ -70,7 +71,15 @@ export class EmpresaModel {
       [id]
     );
     
-    return result.rows.length > 0 ? result.rows[0] : null;
+    if (result.rows.length === 0) return null;
+    
+    const empresa = result.rows[0];
+    
+    // Carregar pontos focais
+    const pontosFocais = await EmpresaPontoFocalModel.findByEmpresaId(id);
+    empresa.pontos_focais = pontosFocais;
+    
+    return empresa;
   }
 
   // Buscar empresa por número de inscrição
@@ -229,7 +238,15 @@ export class EmpresaModel {
       'SELECT * FROM empresas ORDER BY razao_social ASC'
     );
     
-    return result.rows;
+    const empresas = result.rows;
+    
+    // Carregar pontos focais para cada empresa
+    for (const empresa of empresas) {
+      const pontosFocais = await EmpresaPontoFocalModel.findByEmpresaId(empresa.id);
+      empresa.pontos_focais = pontosFocais;
+    }
+    
+    return empresas;
   }
 
   // Listar empresas ativas
@@ -274,7 +291,7 @@ export class EmpresaModel {
       ORDER BY e.razao_social ASC
     `);
     
-    return result.rows.map(empresa => ({
+    const empresas = result.rows.map(empresa => ({
       ...empresa,
       grupo: empresa.grupo_id_ref ? {
         id: empresa.grupo_id_ref,
@@ -302,6 +319,14 @@ export class EmpresaModel {
         updated_by: empresa.regiao_updated_by
       } : undefined
     }));
+    
+    // Carregar pontos focais para cada empresa
+    for (const empresa of empresas) {
+      const pontosFocais = await EmpresaPontoFocalModel.findByEmpresaId(empresa.id);
+      empresa.pontos_focais = pontosFocais;
+    }
+    
+    return empresas;
   }
 
   // Buscar empresas por grupo
