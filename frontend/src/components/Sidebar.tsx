@@ -221,14 +221,14 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </div>
 
       {/* Menu Items */}
-      <nav className="flex-1 overflow-y-auto p-2 pb-4 menu-scrollbar">
+      <nav className="flex-1 overflow-y-auto p-2 menu-scrollbar">
         <div className="space-y-1">
           {menuItems.map(item => renderMenuItem(item))}
         </div>
         
         {/* Informações do usuário no fundo da página */}
         {!collapsed && user && (
-          <div className="absolute bottom-4 left-0 right-0 px-4">
+          <div className="mt-6 px-2">
             <div className="bg-gradient-to-r from-[#00A298]/5 to-[#1D3C44]/5 rounded-xl p-4 border border-gray-200/50 backdrop-blur-sm">
               <div className="text-center">
                 {/* Avatar do usuário */}
@@ -256,18 +256,18 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </div>
           </div>
         )}
-        
-        {/* Ícone do usuário quando collapsed */}
-        {collapsed && user && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#00A298] to-[#1D3C44] rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xs">
-                {user.first_name.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          </div>
-        )}
       </nav>
+      
+      {/* Ícone do usuário quando collapsed - fixo no fundo */}
+      {collapsed && user && (
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+          <div className="w-8 h-8 bg-gradient-to-br from-[#00A298] to-[#1D3C44] rounded-full flex items-center justify-center">
+            <span className="text-white font-bold text-xs">
+              {user.first_name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        </div>
+      )}
     </aside>
   );
 } 
