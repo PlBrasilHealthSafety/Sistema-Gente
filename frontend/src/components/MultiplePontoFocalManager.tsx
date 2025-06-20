@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { PontoFocal } from '@/types/pontoFocal';
 
 interface MultiplePontoFocalManagerProps {
@@ -49,7 +49,7 @@ export default function MultiplePontoFocalManager({
   };
 
   // Função para atualizar ponto focal
-  const atualizarPontoFocal = (id: string, campo: keyof PontoFocal, valor: any) => {
+  const atualizarPontoFocal = (id: string, campo: keyof PontoFocal, valor: string | boolean) => {
     const pontosFocaisAtualizados = pontosFocais.map(pf => {
       if (pf.id === id) {
         // Se está marcando como principal, desmarcar os outros
@@ -132,7 +132,7 @@ export default function MultiplePontoFocalManager({
             <div className="text-center py-6 text-gray-500 text-sm">
               Nenhum ponto focal adicionado ainda.
               <br />
-              Clique em "Adicionar Ponto Focal" para começar.
+              Clique em &quot;Adicionar Ponto Focal&quot; para começar.
             </div>
           ) : (
             <div className="space-y-4">

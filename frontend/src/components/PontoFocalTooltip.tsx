@@ -107,7 +107,7 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
                     + {pontosFocais.length - 1} outro(s) ponto(s) focal(is)
                   </div>
                   <div className="text-gray-400 text-xs mt-1">
-                    Clique em "Visualizar" para ver todos
+                    Clique em &quot;Visualizar&quot; para ver todos
                   </div>
                 </div>
               )}

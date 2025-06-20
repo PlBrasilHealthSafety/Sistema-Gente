@@ -4,6 +4,37 @@ export enum StatusItem {
   INATIVO = 'inativo'
 }
 
+// Interface para Pontos Focais dos Grupos
+export interface GrupoPontoFocal {
+  id: number;
+  grupo_id: number;
+  nome: string;
+  descricao?: string;
+  observacoes?: string;
+  is_principal: boolean;
+  ordem: number;
+  created_at: Date;
+  updated_at: Date;
+  created_by: number;
+  updated_by?: number;
+}
+
+export interface CreateGrupoPontoFocalData {
+  nome: string;
+  descricao?: string;
+  observacoes?: string;
+  is_principal?: boolean;
+  ordem?: number;
+}
+
+export interface UpdateGrupoPontoFocalData {
+  nome?: string;
+  descricao?: string;
+  observacoes?: string;
+  is_principal?: boolean;
+  ordem?: number;
+}
+
 // Interfaces para Grupos
 export interface Grupo {
   id: number;
@@ -12,10 +43,11 @@ export interface Grupo {
   codigo?: string;
   status: StatusItem;
   grupo_pai_id?: number; // Para hierarquia de grupos
-  ponto_focal_nome?: string; // Nome do ponto focal
-  ponto_focal_descricao?: string; // Descrição do ponto focal
-  ponto_focal_observacoes?: string; // Observações importantes do ponto focal
-  ponto_focal_principal?: boolean; // Se é o ponto focal principal
+  ponto_focal_nome?: string; // Nome do ponto focal (mantido para compatibilidade)
+  ponto_focal_descricao?: string; // Descrição do ponto focal (mantido para compatibilidade)
+  ponto_focal_observacoes?: string; // Observações importantes do ponto focal (mantido para compatibilidade)
+  ponto_focal_principal?: boolean; // Se é o ponto focal principal (mantido para compatibilidade)
+  pontos_focais?: GrupoPontoFocal[]; // Array de múltiplos pontos focais
   created_at: Date;
   updated_at: Date;
   created_by: number; // ID do usuário que criou
@@ -32,6 +64,7 @@ export interface CreateGrupoData {
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
   ponto_focal_principal?: boolean;
+  pontos_focais?: CreateGrupoPontoFocalData[]; // Array de pontos focais para criar
 }
 
 export interface UpdateGrupoData {
@@ -44,6 +77,7 @@ export interface UpdateGrupoData {
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
   ponto_focal_principal?: boolean;
+  pontos_focais?: CreateGrupoPontoFocalData[]; // Array de pontos focais para atualizar
 }
 
 // Interfaces para Regiões

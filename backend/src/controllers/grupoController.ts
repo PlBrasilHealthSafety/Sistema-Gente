@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { GrupoModel } from '../models/Grupo';
-import { CreateGrupoData, UpdateGrupoData, StatusItem } from '../types/organizacional';
+import { GrupoPontoFocalModel } from '../models/GrupoPontoFocal';
+import { CreateGrupoData, UpdateGrupoData, StatusItem, CreateGrupoPontoFocalData } from '../types/organizacional';
 import { UserRole } from '../types/user';
 
 // Listar todos os grupos
@@ -175,7 +176,7 @@ export const getSubgroups = async (req: Request, res: Response) => {
 // Criar grupo (apenas SUPER_ADMIN e ADMIN)
 export const createGrupo = async (req: Request, res: Response) => {
   try {
-    const { nome, descricao, codigo, status, grupo_pai_id, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, ponto_focal_principal } = req.body as CreateGrupoData;
+    const { nome, descricao, codigo, status, grupo_pai_id, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, ponto_focal_principal, pontos_focais } = req.body as CreateGrupoData;
     const userId = req.user!.id;
 
     // Validações básicas
@@ -222,6 +223,25 @@ export const createGrupo = async (req: Request, res: Response) => {
       ponto_focal_observacoes: ponto_focal_observacoes?.trim(),
       ponto_focal_principal: ponto_focal_principal || false
     }, userId);
+
+    // Criar múltiplos pontos focais se fornecidos
+    if (pontos_focais && Array.isArray(pontos_focais) && pontos_focais.length > 0) {
+      const pontosFocaisProcessados: CreateGrupoPontoFocalData[] = pontos_focais.map((pf, index) => ({
+        nome: pf.nome?.trim() || '',
+        descricao: pf.descricao?.trim(),
+        observacoes: pf.observacoes?.trim(),
+        is_principal: pf.is_principal || false,
+        ordem: pf.ordem || (index + 1)
+      }));
+
+      await GrupoPontoFocalModel.createMultiple(grupo.id, pontosFocaisProcessados, userId);
+      
+      // Recarregar grupo com pontos focais
+      const grupoComPontosFocais = await GrupoModel.findById(grupo.id);
+      if (grupoComPontosFocais) {
+        grupo.pontos_focais = grupoComPontosFocais.pontos_focais;
+      }
+    }
 
     res.status(201).json({
       success: true,
@@ -336,6 +356,30 @@ export const updateGrupo = async (req: Request, res: Response) => {
         message: 'Grupo não encontrado após atualização',
         error: 'GROUP_NOT_FOUND'
       });
+    }
+
+    // Atualizar múltiplos pontos focais se fornecidos
+    if (updateData.pontos_focais !== undefined) {
+      if (Array.isArray(updateData.pontos_focais) && updateData.pontos_focais.length > 0) {
+        const pontosFocaisProcessados: CreateGrupoPontoFocalData[] = updateData.pontos_focais.map((pf, index) => ({
+          nome: pf.nome?.trim() || '',
+          descricao: pf.descricao?.trim(),
+          observacoes: pf.observacoes?.trim(),
+          is_principal: pf.is_principal || false,
+          ordem: pf.ordem || (index + 1)
+        }));
+
+        await GrupoPontoFocalModel.updateByGrupoId(grupoId, pontosFocaisProcessados, userId);
+      } else {
+        // Se array vazio, remover todos os pontos focais
+        await GrupoPontoFocalModel.deleteByGrupoId(grupoId);
+      }
+      
+      // Recarregar grupo com pontos focais atualizados
+      const grupoAtualizado = await GrupoModel.findById(grupoId);
+      if (grupoAtualizado) {
+        grupo.pontos_focais = grupoAtualizado.pontos_focais;
+      }
     }
 
     res.json({

@@ -7,6 +7,7 @@ import { formatTexto } from '@/utils/masks';
 import { usePermissions } from '@/hooks/usePermissions';
 import PontoFocalTooltip from '@/components/PontoFocalTooltip';
 import MultiplePontoFocalManager from '@/components/MultiplePontoFocalManager';
+import MultiplePontoFocalViewer from '@/components/MultiplePontoFocalViewer';
 import { PontoFocal } from '@/types/pontoFocal';
 
 interface NotificationMessage {
@@ -24,6 +25,20 @@ interface User {
   is_active: boolean;
 }
 
+interface GrupoPontoFocal {
+  id: number;
+  grupo_id: number;
+  nome: string;
+  descricao?: string;
+  observacoes?: string;
+  is_principal: boolean;
+  ordem: number;
+  created_at: string;
+  updated_at: string;
+  created_by: number;
+  updated_by?: number;
+}
+
 interface Grupo {
   id: number;
   nome: string;
@@ -32,6 +47,7 @@ interface Grupo {
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
   ponto_focal_principal?: boolean;
+  pontos_focais?: GrupoPontoFocal[];
   status: 'ativo' | 'inativo';
   created_by: number;
   updated_by: number;
@@ -55,11 +71,11 @@ export default function GruposPage() {
   const [showPontoFocal, setShowPontoFocal] = useState(false);
   const [pontosFocais, setPontosFocais] = useState<PontoFocal[]>([]);
   
-  // Estados para compatibilidade (mantidos para não quebrar o código existente)
-  const [pontoFocalNome, setPontoFocalNome] = useState('');
-  const [pontoFocalDescricao, setPontoFocalDescricao] = useState('');
-  const [pontoFocalObservacoes, setPontoFocalObservacoes] = useState('');
-  const [pontoFocalPrincipal, setPontoFocalPrincipal] = useState(false);
+  // Estados para compatibilidade (removidos pois agora usamos pontosFocais)
+  // const [pontoFocalNome, setPontoFocalNome] = useState('');
+  // const [pontoFocalDescricao, setPontoFocalDescricao] = useState('');
+  // const [pontoFocalObservacoes, setPontoFocalObservacoes] = useState('');
+  // const [pontoFocalPrincipal, setPontoFocalPrincipal] = useState(false);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [filteredGrupos, setFilteredGrupos] = useState<Grupo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,6 +90,8 @@ export default function GruposPage() {
   const [grupoExcluindo, setGrupoExcluindo] = useState<Grupo | null>(null);
   const [showViewGroupModal, setShowViewGroupModal] = useState(false);
   const [grupoVisualizando, setGrupoVisualizando] = useState<Grupo | null>(null);
+  const [showPontoFocalVisualizacao, setShowPontoFocalVisualizacao] = useState(false);
+  const [pontosFocaisVisualizacao, setPontosFocaisVisualizacao] = useState<PontoFocal[]>([]);
 
   // Estados para o autocomplete
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -348,11 +366,6 @@ export default function GruposPage() {
     setDescricaoGrupo('');
     setShowPontoFocal(false);
     setPontosFocais([]);
-    // Manter compatibilidade
-    setPontoFocalNome('');
-    setPontoFocalDescricao('');
-    setPontoFocalObservacoes('');
-    setPontoFocalPrincipal(false);
   };
 
   // Função para retornar (fechar modal)
@@ -367,9 +380,23 @@ export default function GruposPage() {
     setNomeGrupo(grupo.nome);
     setDescricaoGrupo(grupo.descricao || '');
     
-    // Carregar pontos focais existentes (converter do formato atual)
+    // Carregar pontos focais existentes
     const pontosFocaisExistentes: PontoFocal[] = [];
-    if (grupo.ponto_focal_nome || grupo.ponto_focal_descricao || grupo.ponto_focal_observacoes) {
+    
+    // Primeiro, tentar carregar do array de pontos focais (nova estrutura)
+    if (grupo.pontos_focais && Array.isArray(grupo.pontos_focais) && grupo.pontos_focais.length > 0) {
+      grupo.pontos_focais.forEach((pf: GrupoPontoFocal) => {
+        pontosFocaisExistentes.push({
+          id: pf.id.toString(),
+          nome: pf.nome || '',
+          descricao: pf.descricao || '',
+          observacoes: pf.observacoes || '',
+          isPrincipal: pf.is_principal || false
+        });
+      });
+    } 
+    // Fallback: carregar dos campos antigos (compatibilidade)
+    else if (grupo.ponto_focal_nome || grupo.ponto_focal_descricao || grupo.ponto_focal_observacoes) {
       pontosFocaisExistentes.push({
         id: 'existing',
         nome: grupo.ponto_focal_nome || '',
@@ -381,12 +408,6 @@ export default function GruposPage() {
     
     setPontosFocais(pontosFocaisExistentes);
     setShowPontoFocal(pontosFocaisExistentes.length > 0);
-    
-    // Manter compatibilidade
-    setPontoFocalNome(grupo.ponto_focal_nome || '');
-    setPontoFocalDescricao(grupo.ponto_focal_descricao || '');
-    setPontoFocalObservacoes(grupo.ponto_focal_observacoes || '');
-    setPontoFocalPrincipal(grupo.ponto_focal_principal || false);
     
     setShowEditGroupModal(true);
   };
@@ -487,7 +508,7 @@ export default function GruposPage() {
           }
         }
         
-        return regioes.filter((r: any) => r.grupo_id === grupoId && r.status === 'ativo').length;
+        return regioes.filter((r: { grupo_id: number; status: string }) => r.grupo_id === grupoId && r.status === 'ativo').length;
       }
     } catch (error) {
       console.error('Erro ao inativar regiões do grupo:', error);
@@ -552,6 +573,35 @@ export default function GruposPage() {
   // Função para abrir modal de visualização
   const handleVisualizarGrupo = (grupo: Grupo) => {
     setGrupoVisualizando(grupo);
+    
+    // Carregar pontos focais existentes
+    const pontosFocaisExistentes: PontoFocal[] = [];
+    
+    // Primeiro, tentar carregar do array de pontos focais (nova estrutura)
+    if (grupo.pontos_focais && Array.isArray(grupo.pontos_focais) && grupo.pontos_focais.length > 0) {
+      grupo.pontos_focais.forEach((pf: any) => {
+        pontosFocaisExistentes.push({
+          id: pf.id.toString(),
+          nome: pf.nome || '',
+          descricao: pf.descricao || '',
+          observacoes: pf.observacoes || '',
+          isPrincipal: pf.is_principal || false
+        });
+      });
+    } 
+    // Fallback: carregar dos campos antigos (compatibilidade)
+    else if (grupo.ponto_focal_nome || grupo.ponto_focal_descricao || grupo.ponto_focal_observacoes) {
+      pontosFocaisExistentes.push({
+        id: 'existing',
+        nome: grupo.ponto_focal_nome || '',
+        descricao: grupo.ponto_focal_descricao || '',
+        observacoes: grupo.ponto_focal_observacoes || '',
+        isPrincipal: grupo.ponto_focal_principal || false
+      });
+    }
+    
+    setPontosFocaisVisualizacao(pontosFocaisExistentes);
+    setShowPontoFocalVisualizacao(false); // Começar fechado
     setShowViewGroupModal(true);
   };
 
@@ -559,6 +609,8 @@ export default function GruposPage() {
   const handleFecharVisualizacao = () => {
     setShowViewGroupModal(false);
     setGrupoVisualizando(null);
+    setPontosFocaisVisualizacao([]);
+    setShowPontoFocalVisualizacao(false);
   };
 
   useEffect(() => {
@@ -1040,58 +1092,13 @@ export default function GruposPage() {
                   />
                 </div>
 
-                {/* Seção Ponto Focal (apenas se houver dados) */}
-                {permissions.canViewSensitive && (grupoVisualizando?.ponto_focal_nome || grupoVisualizando?.ponto_focal_descricao || grupoVisualizando?.ponto_focal_observacoes) && (
-                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <h5 className="text-sm font-medium text-gray-700 mb-3">Informações do Ponto Focal</h5>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Nome do Ponto Focal
-                        </label>
-                        <input
-                          type="text"
-                          value={grupoVisualizando?.ponto_focal_nome || ''}
-                          readOnly
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Descrição do Ponto Focal
-                        </label>
-                        <textarea
-                          value={grupoVisualizando?.ponto_focal_descricao || ''}
-                          readOnly
-                          rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Observações Importantes
-                        </label>
-                        <textarea
-                          value={grupoVisualizando?.ponto_focal_observacoes || ''}
-                          readOnly
-                          rows={2}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2 pt-2">
-                        <input
-                          type="checkbox"
-                          id="pontoFocalPrincipalView"
-                          checked={grupoVisualizando?.ponto_focal_principal || false}
-                          readOnly
-                          className="w-4 h-4 text-[#00A298] bg-gray-100 border-gray-300 rounded cursor-not-allowed"
-                        />
-                        <label htmlFor="pontoFocalPrincipalView" className="text-sm font-medium text-gray-700">
-                          Ponto Focal Principal
-                        </label>
-                      </div>
-                    </div>
-                  </div>
+                {/* Seção de Múltiplos Pontos Focais - apenas para usuários com permissão */}
+                {permissions.canViewSensitive && (
+                  <MultiplePontoFocalViewer
+                    pontosFocais={pontosFocaisVisualizacao}
+                    showSection={showPontoFocalVisualizacao}
+                    onToggleSection={() => setShowPontoFocalVisualizacao(!showPontoFocalVisualizacao)}
+                  />
                 )}
                 
                 <div className="flex gap-3 mt-6">

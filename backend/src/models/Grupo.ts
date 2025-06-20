@@ -1,5 +1,6 @@
 import { query } from '../config/database';
 import { Grupo, CreateGrupoData, UpdateGrupoData, StatusItem, GrupoWithHierarchy } from '../types/organizacional';
+import { GrupoPontoFocalModel } from './GrupoPontoFocal';
 
 export class GrupoModel {
   
@@ -41,7 +42,15 @@ export class GrupoModel {
       [id]
     );
     
-    return result.rows.length > 0 ? result.rows[0] : null;
+    if (result.rows.length === 0) return null;
+    
+    const grupo = result.rows[0];
+    
+    // Carregar pontos focais
+    const pontosFocais = await GrupoPontoFocalModel.findByGrupoId(id);
+    grupo.pontos_focais = pontosFocais;
+    
+    return grupo;
   }
 
   // Buscar grupo por código
@@ -84,7 +93,15 @@ export class GrupoModel {
       'SELECT * FROM grupos ORDER BY nome ASC'
     );
     
-    return result.rows;
+    const grupos = result.rows;
+    
+    // Carregar pontos focais para cada grupo
+    for (const grupo of grupos) {
+      const pontosFocais = await GrupoPontoFocalModel.findByGrupoId(grupo.id);
+      grupo.pontos_focais = pontosFocais;
+    }
+    
+    return grupos;
   }
 
   // Listar grupos ativos
