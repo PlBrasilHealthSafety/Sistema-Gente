@@ -242,6 +242,7 @@ export const NovaEmpresaModal: React.FC<NovaEmpresaModalProps> = ({
                       >
                         <option value="ME">Microempresa</option>
                         <option value="EPP">Empresa de Pequeno Porte</option>
+                        <option value="GRANDE_PORTE">Grande Porte</option>
                         <option value="DEMAIS">Demais</option>
                       </select>
                     </div>
@@ -640,7 +641,7 @@ export const NovaEmpresaModal: React.FC<NovaEmpresaModalProps> = ({
 
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Grau de Risco <span className="text-red-500">*</span>
+                        Perfil de Risco <span className="text-red-500">*</span>
                       </label>
                       <select
                         value={risco}
@@ -652,11 +653,11 @@ export const NovaEmpresaModal: React.FC<NovaEmpresaModalProps> = ({
                           errors.risco ? 'border-red-500' : 'border-gray-300'
                         }`}
                       >
-                        <option value="">Selecione o grau de risco</option>
-                        <option value="1">1 - Baixo</option>
-                        <option value="2">2 - Médio</option>
-                        <option value="3">3 - Alto</option>
-                        <option value="4">4 - Muito Alto</option>
+                        <option value="">Selecione o perfil de risco</option>
+                        <option value="1">Grau de Risco 1: Baixo risco</option>
+                        <option value="2">Grau de Risco 2: Risco moderado</option>
+                        <option value="3">Grau de Risco 3: Risco significativo</option>
+                        <option value="4">Grau de Risco 4: Alto risco</option>
                       </select>
                       {errors.risco && (
                         <p className="text-red-500 text-xs mt-1">{errors.risco}</p>

@@ -11,7 +11,7 @@ export interface PontoFocalFormData {
 }
 
 export interface PontoFocalDisplayData {
-  pontosFocais?: PontoFocal[];
+  pontosFocais?: any[]; // Aceita dados do backend com snake_case
   // Para compatibilidade com estrutura atual
   ponto_focal_nome?: string;
   ponto_focal_descricao?: string;

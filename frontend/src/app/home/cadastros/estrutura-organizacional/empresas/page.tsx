@@ -987,10 +987,9 @@ export default function EmpresasPage() {
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Risco <span className="text-red-500">*</span>
+                              Perfil de Risco <span className="text-red-500">*</span>
                             </label>
-                            <input
-                              type="text"
+                            <select
                               value={risco}
                               onChange={(e) => {
                                 setRisco(e.target.value);
@@ -1001,8 +1000,13 @@ export default function EmpresasPage() {
                               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
                                 errors.risco ? 'border-red-300 bg-red-50' : 'border-gray-300'
                               }`}
-                              placeholder="Digite o risco"
-                            />
+                            >
+                              <option value="">Selecione o perfil de risco</option>
+                              <option value="1">Grau de Risco 1: Baixo risco</option>
+                              <option value="2">Grau de Risco 2: Risco moderado</option>
+                              <option value="3">Grau de Risco 3: Risco significativo</option>
+                              <option value="4">Grau de Risco 4: Alto risco</option>
+                            </select>
                             {errors.risco && (
                               <p className="text-red-500 text-xs mt-1">{errors.risco}</p>
                             )}
@@ -1034,6 +1038,17 @@ export default function EmpresasPage() {
                                   className="mr-2 text-[#00A298] focus:ring-[#00A298]"
                                 />
                                 <span className="text-sm font-medium">EPP</span>
+                              </label>
+                              <label className="flex items-center cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="classificacao"
+                                  value="GRANDE_PORTE"
+                                  checked={classificacaoPorte === 'GRANDE_PORTE'}
+                                  onChange={(e) => setClassificacaoPorte(e.target.value)}
+                                  className="mr-2 text-[#00A298] focus:ring-[#00A298]"
+                                />
+                                <span className="text-sm font-medium">Grande Porte</span>
                               </label>
                             </div>
                           </div>
@@ -1515,7 +1530,7 @@ export default function EmpresasPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Risco
+                      Perfil de Risco
                     </label>
                     <input
                       type="text"
@@ -1736,10 +1751,9 @@ export default function EmpresasPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Risco <span className="text-red-500">*</span>
+                      Perfil de Risco <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={risco}
                       onChange={(e) => {
                         setRisco(e.target.value);
@@ -1750,8 +1764,13 @@ export default function EmpresasPage() {
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
                         errors.risco ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
-                      placeholder="Digite o risco"
-                    />
+                    >
+                      <option value="">Selecione o perfil de risco</option>
+                      <option value="1">Grau de Risco 1: Baixo risco</option>
+                      <option value="2">Grau de Risco 2: Risco moderado</option>
+                      <option value="3">Grau de Risco 3: Risco significativo</option>
+                      <option value="4">Grau de Risco 4: Alto risco</option>
+                    </select>
                     {errors.risco && (
                       <p className="text-red-500 text-xs mt-1">{errors.risco}</p>
                     )}

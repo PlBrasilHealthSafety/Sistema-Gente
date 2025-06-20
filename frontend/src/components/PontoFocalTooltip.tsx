@@ -10,9 +10,15 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
 
   // Função para converter dados atuais para novos pontos focais (compatibilidade)
   const getPontosFocais = (): PontoFocal[] => {
-    // Se tem novos pontos focais, usar eles
-    if (data.pontosFocais && data.pontosFocais.length > 0) {
-      return data.pontosFocais;
+    // Se tem novos pontos focais, usar eles com conversão snake_case -> camelCase
+    if (data.pontosFocais && Array.isArray(data.pontosFocais) && data.pontosFocais.length > 0) {
+      return data.pontosFocais.map((pf: any) => ({
+        id: pf.id?.toString() || 'unknown',
+        nome: pf.nome || '',
+        descricao: pf.descricao || '',
+        observacoes: pf.observacoes || '',
+        isPrincipal: pf.is_principal || false // 🎯 Conversão snake_case -> camelCase
+      }));
     }
     
     // Se tem dados antigos, converter para novo formato
