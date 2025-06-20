@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { formatTexto } from '@/utils/masks';
 import { usePermissions } from '@/hooks/usePermissions';
 import PontoFocalTooltip from '@/components/PontoFocalTooltip';
+import MultiplePontoFocalManager from '@/components/MultiplePontoFocalManager';
+import { PontoFocal } from '@/types/pontoFocal';
 
 interface NotificationMessage {
   type: 'success' | 'error';
@@ -51,6 +53,9 @@ export default function GruposPage() {
   const [nomeBusca, setNomeBusca] = useState('');
   const [descricaoGrupo, setDescricaoGrupo] = useState('');
   const [showPontoFocal, setShowPontoFocal] = useState(false);
+  const [pontosFocais, setPontosFocais] = useState<PontoFocal[]>([]);
+  
+  // Estados para compatibilidade (mantidos para não quebrar o código existente)
   const [pontoFocalNome, setPontoFocalNome] = useState('');
   const [pontoFocalDescricao, setPontoFocalDescricao] = useState('');
   const [pontoFocalObservacoes, setPontoFocalObservacoes] = useState('');
@@ -299,6 +304,10 @@ export default function GruposPage() {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // Usar o ponto focal principal se há múltiplos pontos focais
+      const pontoFocalPrincipal = pontosFocais.find(pf => pf.isPrincipal);
+      
       const response = await fetch('http://localhost:3001/api/grupos', {
         method: 'POST',
         headers: {
@@ -308,10 +317,11 @@ export default function GruposPage() {
         body: JSON.stringify({
           nome: nomeGrupo,
           descricao: descricaoGrupo || null,
-          ponto_focal_nome: showPontoFocal ? pontoFocalNome || null : null,
-          ponto_focal_descricao: showPontoFocal ? pontoFocalDescricao || null : null,
-          ponto_focal_observacoes: showPontoFocal ? pontoFocalObservacoes || null : null,
-          ponto_focal_principal: showPontoFocal ? pontoFocalPrincipal : false,
+          ponto_focal_nome: pontoFocalPrincipal?.nome || null,
+          ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
+          ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
+          ponto_focal_principal: !!pontoFocalPrincipal,
+          pontos_focais: pontosFocais.length > 0 ? pontosFocais : null, // Adicionar array completo para futuro uso
         })
       });
 
@@ -337,6 +347,8 @@ export default function GruposPage() {
     setNomeGrupo('');
     setDescricaoGrupo('');
     setShowPontoFocal(false);
+    setPontosFocais([]);
+    // Manter compatibilidade
     setPontoFocalNome('');
     setPontoFocalDescricao('');
     setPontoFocalObservacoes('');
@@ -355,9 +367,22 @@ export default function GruposPage() {
     setNomeGrupo(grupo.nome);
     setDescricaoGrupo(grupo.descricao || '');
     
-    // Verificar se tem ponto focal cadastrado
-    const hasPontoFocal = !!(grupo.ponto_focal_nome || grupo.ponto_focal_descricao || grupo.ponto_focal_observacoes);
-    setShowPontoFocal(hasPontoFocal);
+    // Carregar pontos focais existentes (converter do formato atual)
+    const pontosFocaisExistentes: PontoFocal[] = [];
+    if (grupo.ponto_focal_nome || grupo.ponto_focal_descricao || grupo.ponto_focal_observacoes) {
+      pontosFocaisExistentes.push({
+        id: 'existing',
+        nome: grupo.ponto_focal_nome || '',
+        descricao: grupo.ponto_focal_descricao || '',
+        observacoes: grupo.ponto_focal_observacoes || '',
+        isPrincipal: grupo.ponto_focal_principal || false
+      });
+    }
+    
+    setPontosFocais(pontosFocaisExistentes);
+    setShowPontoFocal(pontosFocaisExistentes.length > 0);
+    
+    // Manter compatibilidade
     setPontoFocalNome(grupo.ponto_focal_nome || '');
     setPontoFocalDescricao(grupo.ponto_focal_descricao || '');
     setPontoFocalObservacoes(grupo.ponto_focal_observacoes || '');
@@ -375,6 +400,10 @@ export default function GruposPage() {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // Usar o ponto focal principal se há múltiplos pontos focais
+      const pontoFocalPrincipal = pontosFocais.find(pf => pf.isPrincipal);
+      
       const response = await fetch(`http://localhost:3001/api/grupos/${grupoEditando?.id}`, {
         method: 'PUT',
         headers: {
@@ -384,10 +413,11 @@ export default function GruposPage() {
         body: JSON.stringify({
           nome: nomeGrupo,
           descricao: descricaoGrupo || null,
-          ponto_focal_nome: showPontoFocal ? pontoFocalNome || null : null,
-          ponto_focal_descricao: showPontoFocal ? pontoFocalDescricao || null : null,
-          ponto_focal_observacoes: showPontoFocal ? pontoFocalObservacoes || null : null,
-          ponto_focal_principal: showPontoFocal ? pontoFocalPrincipal : false,
+          ponto_focal_nome: pontoFocalPrincipal?.nome || null,
+          ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
+          ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
+          ponto_focal_principal: !!pontoFocalPrincipal,
+          pontos_focais: pontosFocais.length > 0 ? pontosFocais : null, // Adicionar array completo para futuro uso
         })
       });
       if (response.ok) {
@@ -855,76 +885,14 @@ export default function GruposPage() {
                       />
                     </div>
 
-                    {/* Botão Ponto Focal - apenas para usuários com permissão */}
+                    {/* Seção de Múltiplos Pontos Focais - apenas para usuários com permissão */}
                     {permissions.canViewSensitive && (
-                      <div className="mt-4">
-                        <button
-                          type="button"
-                          onClick={() => setShowPontoFocal(!showPontoFocal)}
-                          className="flex items-center space-x-2 text-[#00A298] hover:text-[#1D3C44] font-medium text-sm transition-colors duration-200 cursor-pointer"
-                        >
-                          <div className={`w-6 h-6 border-2 border-[#00A298] rounded-full flex items-center justify-center transition-all duration-200 ${showPontoFocal ? 'bg-[#00A298] text-white' : 'text-[#00A298]'}`}>
-                            <span className="text-sm font-bold">{showPontoFocal ? '−' : '+'}</span>
-                          </div>
-                          <span>Ponto Focal</span>
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Seção Ponto Focal Expandível */}
-                    {permissions.canViewSensitive && showPontoFocal && (
-                      <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Nome do Ponto Focal
-                            </label>
-                            <input
-                              type="text"
-                              value={pontoFocalNome}
-                              onChange={(e) => setPontoFocalNome(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                              placeholder="Digite o nome do ponto focal..."
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Descrição do Ponto Focal
-                            </label>
-                            <textarea
-                              value={pontoFocalDescricao}
-                              onChange={(e) => setPontoFocalDescricao(e.target.value)}
-                              rows={3}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                              placeholder="Digite informações sobre o ponto focal do grupo..."
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Observações Importantes
-                            </label>
-                            <textarea
-                              value={pontoFocalObservacoes}
-                              onChange={(e) => setPontoFocalObservacoes(e.target.value)}
-                              rows={2}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                              placeholder="Observações rápidas..."
-                            />
-                          </div>
-                          <div className="flex items-center space-x-2 pt-2">
-                            <input
-                              type="checkbox"
-                              id="pontoFocalPrincipal"
-                              checked={pontoFocalPrincipal}
-                              onChange={(e) => setPontoFocalPrincipal(e.target.checked)}
-                              className="w-4 h-4 text-[#00A298] bg-gray-100 border-gray-300 rounded focus:ring-[#00A298] focus:ring-2"
-                            />
-                            <label htmlFor="pontoFocalPrincipal" className="text-sm font-medium text-gray-700 cursor-pointer">
-                              Marcar como Ponto Focal Principal
-                            </label>
-                          </div>
-                        </div>
-                      </div>
+                      <MultiplePontoFocalManager
+                        pontosFocais={pontosFocais}
+                        onPontosFocaisChange={setPontosFocais}
+                        showSection={showPontoFocal}
+                        onToggleSection={() => setShowPontoFocal(!showPontoFocal)}
+                      />
                     )}
 
                     <div className="flex gap-3 mt-6">
@@ -1178,76 +1146,14 @@ export default function GruposPage() {
                   />
                 </div>
 
-                {/* Botão Ponto Focal - apenas para usuários com permissão */}
+                {/* Seção de Múltiplos Pontos Focais - apenas para usuários com permissão */}
                 {permissions.canViewSensitive && (
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowPontoFocal(!showPontoFocal)}
-                      className="flex items-center space-x-2 text-[#00A298] hover:text-[#1D3C44] font-medium text-sm transition-colors duration-200 cursor-pointer"
-                    >
-                      <div className={`w-6 h-6 border-2 border-[#00A298] rounded-full flex items-center justify-center transition-all duration-200 ${showPontoFocal ? 'bg-[#00A298] text-white' : 'text-[#00A298]'}`}>
-                        <span className="text-sm font-bold">{showPontoFocal ? '−' : '+'}</span>
-                      </div>
-                      <span>Ponto Focal</span>
-                    </button>
-                  </div>
-                )}
-
-                {/* Seção Ponto Focal Expandível */}
-                {permissions.canViewSensitive && showPontoFocal && (
-                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg transition-all duration-300">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Nome do Ponto Focal
-                        </label>
-                        <input
-                          type="text"
-                          value={pontoFocalNome}
-                          onChange={(e) => setPontoFocalNome(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                          placeholder="Digite o nome do ponto focal..."
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Descrição do Ponto Focal
-                        </label>
-                        <textarea
-                          value={pontoFocalDescricao}
-                          onChange={(e) => setPontoFocalDescricao(e.target.value)}
-                          rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                          placeholder="Digite informações sobre o ponto focal do grupo..."
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Observações Importantes
-                        </label>
-                        <textarea
-                          value={pontoFocalObservacoes}
-                          onChange={(e) => setPontoFocalObservacoes(e.target.value)}
-                          rows={2}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                          placeholder="Observações rápidas..."
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2 pt-2">
-                        <input
-                          type="checkbox"
-                          id="pontoFocalPrincipalEdit"
-                          checked={pontoFocalPrincipal}
-                          onChange={(e) => setPontoFocalPrincipal(e.target.checked)}
-                          className="w-4 h-4 text-[#00A298] bg-gray-100 border-gray-300 rounded focus:ring-[#00A298] focus:ring-2"
-                        />
-                        <label htmlFor="pontoFocalPrincipalEdit" className="text-sm font-medium text-gray-700 cursor-pointer">
-                          Marcar como Ponto Focal Principal
-                        </label>
-                      </div>
-                    </div>
-                  </div>
+                  <MultiplePontoFocalManager
+                    pontosFocais={pontosFocais}
+                    onPontosFocaisChange={setPontosFocais}
+                    showSection={showPontoFocal}
+                    onToggleSection={() => setShowPontoFocal(!showPontoFocal)}
+                  />
                 )}
                 
                 <div className="flex gap-3 mt-6">
