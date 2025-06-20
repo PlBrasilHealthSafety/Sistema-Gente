@@ -12,34 +12,52 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
   const getPontosFocais = (): PontoFocal[] => {
     // Se tem novos pontos focais, usar eles com conversão snake_case -> camelCase
     if (data.pontosFocais && Array.isArray(data.pontosFocais) && data.pontosFocais.length > 0) {
-      return data.pontosFocais.map((pf: any) => ({
+      const converted = data.pontosFocais.map((pf: any) => ({
         id: pf.id?.toString() || 'unknown',
         nome: pf.nome || '',
         descricao: pf.descricao || '',
         observacoes: pf.observacoes || '',
         isPrincipal: pf.is_principal || false // 🎯 Conversão snake_case -> camelCase
       }));
+      return converted;
     }
     
     // Se tem dados antigos, converter para novo formato
     if (data.ponto_focal_nome || data.ponto_focal_descricao || data.ponto_focal_observacoes) {
-      return [{
+      const legacy = [{
         id: 'legacy',
         nome: data.ponto_focal_nome || '',
         descricao: data.ponto_focal_descricao || '',
         observacoes: data.ponto_focal_observacoes || '',
-        isPrincipal: data.ponto_focal_principal || false
+        isPrincipal: data.ponto_focal_principal !== false // ✅ Mudança: considerar principal por padrão
       }];
+      return legacy;
     }
 
     return [];
   };
 
   const pontosFocais = getPontosFocais();
-  const pontoFocalPrincipal = pontosFocais.find(pf => pf.isPrincipal);
   
-  // Se não tem pontos focais ou não tem principal, não mostrar
-  if (pontosFocais.length === 0 || !pontoFocalPrincipal) {
+  // ✅ Nova lógica: procurar por um principal OU usar o primeiro disponível
+  let pontoFocalPrincipal = pontosFocais.find(pf => pf.isPrincipal);
+  if (!pontoFocalPrincipal && pontosFocais.length > 0) {
+    pontoFocalPrincipal = pontosFocais[0]; // Usar o primeiro se não houver principal
+  }
+  
+  // 🔍 Log simples para debug apenas quando há dados
+  if (pontosFocais.length > 0) {
+    console.log('PontoFocalTooltip:', { 
+      empresa: data.nome_fantasia || 'Sem nome', 
+      pontosFocais: pontosFocais.length,
+      temPrincipal: !!pontoFocalPrincipal,
+      dados: data
+    });
+  }
+  
+  // ✅ Condição mais permissiva: mostrar se tem qualquer ponto focal com dados
+  if (pontosFocais.length === 0 || !pontoFocalPrincipal || 
+      (!pontoFocalPrincipal.nome && !pontoFocalPrincipal.descricao && !pontoFocalPrincipal.observacoes)) {
     return <span className="text-gray-300">-</span>;
   }
 

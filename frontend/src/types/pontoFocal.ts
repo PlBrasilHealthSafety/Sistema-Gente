@@ -17,4 +17,7 @@ export interface PontoFocalDisplayData {
   ponto_focal_descricao?: string;
   ponto_focal_observacoes?: string;
   ponto_focal_principal?: boolean;
+  // Campos adicionais para debug
+  nome_fantasia?: string;
+  numero_inscricao?: string;
 } 
