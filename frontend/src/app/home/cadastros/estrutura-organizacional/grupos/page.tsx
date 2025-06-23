@@ -339,7 +339,13 @@ export default function GruposPage() {
           ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
           ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
           ponto_focal_principal: !!pontoFocalPrincipal,
-          pontos_focais: pontosFocais.length > 0 ? pontosFocais : null, // Adicionar array completo para futuro uso
+          pontos_focais: pontosFocais.length > 0 ? pontosFocais.map(pf => ({
+            nome: pf.nome,
+            descricao: pf.descricao,
+            observacoes: pf.observacoes,
+            is_principal: pf.isPrincipal,
+            ordem: pontosFocais.indexOf(pf) + 1
+          })) : null,
         })
       });
 
@@ -438,7 +444,13 @@ export default function GruposPage() {
           ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
           ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
           ponto_focal_principal: !!pontoFocalPrincipal,
-          pontos_focais: pontosFocais.length > 0 ? pontosFocais : null, // Adicionar array completo para futuro uso
+          pontos_focais: pontosFocais.length > 0 ? pontosFocais.map(pf => ({
+            nome: pf.nome,
+            descricao: pf.descricao,
+            observacoes: pf.observacoes,
+            is_principal: pf.isPrincipal,
+            ordem: pontosFocais.indexOf(pf) + 1
+          })) : null,
         })
       });
       if (response.ok) {

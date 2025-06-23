@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Cidades Dinâmicas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Teste de Cidades Dinâmicas - API IBGE</h1>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Nova Funcionalidade Implementada</h2>
+            
+            <div class="space-y-4">
+                <div class="border border-blue-200 bg-blue-50 p-4 rounded">
+                    <h3 class="font-medium text-blue-900 mb-2">🔄 Como funciona a nova funcionalidade:</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-sm text-blue-800">
+                        <li>Acesse a página de Regiões</li>
+                        <li>Clique em "NOVA REGIÃO" ou "Editar" em uma região existente</li>
+                        <li>Selecione uma UF (Estado) no campo correspondente</li>
+                        <li>Observe que o campo "Cidade" se torna habilitado automaticamente</li>
+                        <li>O sistema busca todas as cidades do estado selecionado via API do IBGE</li>
+                        <li>Selecione a cidade desejada na lista carregada dinamicamente</li>
+                        <li>As cidades aparecem em ordem alfabética para facilitar a seleção</li>
+                    </ol>
+                </div>
+                
+                <div class="border border-green-200 bg-green-50 p-4 rounded">
+                    <h3 class="font-medium text-green-900 mb-2">✨ Melhorias implementadas:</h3>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-green-800">
+                        <li>✅ Campo cidade transformado de input text para select dinâmico</li>
+                        <li>✅ Integração com API oficial do IBGE para dados atualizados</li>
+                        <li>✅ Carregamento automático das cidades ao selecionar UF</li>
+                        <li>✅ Indicador visual de carregamento enquanto busca as cidades</li>
+                        <li>✅ Campo desabilitado até selecionar uma UF</li>
+                        <li>✅ Ordenação alfabética das cidades para fácil localização</li>
+                        <li>✅ Funciona tanto na criação quanto na edição de regiões</li>
+                        <li>✅ Reset automático da cidade ao trocar de UF</li>
+                    </ul>
+                </div>
+                
+                <div class="border border-yellow-200 bg-yellow-50 p-4 rounded">
+                    <h3 class="font-medium text-yellow-900 mb-2">🛠️ Detalhes técnicos:</h3>
+                    <div class="text-sm text-yellow-800 space-y-2">
+                        <p><strong>API utilizada:</strong> IBGE - Localidades</p>
+                        <p><strong>Endpoint:</strong> <code class="bg-yellow-100 px-1 rounded">https://servicodados.ibge.gov.br/api/v1/localidades/estados/{UF}/municipios</code></p>
+                        <p><strong>Método:</strong> GET (sem necessidade de autenticação)</p>
+                        <p><strong>Resposta:</strong> Array de objetos com id e nome das cidades</p>
+                        <p><strong>Ordenação:</strong> Alfabética pelo nome da cidade</p>
+                        <p><strong>Estados gerenciados:</strong></p>
+                        <ul class="list-disc list-inside ml-4 mt-1">
+                            <li><code>cidades[]</code> - Array das cidades disponíveis</li>
+                            <li><code>loadingCidades</code> - Indicador de carregamento</li>
+                            <li><code>cidadeRegiao</code> - Cidade selecionada</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="border border-purple-200 bg-purple-50 p-4 rounded">
+                    <h3 class="font-medium text-purple-900 mb-2">📱 Experiência do usuário:</h3>
+                    <div class="text-sm text-purple-800 space-y-2">
+                        <p><strong>Estado inicial:</strong> Campo cidade desabilitado com texto "Selecione primeiro a UF"</p>
+                        <p><strong>Ao selecionar UF:</strong> Campo habilitado, spinner de loading aparece</p>
+                        <p><strong>Durante carregamento:</strong> Texto "Carregando cidades..." e ícone de loading</p>
+                        <p><strong>Após carregamento:</strong> Lista de cidades ordenadas alfabeticamente</p>
+                        <p><strong>Ao trocar UF:</strong> Cidade resetada e nova busca iniciada</p>
+                        <p><strong>Tratamento de erro:</strong> Notificação amigável se a API falhar</p>
+                    </div>
+                </div>
+                
+                <div class="border border-red-200 bg-red-50 p-4 rounded">
+                    <h3 class="font-medium text-red-900 mb-2">🔄 Fluxo de teste completo:</h3>
+                    <div class="text-sm text-red-800">
+                        <p class="mb-2"><strong>Cenário 1 - Nova região:</strong></p>
+                        <ol class="list-decimal list-inside ml-4 space-y-1">
+                            <li>Clique em "NOVA REGIÃO"</li>
+                            <li>Preencha o nome da região</li>
+                            <li>Selecione uma UF (ex: SP, RJ, MG)</li>
+                            <li>Aguarde o carregamento das cidades</li>
+                            <li>Selecione uma cidade da lista</li>
+                            <li>Complete os outros campos e salve</li>
+                        </ol>
+                        
+                        <p class="mt-3 mb-2"><strong>Cenário 2 - Editar região:</strong></p>
+                        <ol class="list-decimal list-inside ml-4 space-y-1">
+                            <li>Clique em "Editar" em uma região existente</li>
+                            <li>Observe que as cidades da UF atual são carregadas automaticamente</li>
+                            <li>Troque a UF para testar o carregamento dinâmico</li>
+                            <li>Selecione uma nova cidade</li>
+                            <li>Salve as alterações</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <a href="http://localhost:3000/home/cadastros/estrutura-organizacional/regioes" 
+                   class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg inline-block">
+                    🗺️ Testar Regiões com Cidades Dinâmicas
+                </a>
+            </div>
+            
+            <div class="mt-4 p-4 bg-gray-100 rounded-lg">
+                <h4 class="font-medium text-gray-700 mb-2">📊 Exemplo de resposta da API IBGE:</h4>
+                <pre class="text-xs bg-white p-3 rounded overflow-x-auto">
+[
+  {
+    "id": 3550308,
+    "nome": "São Paulo",
+    "microrregiao": {...},
+    "regiao-imediata": {...}
+  },
+  {
+    "id": 3505708,
+    "nome": "Americana",
+    "microrregiao": {...},
+    "regiao-imediata": {...}
+  },
+  // ... mais cidades
+]</pre>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

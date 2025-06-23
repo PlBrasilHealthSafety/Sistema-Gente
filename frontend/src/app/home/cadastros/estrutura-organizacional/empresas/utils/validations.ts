@@ -12,6 +12,13 @@ export const validateEmpresaForm = (formData: {
   tipoInscricao: string;
   numeroInscricao: string;
   cno: string;
+  tipoLogradouro: string;
+  logradouro: string;
+  uf: string;
+  cidade: string;
+  bairro: string;
+  telefone: string;
+  email: string;
 }): FormErrors => {
   const errors: FormErrors = {
     nomeFantasia: '',
@@ -24,7 +31,14 @@ export const validateEmpresaForm = (formData: {
     numeroEndereco: '',
     tipoInscricao: '',
     numeroInscricao: '',
-    cno: ''
+    cno: '',
+    tipoLogradouro: '',
+    logradouro: '',
+    uf: '',
+    cidade: '',
+    bairro: '',
+    telefone: '',
+    email: ''
   };
 
   if (!formData.nomeFantasia.trim()) {
@@ -65,6 +79,36 @@ export const validateEmpresaForm = (formData: {
 
   if (!formData.numeroInscricao.trim()) {
     errors.numeroInscricao = 'Número de inscrição é obrigatório';
+  }
+
+  if (!formData.tipoLogradouro) {
+    errors.tipoLogradouro = 'Tipo de logradouro é obrigatório';
+  }
+
+  if (!formData.logradouro.trim()) {
+    errors.logradouro = 'Logradouro é obrigatório';
+  }
+
+  if (!formData.uf) {
+    errors.uf = 'UF é obrigatório';
+  }
+
+  if (!formData.cidade.trim()) {
+    errors.cidade = 'Cidade é obrigatória';
+  }
+
+  if (!formData.bairro.trim()) {
+    errors.bairro = 'Bairro é obrigatório';
+  }
+
+  if (!formData.telefone.trim()) {
+    errors.telefone = 'Telefone é obrigatório';
+  }
+
+  if (!formData.email.trim()) {
+    errors.email = 'E-mail é obrigatório';
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    errors.email = 'E-mail deve ter um formato válido';
   }
 
   return errors;

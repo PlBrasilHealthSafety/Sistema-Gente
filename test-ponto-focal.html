@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Pontos Focais</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Teste de Atualização de Pontos Focais</h1>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Instruções de Teste</h2>
+            
+            <div class="space-y-4">
+                <div class="border border-blue-200 bg-blue-50 p-4 rounded">
+                    <h3 class="font-medium text-blue-900 mb-2">1. Como testar a atualização do ponto focal principal:</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-sm text-blue-800">
+                        <li>Acesse a página de Grupos ou Empresas</li>
+                        <li>Clique em "Editar" em um item que tenha múltiplos pontos focais</li>
+                        <li>No modal de edição, expanda a seção "Pontos Focais"</li>
+                        <li>Marque um ponto focal diferente como "Principal"</li>
+                        <li>Observe que apenas um pode ser marcado como principal por vez</li>
+                        <li>Clique em "SALVAR"</li>
+                        <li>Verifique na listagem se o ícone de lâmpada mostra o novo ponto focal principal</li>
+                    </ol>
+                </div>
+                
+                <div class="border border-green-200 bg-green-50 p-4 rounded">
+                    <h3 class="font-medium text-green-900 mb-2">2. O que foi corrigido:</h3>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-green-800">
+                        <li>✅ Quando um ponto focal é marcado como principal, os outros são desmarcados automaticamente</li>
+                        <li>✅ Os dados são enviados corretamente para o backend com o campo is_principal</li>
+                        <li>✅ O tooltip (ícone de lâmpada) mostra sempre o ponto focal principal atualizado</li>
+                        <li>✅ A interface visual é atualizada imediatamente ao marcar/desmarcar</li>
+                    </ul>
+                </div>
+                
+                <div class="border border-yellow-200 bg-yellow-50 p-4 rounded">
+                    <h3 class="font-medium text-yellow-900 mb-2">3. Estrutura dos dados:</h3>
+                    <pre class="text-xs bg-yellow-100 p-2 rounded overflow-x-auto">
+{
+  "pontos_focais": [
+    {
+      "nome": "João Silva",
+      "descricao": "Responsável técnico",
+      "observacoes": "Disponível das 9h às 18h",
+      "is_principal": true,
+      "ordem": 1
+    },
+    {
+      "nome": "Maria Santos",
+      "descricao": "Gerente de projetos",
+      "observacoes": "Backup do responsável",
+      "is_principal": false,
+      "ordem": 2
+    }
+  ]
+}</pre>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <a href="http://localhost:3000/home/cadastros/estrutura-organizacional/grupos" 
+                   class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg inline-block">
+                    Testar em Grupos
+                </a>
+                <a href="http://localhost:3000/home/cadastros/estrutura-organizacional/empresas" 
+                   class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg inline-block ml-4">
+                    Testar em Empresas
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

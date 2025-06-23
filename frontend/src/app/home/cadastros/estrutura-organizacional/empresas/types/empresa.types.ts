@@ -99,6 +99,13 @@ export interface FormErrors {
   tipoInscricao: string;
   numeroInscricao: string;
   cno: string;
+  tipoLogradouro: string;
+  logradouro: string;
+  uf: string;
+  cidade: string;
+  bairro: string;
+  telefone: string;
+  email: string;
 }
 
 export interface EmpresaFormData {

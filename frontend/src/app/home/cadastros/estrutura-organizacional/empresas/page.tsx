@@ -308,7 +308,13 @@ export default function EmpresasPage() {
       
       // Adicionar múltiplos pontos focais se existirem
       if (pontosFocais.length > 0) {
-        empresaData.pontos_focais = pontosFocais;
+        empresaData.pontos_focais = pontosFocais.map((pf, index) => ({
+          nome: pf.nome,
+          descricao: pf.descricao,
+          observacoes: pf.observacoes,
+          is_principal: pf.isPrincipal,
+          ordem: index + 1
+        }));
       }
       
       await empresasService.criarEmpresa(empresaData);
@@ -400,7 +406,13 @@ export default function EmpresasPage() {
       
       // Adicionar múltiplos pontos focais se existirem
       if (pontosFocais.length > 0) {
-        empresaData.pontos_focais = pontosFocais;
+        empresaData.pontos_focais = pontosFocais.map((pf, index) => ({
+          nome: pf.nome,
+          descricao: pf.descricao,
+          observacoes: pf.observacoes,
+          is_principal: pf.isPrincipal,
+          ordem: index + 1
+        }));
       }
       
       await empresasService.atualizarEmpresa(empresaEditando!.id, empresaData);
@@ -1169,12 +1181,19 @@ export default function EmpresasPage() {
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Tipo de logradouro
+                              Tipo de logradouro <span className="text-red-500">*</span>
                             </label>
                             <select 
                               value={endereco.tipoLogradouro}
-                              onChange={(e) => setEndereco({...endereco, tipoLogradouro: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              onChange={(e) => {
+                                setEndereco({...endereco, tipoLogradouro: e.target.value});
+                                if (e.target.value && errors.tipoLogradouro) {
+                                  setErrors({...errors, tipoLogradouro: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.tipoLogradouro ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                             >
                               <option value="">Selecione...</option>
                               <option value="Rua">Rua</option>
@@ -1184,19 +1203,32 @@ export default function EmpresasPage() {
                               <option value="Praça">Praça</option>
                               <option value="Estrada">Estrada</option>
                             </select>
+                            {errors.tipoLogradouro && (
+                              <p className="text-red-500 text-xs mt-1">{errors.tipoLogradouro}</p>
+                            )}
                           </div>
 
                           <div className="md:col-span-1">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Logradouro
+                              Logradouro <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
                               value={endereco.logradouro}
-                              onChange={(e) => setEndereco({...endereco, logradouro: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              onChange={(e) => {
+                                setEndereco({...endereco, logradouro: e.target.value});
+                                if (e.target.value.trim() && errors.logradouro) {
+                                  setErrors({...errors, logradouro: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.logradouro ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="Nome da rua"
                             />
+                            {errors.logradouro && (
+                              <p className="text-red-500 text-xs mt-1">{errors.logradouro}</p>
+                            )}
                           </div>
 
                           <div>
@@ -1237,12 +1269,19 @@ export default function EmpresasPage() {
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              UF
+                              UF <span className="text-red-500">*</span>
                             </label>
                             <select 
                               value={endereco.uf}
-                              onChange={(e) => setEndereco({...endereco, uf: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              onChange={(e) => {
+                                setEndereco({...endereco, uf: e.target.value});
+                                if (e.target.value && errors.uf) {
+                                  setErrors({...errors, uf: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.uf ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                             >
                               <option value="">Selecione...</option>
                               <option value="AC">AC</option>
@@ -1273,32 +1312,55 @@ export default function EmpresasPage() {
                               <option value="SE">SE</option>
                               <option value="TO">TO</option>
                             </select>
+                            {errors.uf && (
+                              <p className="text-red-500 text-xs mt-1">{errors.uf}</p>
+                            )}
                           </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Cidade
+                              Cidade <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
                               value={endereco.cidade}
-                              onChange={(e) => setEndereco({...endereco, cidade: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              onChange={(e) => {
+                                setEndereco({...endereco, cidade: e.target.value});
+                                if (e.target.value.trim() && errors.cidade) {
+                                  setErrors({...errors, cidade: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.cidade ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="Nome da cidade"
                             />
+                            {errors.cidade && (
+                              <p className="text-red-500 text-xs mt-1">{errors.cidade}</p>
+                            )}
                           </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Bairro
+                              Bairro <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
                               value={endereco.bairro}
-                              onChange={(e) => setEndereco({...endereco, bairro: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              onChange={(e) => {
+                                setEndereco({...endereco, bairro: e.target.value});
+                                if (e.target.value.trim() && errors.bairro) {
+                                  setErrors({...errors, bairro: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.bairro ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="Nome do bairro"
                             />
+                            {errors.bairro && (
+                              <p className="text-red-500 text-xs mt-1">{errors.bairro}</p>
+                            )}
                           </div>
 
                           <div>
@@ -1316,32 +1378,52 @@ export default function EmpresasPage() {
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Telefone
+                              Telefone <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="tel"
                               value={telefone}
-                              onChange={(e) => handleTelefoneChange(e.target.value)}
+                              onChange={(e) => {
+                                handleTelefoneChange(e.target.value);
+                                if (e.target.value.trim() && errors.telefone) {
+                                  setErrors({...errors, telefone: ''});
+                                }
+                              }}
                               maxLength={15}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.telefone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="(00) 00000-0000"
                             />
                             {telefone && !isValidTelefone(telefone) && (
                               <p className="text-red-500 text-xs mt-1">Telefone inválido (10 ou 11 dígitos)</p>
                             )}
+                            {errors.telefone && (
+                              <p className="text-red-500 text-xs mt-1">{errors.telefone}</p>
+                            )}
                           </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              E-mail
+                              E-mail <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="email"
                               value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                              onChange={(e) => {
+                                setEmail(e.target.value);
+                                if (e.target.value.trim() && errors.email) {
+                                  setErrors({...errors, email: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                               placeholder="email@exemplo.com"
                             />
+                            {errors.email && (
+                              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                            )}
                           </div>
                         </div>
                       </div>

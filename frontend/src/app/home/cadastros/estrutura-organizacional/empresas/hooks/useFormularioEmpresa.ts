@@ -74,7 +74,14 @@ export const useFormularioEmpresa = () => {
     numeroEndereco: '',
     tipoInscricao: '',
     numeroInscricao: '',
-    cno: ''
+    cno: '',
+    tipoLogradouro: '',
+    logradouro: '',
+    uf: '',
+    cidade: '',
+    bairro: '',
+    telefone: '',
+    email: ''
   });
 
   // Estados para grupos e regiões filtradas
@@ -293,13 +300,20 @@ export const useFormularioEmpresa = () => {
       numeroEndereco: endereco.numero,
       tipoInscricao,
       numeroInscricao,
-      cno
+      cno,
+      tipoLogradouro: endereco.tipoLogradouro,
+      logradouro: endereco.logradouro,
+      uf: endereco.uf,
+      cidade: endereco.cidade,
+      bairro: endereco.bairro,
+      telefone,
+      email
     };
 
     const newErrors = validateEmpresaForm(formData);
     setErrors(newErrors);
     return !hasFormErrors(newErrors);
-  }, [nomeFantasia, razaoSocial, grupoSelecionado, regiaoSelecionada, cnaeDescricao, risco, cep, endereco.numero, tipoInscricao, numeroInscricao, cno]);
+  }, [nomeFantasia, razaoSocial, grupoSelecionado, regiaoSelecionada, cnaeDescricao, risco, cep, endereco, tipoInscricao, numeroInscricao, cno, telefone, email]);
 
   // Função para obter dados do formulário
   const getFormData = useCallback(() => {
@@ -392,7 +406,14 @@ export const useFormularioEmpresa = () => {
       numeroEndereco: '',
       tipoInscricao: '',
       numeroInscricao: '',
-      cno: ''
+      cno: '',
+      tipoLogradouro: '',
+      logradouro: '',
+      uf: '',
+      cidade: '',
+      bairro: '',
+      telefone: '',
+      email: ''
     });
   }, []);
 

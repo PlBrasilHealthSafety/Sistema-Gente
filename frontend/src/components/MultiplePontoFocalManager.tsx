@@ -52,13 +52,6 @@ export default function MultiplePontoFocalManager({
   const atualizarPontoFocal = (id: string, campo: keyof PontoFocal, valor: string | boolean) => {
     const pontosFocaisAtualizados = pontosFocais.map(pf => {
       if (pf.id === id) {
-        // Se está marcando como principal, desmarcar os outros
-        if (campo === 'isPrincipal' && valor === true) {
-          // Primeiro, desmarcar todos os outros
-          pontosFocais.forEach(otherPf => {
-            if (otherPf.id !== id) otherPf.isPrincipal = false;
-          });
-        }
         return { ...pf, [campo]: valor };
       }
       // Se está marcando outro como principal, desmarcar este
@@ -121,7 +114,7 @@ export default function MultiplePontoFocalManager({
             <button
               type="button"
               onClick={adicionarPontoFocal}
-              className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-102 shadow-sm"
+              className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-102 shadow-sm cursor-pointer"
             >
               + Adicionar Ponto Focal
             </button>
