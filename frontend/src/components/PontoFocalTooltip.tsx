@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { PontoFocalDisplayData, PontoFocal } from '@/types/pontoFocal';
 
 interface PontoFocalTooltipProps {
@@ -7,6 +7,8 @@ interface PontoFocalTooltipProps {
 
 export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState<'top' | 'bottom'>('top');
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   // Função para converter dados atuais para novos pontos focais (compatibilidade)
   const getPontosFocais = (): PontoFocal[] => {
@@ -29,6 +31,34 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
     return [];
   };
 
+  // Função para calcular a melhor posição do tooltip
+  const calculateTooltipPosition = () => {
+    if (!triggerRef.current) return;
+    
+    const rect = triggerRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const spaceAbove = rect.top;
+    const spaceBelow = viewportHeight - rect.bottom;
+    
+    // Se há mais espaço embaixo ou se está muito no topo, mostrar embaixo
+    if (spaceBelow > spaceAbove || spaceAbove < 200) {
+      setTooltipPosition('bottom');
+    } else {
+      setTooltipPosition('top');
+    }
+  };
+
+  const handleMouseEnter = () => {
+    calculateTooltipPosition();
+    setShowTooltip(true);
+  };
+
+  useEffect(() => {
+    if (showTooltip) {
+      calculateTooltipPosition();
+    }
+  }, [showTooltip]);
+
   const pontosFocais = getPontosFocais();
   const pontoFocalPrincipal = pontosFocais.find(pf => pf.isPrincipal);
   
@@ -40,14 +70,15 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
   return (
     <div className="relative flex justify-center">
       <div 
+        ref={triggerRef}
         className="cursor-pointer"
-        onMouseEnter={() => setShowTooltip(true)}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setShowTooltip(false)}
       >
         {/* Ícone de lâmpada acesa com contador se há múltiplos */}
         <div className="relative">
           <svg 
-            className="w-6 h-6 text-yellow-500 hover:text-yellow-600 transition-colors duration-200" 
+            className="w-5 h-5 text-yellow-500 hover:text-yellow-600 transition-colors duration-200" 
             fill="currentColor" 
             viewBox="0 0 20 20"
           >
@@ -56,66 +87,57 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
           
           {/* Contador de pontos focais */}
           {pontosFocais.length > 1 && (
-            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold text-[10px]">
               {pontosFocais.length}
             </span>
           )}
         </div>
       </div>
       
-      {/* Tooltip */}
+      {/* Tooltip simplificado */}
       {showTooltip && (
-        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="bg-gray-800 text-white text-xs rounded-lg py-3 px-4 shadow-lg max-w-xs w-64">
-            <div className="space-y-3">
-              {/* Cabeçalho */}
-              <div className="text-yellow-300 font-semibold border-b border-gray-600 pb-1">
-                🌟 Ponto Focal Principal
-                {pontosFocais.length > 1 && (
-                  <span className="ml-2 text-blue-300">
-                    (1 de {pontosFocais.length})
-                  </span>
-                )}
-              </div>
-              
-              {/* Dados do ponto focal principal */}
-              {pontoFocalPrincipal.nome && (
-                <div>
-                  <span className="text-gray-300 font-medium">Nome:</span>
-                  <div className="text-white mt-1">{pontoFocalPrincipal.nome}</div>
-                </div>
-              )}
-              
-              {pontoFocalPrincipal.descricao && (
-                <div>
-                  <span className="text-gray-300 font-medium">Descrição:</span>
-                  <div className="text-white mt-1 break-words">{pontoFocalPrincipal.descricao}</div>
-                </div>
-              )}
-              
-              {pontoFocalPrincipal.observacoes && (
-                <div>
-                  <span className="text-gray-300 font-medium">Observações:</span>
-                  <div className="text-white mt-1 break-words">{pontoFocalPrincipal.observacoes}</div>
-                </div>
-              )}
-
-              {/* Indicador de pontos focais adicionais */}
+        <div 
+          className={`fixed z-[9999] left-1/2 transform -translate-x-1/2 ${
+            tooltipPosition === 'top' 
+              ? 'bottom-full mb-2' 
+              : 'top-full mt-2'
+          }`}
+          style={{
+            left: triggerRef.current ? 
+              `${triggerRef.current.getBoundingClientRect().left + triggerRef.current.offsetWidth / 2}px` : 
+              '50%',
+            [tooltipPosition === 'top' ? 'bottom' : 'top']: triggerRef.current ? 
+              (tooltipPosition === 'top' ? 
+                `${window.innerHeight - triggerRef.current.getBoundingClientRect().top + 8}px` :
+                `${triggerRef.current.getBoundingClientRect().bottom + 8}px`
+              ) : 
+              'auto'
+          }}
+        >
+          <div className="bg-gray-800 text-white text-xs rounded-md py-2 px-3 shadow-lg whitespace-nowrap">
+            <div className="flex items-center space-x-1">
+              <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="font-medium">
+                {pontoFocalPrincipal.nome}
+              </span>
               {pontosFocais.length > 1 && (
-                <div className="border-t border-gray-600 pt-2 mt-2">
-                  <div className="text-blue-300 text-xs font-medium">
-                    + {pontosFocais.length - 1} outro(s) ponto(s) focal(is)
-                  </div>
-                  <div className="text-gray-400 text-xs mt-1">
-                    Clique em &quot;Visualizar&quot; para ver todos
-                  </div>
-                </div>
+                <span className="text-blue-300 text-[10px]">
+                  (+{pontosFocais.length - 1})
+                </span>
               )}
             </div>
             
             {/* Seta do tooltip */}
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2">
-              <div className="border-4 border-transparent border-t-gray-800"></div>
+            <div className={`absolute left-1/2 transform -translate-x-1/2 ${
+              tooltipPosition === 'top' ? 'top-full' : 'bottom-full'
+            }`}>
+              <div className={`border-3 border-transparent ${
+                tooltipPosition === 'top' 
+                  ? 'border-t-gray-800' 
+                  : 'border-b-gray-800'
+              }`}></div>
             </div>
           </div>
         </div>

@@ -21,7 +21,7 @@ interface TabelaEmpresasProps {
 export default function TabelaEmpresas({ empresas, onEditar, onExcluir, onVisualizar, pesquisaTexto, permissions }: TabelaEmpresasProps) {
   return (
     <div className="p-6">
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div className="border border-gray-200 rounded-lg">
         <table className="w-full">
           <thead className="bg-gray-100">
             <tr>

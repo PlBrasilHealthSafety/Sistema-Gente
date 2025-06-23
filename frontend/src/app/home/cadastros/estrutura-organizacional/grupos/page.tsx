@@ -976,7 +976,7 @@ export default function GruposPage() {
 
               {/* Tabela de resultados */}
               <div className="p-6">
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="border border-gray-200 rounded-lg">
                   <table className="w-full">
                     <thead className="bg-gray-100">
                       <tr>
