@@ -407,12 +407,21 @@ export const updateGrupo = async (req: Request, res: Response) => {
   }
 };
 
-// Deletar grupo (apenas SUPER_ADMIN e ADMIN)
+// Deletar grupo (apenas SUPER_ADMIN)
 export const deleteGrupo = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const grupoId = parseInt(id);
-    const userId = req.user!.id;
+    const userRole = req.user!.role;
+
+    // Verificar se é SUPER_ADMIN
+    if (userRole !== UserRole.SUPER_ADMIN) {
+      return res.status(403).json({
+        success: false,
+        message: 'Apenas SUPER_ADMIN pode excluir grupos definitivamente',
+        error: 'FORBIDDEN'
+      });
+    }
 
     if (isNaN(grupoId)) {
       return res.status(400).json({
@@ -442,7 +451,28 @@ export const deleteGrupo = async (req: Request, res: Response) => {
       });
     }
 
-    const success = await GrupoModel.delete(grupoId, userId);
+    // Verificar se há empresas associadas
+    const hasEmpresas = await GrupoModel.hasAssociatedEmpresas(grupoId);
+    if (hasEmpresas) {
+      return res.status(409).json({
+        success: false,
+        message: 'Não é possível excluir um grupo que possui empresas associadas. Primeiro mova as empresas para outro grupo ou exclua-as.',
+        error: 'HAS_ASSOCIATED_EMPRESAS'
+      });
+    }
+
+    // Verificar se há regiões associadas
+    const hasRegioes = await GrupoModel.hasAssociatedRegioes(grupoId);
+    if (hasRegioes) {
+      return res.status(409).json({
+        success: false,
+        message: 'Não é possível excluir um grupo que possui regiões associadas. Primeiro mova as regiões para outro grupo ou exclua-as.',
+        error: 'HAS_ASSOCIATED_REGIOES'
+      });
+    }
+
+    // Usar hard delete para SUPER_ADMIN
+    const success = await GrupoModel.hardDelete(grupoId);
 
     if (!success) {
       return res.status(404).json({
@@ -454,7 +484,7 @@ export const deleteGrupo = async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      message: 'Grupo excluído com sucesso'
+      message: 'Grupo excluído definitivamente com sucesso'
     });
   } catch (error) {
     console.error('Erro ao excluir grupo:', error);

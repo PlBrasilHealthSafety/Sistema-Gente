@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken, requireAdmin, requireUser } from '../middleware/auth';
+import { authenticateToken, requireAdmin, requireUser, requireSuperAdmin } from '../middleware/auth';
 import {
   getAllRegioes,
   getActiveRegioes,
@@ -30,6 +30,7 @@ router.get('/:id', requireUser, getRegiaoById);
 // Rotas de escrita - Apenas SUPER_ADMIN e ADMIN podem acessar
 router.post('/', requireAdmin, createRegiao);
 router.put('/:id', requireAdmin, updateRegiao);
-router.delete('/:id', requireAdmin, deleteRegiao);
+// Rota de exclusão física - Apenas SUPER_ADMIN pode acessar
+router.delete('/:id', requireSuperAdmin, deleteRegiao);
 
 export default router; 

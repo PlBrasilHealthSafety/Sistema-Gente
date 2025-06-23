@@ -446,6 +446,20 @@ export class EmpresaModel {
     return (result.rowCount || 0) > 0;
   }
 
+  // Deletar empresa definitivamente (hard delete - apenas SUPER_ADMIN)
+  static async hardDelete(id: number): Promise<boolean> {
+    // Primeiro deletar pontos focais associados
+    await EmpresaPontoFocalModel.deleteByEmpresaId(id);
+    
+    // Depois deletar a empresa
+    const result = await query(
+      'DELETE FROM empresas WHERE id = $1',
+      [id]
+    );
+    
+    return (result.rowCount || 0) > 0;
+  }
+
   // Contar empresas por status
   static async countByStatus(): Promise<{ status: string; count: number }[]> {
     const result = await query(

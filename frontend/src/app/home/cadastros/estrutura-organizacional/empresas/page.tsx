@@ -201,18 +201,18 @@ export default function EmpresasPage() {
 
   const getRoleName = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN': return 'Super Administrador';
-      case 'ADMIN': return 'Administrador';
-      case 'USER': return 'Usuário';
+      case 'super_admin': return 'Super Administrador';
+      case 'admin': return 'Administrador';
+      case 'user': return 'Usuário';
       default: return role;
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN': return 'bg-purple-100 text-purple-800';
-      case 'ADMIN': return 'bg-blue-100 text-blue-800';
-      case 'USER': return 'bg-green-100 text-green-800';
+      case 'super_admin': return 'bg-purple-100 text-purple-800';
+      case 'admin': return 'bg-blue-100 text-blue-800';
+      case 'user': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -442,6 +442,76 @@ export default function EmpresasPage() {
   const handleExcluirEmpresa = (empresa: Empresa) => {
     setEmpresaExcluindo(empresa);
     setShowDeleteModal(true);
+  };
+
+  // Handlers para inativação (soft delete)
+  const handleInativarEmpresa = (empresa: Empresa) => {
+    setEmpresaExcluindo(empresa);
+    setShowDeleteModal(true);
+  };
+
+  // Handler para excluir definitivamente (apenas SUPER_ADMIN)
+  const handleExcluirDefinitivo = async (empresa: Empresa) => {
+    if (confirm(`Tem certeza que deseja EXCLUIR DEFINITIVAMENTE a empresa "${empresa.nome_fantasia}"? Esta ação NÃO pode ser desfeita!`)) {
+      setIsSubmitting(true);
+      try {
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`http://localhost:3001/api/empresas/${empresa.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          showNotification('success', 'Empresa excluída definitivamente!');
+          await carregarEmpresas();
+        } else {
+          const error = await response.json();
+          showNotification('error', `Erro ao excluir empresa: ${error.message}`);
+        }
+      } catch (error) {
+        console.error('Erro ao excluir empresa:', error);
+        showNotification('error', 'Erro ao excluir empresa. Tente novamente.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  // Handler para reativar empresa
+  const handleReativarEmpresa = async (empresa: Empresa) => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:3001/api/empresas/${empresa.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...empresa,
+          status: 'ativo'
+        })
+      });
+
+      if (response.ok) {
+        showNotification('success', 'Empresa reativada com sucesso!');
+        await carregarEmpresas();
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao reativar empresa: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao reativar empresa:', error);
+      showNotification('error', 'Erro ao reativar empresa. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleConfirmarExclusao = async () => {
@@ -1526,12 +1596,16 @@ export default function EmpresasPage() {
                   pesquisaTexto={pesquisaTexto}
                   onEditar={handleEditarEmpresa}
                   onExcluir={handleExcluirEmpresa}
+                  onInativar={handleInativarEmpresa}
+                  onReativar={handleReativarEmpresa}
+                  onExcluirDefinitivo={handleExcluirDefinitivo}
                   onVisualizar={handleVisualizarEmpresa}
                   permissions={{
                     canEdit: permissions.empresas.canEdit,
                     canDelete: permissions.empresas.canDelete,
                     canViewSensitive: permissions.canViewSensitive
                   }}
+                  user={user!}
                 />
               )}
             </div>

@@ -261,4 +261,29 @@ export class RegiaoModel {
       throw error;
     }
   }
+
+  // Deletar região fisicamente (hard delete - apenas SUPER_ADMIN)
+  static async hardDelete(id: number): Promise<boolean> {
+    console.log(`[RegiaoModel] Executando hard delete da região ${id}...`);
+    
+    try {
+      const result = await query(
+        'DELETE FROM regioes WHERE id = $1',
+        [id]
+      );
+      
+      console.log(`[RegiaoModel] Resultado da query:`, {
+        rowCount: result.rowCount,
+        command: result.command
+      });
+      
+      const success = (result.rowCount || 0) > 0;
+      console.log(`[RegiaoModel] Hard delete ${success ? 'realizado' : 'falhou'} para região ${id}`);
+      
+      return success;
+    } catch (error) {
+      console.error(`[RegiaoModel] Erro ao fazer hard delete da região ${id}:`, error);
+      throw error;
+    }
+  }
 } 

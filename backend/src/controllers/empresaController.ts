@@ -4,6 +4,7 @@ import { EmpresaPontoFocalModel } from '../models/EmpresaPontoFocal';
 import { GrupoModel } from '../models/Grupo';
 import { RegiaoModel } from '../models/Regiao';
 import { CreateEmpresaData, UpdateEmpresaData, StatusItem, CreateEmpresaPontoFocalData } from '../types/organizacional';
+import { UserRole } from '../types/user';
 
 // Função auxiliar para validar CNPJ
 const isValidCNPJ = (cnpj: string): boolean => {
@@ -662,12 +663,21 @@ export const updateEmpresa = async (req: Request, res: Response) => {
   }
 };
 
-// Deletar empresa (apenas SUPER_ADMIN e ADMIN)
+// Deletar empresa (apenas SUPER_ADMIN)
 export const deleteEmpresa = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const empresaId = parseInt(id);
-    const userId = req.user!.id;
+    const userRole = req.user!.role;
+
+    // Verificar se é SUPER_ADMIN
+    if (userRole !== UserRole.SUPER_ADMIN) {
+      return res.status(403).json({
+        success: false,
+        message: 'Apenas SUPER_ADMIN pode excluir empresas definitivamente',
+        error: 'FORBIDDEN'
+      });
+    }
 
     if (isNaN(empresaId)) {
       return res.status(400).json({
@@ -687,7 +697,8 @@ export const deleteEmpresa = async (req: Request, res: Response) => {
       });
     }
 
-    const success = await EmpresaModel.delete(empresaId, userId);
+    // Usar hard delete para SUPER_ADMIN
+    const success = await EmpresaModel.hardDelete(empresaId);
 
     if (!success) {
       return res.status(404).json({
@@ -699,7 +710,7 @@ export const deleteEmpresa = async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      message: 'Empresa excluída com sucesso'
+      message: 'Empresa excluída definitivamente com sucesso'
     });
   } catch (error) {
     console.error('Erro ao excluir empresa:', error);
