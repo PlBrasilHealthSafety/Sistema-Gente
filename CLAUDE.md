@@ -4,11 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Important Information
 
-- **Environment: Windows PowerShell - ALWAYS USE COMMANDS AIMED AT POWERSHELL**
 - **Shadcn Command**: `npx shadcn@latest add`
 - **Always analyze Pull Requests for potential breaking changes and adjust code for best integration**
 - **Always use local.env as the main .env file for configuration in development**
-- **Always use npm run dev in the correct directory**
+- **Always enter the specific directory (frontend or backend) to use the npm run dev command**
 
 ## Project Overview
 

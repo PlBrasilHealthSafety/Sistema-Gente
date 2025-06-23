@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 import { testConnection, query } from './config/database';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
+import grupoRoutes from './routes/grupoRoutes';
+import regiaoRoutes from './routes/regiaoRoutes';
+import empresaRoutes from './routes/empresaRoutes';
 import { initializeDatabase } from './utils/initDatabase';
 
 // Configurar dotenv para usar local.env
@@ -24,6 +27,9 @@ app.use(express.urlencoded({ extended: true })); // Parser URL
 // Rotas
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/grupos', grupoRoutes);
+app.use('/api/regioes', regiaoRoutes);
+app.use('/api/empresas', empresaRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {
@@ -34,6 +40,9 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
+      grupos: '/api/grupos',
+      regioes: '/api/regioes',
+      empresas: '/api/empresas',
       health: '/health',
       db_test: '/db-test'
     }

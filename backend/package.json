@@ -8,6 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "npx ts-node src/scripts/seedData.ts",
+    "migrate:empresas": "npx ts-node src/scripts/migrate-empresas.ts",
+    "update:empresas-constraints": "npx ts-node src/scripts/update-empresas-constraints.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

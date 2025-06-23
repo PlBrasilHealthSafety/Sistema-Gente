@@ -121,6 +121,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
   }
 }
 
@@ -166,29 +167,29 @@
 /* Estilos personalizados para barra de rolagem do menu lateral */
 .menu-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #D1D5DB #F9FAFB;
+  scrollbar-color: #00A298 #F3F4F6;
 }
 
 .menu-scrollbar::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .menu-scrollbar::-webkit-scrollbar-track {
-  background: #F9FAFB;
-  border-radius: 4px;
-  margin: 4px 0;
+  background: #F3F4F6;
+  border-radius: 3px;
+  margin: 2px 0;
 }
 
 .menu-scrollbar::-webkit-scrollbar-thumb {
-  background: #D1D5DB;
-  border-radius: 4px;
+  background: #00A298;
+  border-radius: 3px;
   transition: background-color 0.2s ease;
 }
 
 .menu-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #9CA3AF;
+  background: #008B82;
 }
 
 .menu-scrollbar::-webkit-scrollbar-corner {
-  background: #F9FAFB;
+  background: #F3F4F6;
 }
