@@ -128,6 +128,9 @@ export default function EmpresasPage() {
     endereco,
     loadingCep,
     cepError,
+    loadingCnpj,
+    cnpjError,
+    cnpjSuccess,
     contato,
     telefone,
     email,
@@ -787,6 +790,7 @@ export default function EmpresasPage() {
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
                               Número de Inscrição <span className="text-red-500">*</span>
+                              
                             </label>
                             <input
                               type="text"
@@ -798,10 +802,30 @@ export default function EmpresasPage() {
                                 }
                               }}
                               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all ${
-                                errors.numeroInscricao ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                errors.numeroInscricao || cnpjError ? 'border-red-300 bg-red-50' : 'border-gray-300'
                               }`}
                               placeholder="Digite o número"
                             />
+                            {loadingCnpj && tipoInscricao === 'cnpj' && (
+                              <p className="text-blue-500 text-xs mt-1 flex items-center">
+                                <svg className="animate-spin h-3 w-3 mr-1" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Buscando dados da empresa...
+                              </p>
+                            )}
+                            {cnpjSuccess && tipoInscricao === 'cnpj' && (
+                              <p className="text-green-500 text-xs mt-1 flex items-center">
+                                <svg className="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                {cnpjSuccess}
+                              </p>
+                            )}
+                            {cnpjError && tipoInscricao === 'cnpj' && (
+                              <p className="text-red-500 text-xs mt-1">{cnpjError}</p>
+                            )}
                             {errors.numeroInscricao && (
                               <p className="text-red-500 text-xs mt-1">{errors.numeroInscricao}</p>
                             )}
@@ -989,8 +1013,7 @@ export default function EmpresasPage() {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                               Risco <span className="text-red-500">*</span>
                             </label>
-                            <input
-                              type="text"
+                            <select
                               value={risco}
                               onChange={(e) => {
                                 setRisco(e.target.value);
@@ -1001,8 +1024,13 @@ export default function EmpresasPage() {
                               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
                                 errors.risco ? 'border-red-300 bg-red-50' : 'border-gray-300'
                               }`}
-                              placeholder="Digite o risco"
-                            />
+                            >
+                              <option value="">Selecione o grau de risco...</option>
+                              <option value="1">Grau de Risco 1: Baixo risco</option>
+                              <option value="2">Grau de Risco 2: Risco moderado</option>
+                              <option value="3">Grau de Risco 3: Risco significativo</option>
+                              <option value="4">Grau de Risco 4: Alto risco</option>
+                            </select>
                             {errors.risco && (
                               <p className="text-red-500 text-xs mt-1">{errors.risco}</p>
                             )}
@@ -1034,6 +1062,17 @@ export default function EmpresasPage() {
                                   className="mr-2 text-[#00A298] focus:ring-[#00A298]"
                                 />
                                 <span className="text-sm font-medium">EPP</span>
+                              </label>
+                              <label className="flex items-center cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="classificacao"
+                                  value="GRANDE_PORTE"
+                                  checked={classificacaoPorte === 'GRANDE_PORTE'}
+                                  onChange={(e) => setClassificacaoPorte(e.target.value)}
+                                  className="mr-2 text-[#00A298] focus:ring-[#00A298]"
+                                />
+                                <span className="text-sm font-medium">Grande Porte</span>
                               </label>
                             </div>
                           </div>
@@ -1519,7 +1558,17 @@ export default function EmpresasPage() {
                     </label>
                     <input
                       type="text"
-                      value={empresaVisualizando?.risco || 'Não informado'}
+                      value={
+                        empresaVisualizando?.risco 
+                          ? `Grau de Risco ${empresaVisualizando.risco}: ${
+                              empresaVisualizando.risco === '1' ? 'Baixo risco' :
+                              empresaVisualizando.risco === '2' ? 'Risco moderado' :
+                              empresaVisualizando.risco === '3' ? 'Risco significativo' :
+                              empresaVisualizando.risco === '4' ? 'Alto risco' :
+                              empresaVisualizando.risco
+                            }`
+                          : 'Não informado'
+                      }
                       readOnly
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                     />
@@ -1738,8 +1787,7 @@ export default function EmpresasPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Risco <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={risco}
                       onChange={(e) => {
                         setRisco(e.target.value);
@@ -1750,8 +1798,13 @@ export default function EmpresasPage() {
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
                         errors.risco ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
-                      placeholder="Digite o risco"
-                    />
+                    >
+                      <option value="">Selecione o grau de risco...</option>
+                      <option value="1">Grau de Risco 1: Baixo risco</option>
+                      <option value="2">Grau de Risco 2: Risco moderado</option>
+                      <option value="3">Grau de Risco 3: Risco significativo</option>
+                      <option value="4">Grau de Risco 4: Alto risco</option>
+                    </select>
                     {errors.risco && (
                       <p className="text-red-500 text-xs mt-1">{errors.risco}</p>
                     )}

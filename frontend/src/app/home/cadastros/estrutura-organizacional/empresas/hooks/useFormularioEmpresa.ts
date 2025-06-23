@@ -11,6 +11,7 @@ import {
   formatarNumeroInscricao,
   formatarCno
 } from '../utils/formatters';
+import { buscarEmpresaPorCNPJ, formatarCNPJ, isValidCNPJ } from '@/utils/cnpjUtils';
 
 export const useFormularioEmpresa = () => {
   // Estados do formulário
@@ -80,6 +81,11 @@ export const useFormularioEmpresa = () => {
   const [regioesFiltradas, setRegioesFiltradas] = useState<Regiao[]>([]);
   const [gruposFiltradosPorRegiao, setGruposFiltradosPorRegiao] = useState<Grupo[]>([]);
 
+  // Estados para autocomplete CNPJ
+  const [loadingCnpj, setLoadingCnpj] = useState(false);
+  const [cnpjError, setCnpjError] = useState('');
+  const [cnpjSuccess, setCnpjSuccess] = useState('');
+
   // Função para buscar CEP
   const buscarCep = useCallback(async (cepValue: string) => {
     const cepLimpo = cepValue.replace(/\D/g, '');
@@ -129,10 +135,83 @@ export const useFormularioEmpresa = () => {
     }
   }, [cepError, buscarCep]);
 
+  // Função para buscar dados da empresa por CNPJ
+  const buscarDadosEmpresa = useCallback(async (cnpj: string) => {
+    try {
+      setLoadingCnpj(true);
+      setCnpjError('');
+      
+      const empresaInfo = await buscarEmpresaPorCNPJ(cnpj);
+      
+      if (empresaInfo) {
+        // Preencher campos automaticamente
+        setRazaoSocial(empresaInfo.razaoSocial);
+        setNomeFantasia(empresaInfo.nomeFantasia);
+        
+        // Preencher endereço
+        if (empresaInfo.endereco.cep) {
+          setCep(formatCEP(empresaInfo.endereco.cep));
+          setEndereco({
+            logradouro: empresaInfo.endereco.logradouro,
+            tipoLogradouro: empresaInfo.endereco.logradouro ? empresaInfo.endereco.logradouro.split(' ')[0] : '',
+            numero: empresaInfo.endereco.numero,
+            complemento: empresaInfo.endereco.complemento,
+            bairro: empresaInfo.endereco.bairro,
+            cidade: empresaInfo.endereco.cidade,
+            uf: empresaInfo.endereco.uf
+          });
+        }
+        
+        // Preencher contatos
+        if (empresaInfo.email) {
+          setEmail(empresaInfo.email);
+        }
+        if (empresaInfo.telefone) {
+          setTelefone(formatTelefone(empresaInfo.telefone));
+        }
+        
+        // Preencher CNAE
+        if (empresaInfo.cnae.codigo || empresaInfo.cnae.descricao) {
+          setCnaeDescricao(`${empresaInfo.cnae.codigo} - ${empresaInfo.cnae.descricao}`);
+        }
+        
+        setCnpjError('');
+        setCnpjSuccess('Dados da empresa carregados automaticamente!');
+        
+        // Limpar mensagem de sucesso após 3 segundos
+        setTimeout(() => {
+          setCnpjSuccess('');
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados da empresa:', error);
+      setCnpjError(error instanceof Error ? error.message : 'Erro ao consultar CNPJ');
+      setCnpjSuccess('');
+    } finally {
+      setLoadingCnpj(false);
+    }
+  }, []);
+
   const handleNumeroInscricaoChange = useCallback((value: string) => {
     const formatted = formatarNumeroInscricao(value, tipoInscricao);
     setNumeroInscricao(formatted);
-  }, [tipoInscricao]);
+    
+    // Limpar erro e sucesso anterior
+    if (cnpjError) {
+      setCnpjError('');
+    }
+    if (cnpjSuccess) {
+      setCnpjSuccess('');
+    }
+    
+    // Se for CNPJ e estiver completo, buscar dados
+    if (tipoInscricao === 'cnpj') {
+      const cnpjLimpo = value.replace(/[^\d]/g, '');
+      if (cnpjLimpo.length === 14 && isValidCNPJ(formatted)) {
+        buscarDadosEmpresa(cnpjLimpo);
+      }
+    }
+  }, [tipoInscricao, cnpjError, cnpjSuccess, buscarDadosEmpresa]);
 
   const handleCpfRepresentanteChange = useCallback((value: string) => {
     const formatted = formatCPF(value);
@@ -291,6 +370,8 @@ export const useFormularioEmpresa = () => {
     setRegioesFiltradas(regioesAtivas);
     setGruposFiltradosPorRegiao(gruposAtivos);
     setCepError('');
+    setCnpjError('');
+    setCnpjSuccess('');
     setCnaeDescricao('');
     setRisco('');
     setClassificacaoPorte('ME');
@@ -387,6 +468,9 @@ export const useFormularioEmpresa = () => {
     endereco,
     loadingCep,
     cepError,
+    loadingCnpj,
+    cnpjError,
+    cnpjSuccess,
     contato,
     telefone,
     email,

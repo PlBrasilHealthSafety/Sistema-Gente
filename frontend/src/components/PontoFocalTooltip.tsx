@@ -14,7 +14,24 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
   const getPontosFocais = (): PontoFocal[] => {
     // Se tem novos pontos focais, usar eles
     if (data.pontosFocais && data.pontosFocais.length > 0) {
-      return data.pontosFocais;
+      return data.pontosFocais.map(pf => ({
+        id: pf.id?.toString() || 'temp',
+        nome: pf.nome || '',
+        descricao: pf.descricao || '',
+        observacoes: pf.observacoes || '',
+        isPrincipal: pf.is_principal || pf.isPrincipal || false
+      }));
+    }
+    
+    // Verificar se tem no formato pontos_focais (vindo do backend)
+    if ((data as any).pontos_focais && Array.isArray((data as any).pontos_focais) && (data as any).pontos_focais.length > 0) {
+      return (data as any).pontos_focais.map((pf: any) => ({
+        id: pf.id?.toString() || 'temp',
+        nome: pf.nome || '',
+        descricao: pf.descricao || '',
+        observacoes: pf.observacoes || '',
+        isPrincipal: pf.is_principal || pf.isPrincipal || false
+      }));
     }
     
     // Se tem dados antigos, converter para novo formato
@@ -61,9 +78,11 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
 
   const pontosFocais = getPontosFocais();
   const pontoFocalPrincipal = pontosFocais.find(pf => pf.isPrincipal);
+  // Se não tem principal, usar o primeiro ponto focal
+  const pontoFocalExibir = pontoFocalPrincipal || pontosFocais[0];
   
-  // Se não tem pontos focais ou não tem principal, não mostrar
-  if (pontosFocais.length === 0 || !pontoFocalPrincipal) {
+  // Se não tem pontos focais, não mostrar
+  if (pontosFocais.length === 0) {
     return <span className="text-gray-300">-</span>;
   }
 
@@ -120,7 +139,7 @@ export default function PontoFocalTooltip({ data }: PontoFocalTooltipProps) {
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
               <span className="font-medium">
-                {pontoFocalPrincipal.nome}
+                {pontoFocalExibir.nome}
               </span>
               {pontosFocais.length > 1 && (
                 <span className="text-blue-300 text-[10px]">
