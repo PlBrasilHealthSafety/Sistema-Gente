@@ -86,8 +86,10 @@ export default function GruposPage() {
   });
   const [showEditGroupModal, setShowEditGroupModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteDefinitivoModal, setShowDeleteDefinitivoModal] = useState(false);
   const [grupoEditando, setGrupoEditando] = useState<Grupo | null>(null);
   const [grupoExcluindo, setGrupoExcluindo] = useState<Grupo | null>(null);
+  const [grupoExcluindoDefinitivo, setGrupoExcluindoDefinitivo] = useState<Grupo | null>(null);
   const [showViewGroupModal, setShowViewGroupModal] = useState(false);
   const [grupoVisualizando, setGrupoVisualizando] = useState<Grupo | null>(null);
   const [showPontoFocalVisualizacao, setShowPontoFocalVisualizacao] = useState(false);
@@ -235,6 +237,8 @@ export default function GruposPage() {
         console.log('Valid data:', validData);
         console.log('Valid data length:', validData.length);
         
+
+        
         setGrupos(validData);
         setFilteredGrupos(validData);
         
@@ -312,6 +316,20 @@ export default function GruposPage() {
     }
   };
 
+  // Função helper para mapear pontos focais para envio ao backend
+  const mapearPontosFocaisParaBackend = (pontosFocais: PontoFocal[]) => {
+    return pontosFocais.map(pf => ({
+      nome: pf.nome,
+      cargo: pf.cargo,
+      descricao: pf.descricao,
+      observacoes: pf.observacoes,
+      telefone: pf.telefone,
+      email: pf.email,
+      is_principal: pf.isPrincipal,
+      ordem: pontosFocais.indexOf(pf) + 1
+    }));
+  };
+
   // Função para incluir novo grupo
   const handleIncluir = async () => {
     if (!nomeGrupo.trim()) {
@@ -326,27 +344,34 @@ export default function GruposPage() {
       // Usar o ponto focal principal se há múltiplos pontos focais
       const pontoFocalPrincipal = pontosFocais.find(pf => pf.isPrincipal);
       
+      const dadosParaEnviar = {
+        nome: nomeGrupo,
+        descricao: descricaoGrupo || null,
+        ponto_focal_nome: pontoFocalPrincipal?.nome || null,
+        ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
+        ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
+        ponto_focal_principal: !!pontoFocalPrincipal,
+        pontos_focais: pontosFocais.length > 0 ? pontosFocais.map(pf => ({
+          nome: pf.nome,
+          cargo: pf.cargo,
+          descricao: pf.descricao,
+          observacoes: pf.observacoes,
+          telefone: pf.telefone,
+          email: pf.email,
+          is_principal: pf.isPrincipal,
+          ordem: pontosFocais.indexOf(pf) + 1
+        })) : null,
+      };
+      
+
+      
       const response = await fetch('http://localhost:3001/api/grupos', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          nome: nomeGrupo,
-          descricao: descricaoGrupo || null,
-          ponto_focal_nome: pontoFocalPrincipal?.nome || null,
-          ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
-          ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
-          ponto_focal_principal: !!pontoFocalPrincipal,
-          pontos_focais: pontosFocais.length > 0 ? pontosFocais.map(pf => ({
-            nome: pf.nome,
-            descricao: pf.descricao,
-            observacoes: pf.observacoes,
-            is_principal: pf.isPrincipal,
-            ordem: pontosFocais.indexOf(pf) + 1
-          })) : null,
-        })
+        body: JSON.stringify(dadosParaEnviar)
       });
 
       if (response.ok) {
@@ -391,12 +416,15 @@ export default function GruposPage() {
     
     // Primeiro, tentar carregar do array de pontos focais (nova estrutura)
     if (grupo.pontos_focais && Array.isArray(grupo.pontos_focais) && grupo.pontos_focais.length > 0) {
-      grupo.pontos_focais.forEach((pf: GrupoPontoFocal) => {
+      grupo.pontos_focais.forEach((pf: any) => {
         pontosFocaisExistentes.push({
           id: pf.id.toString(),
           nome: pf.nome || '',
+          cargo: pf.cargo || '',
           descricao: pf.descricao || '',
           observacoes: pf.observacoes || '',
+          telefone: pf.telefone || '',
+          email: pf.email || '',
           isPrincipal: pf.is_principal || false
         });
       });
@@ -406,8 +434,11 @@ export default function GruposPage() {
       pontosFocaisExistentes.push({
         id: 'existing',
         nome: grupo.ponto_focal_nome || '',
+        cargo: '',
         descricao: grupo.ponto_focal_descricao || '',
         observacoes: grupo.ponto_focal_observacoes || '',
+        telefone: '',
+        email: '',
         isPrincipal: grupo.ponto_focal_principal || false
       });
     }
@@ -431,28 +462,36 @@ export default function GruposPage() {
       // Usar o ponto focal principal se há múltiplos pontos focais
       const pontoFocalPrincipal = pontosFocais.find(pf => pf.isPrincipal);
       
+      const dadosParaEnviar = {
+        nome: nomeGrupo,
+        descricao: descricaoGrupo || null,
+        ponto_focal_nome: pontoFocalPrincipal?.nome || null,
+        ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
+        ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
+        ponto_focal_principal: !!pontoFocalPrincipal,
+        pontos_focais: pontosFocais.length > 0 ? pontosFocais.map(pf => ({
+          nome: pf.nome,
+          cargo: pf.cargo,
+          descricao: pf.descricao,
+          observacoes: pf.observacoes,
+          telefone: pf.telefone,
+          email: pf.email,
+          is_principal: pf.isPrincipal,
+          ordem: pontosFocais.indexOf(pf) + 1
+        })) : null,
+      };
+      
+
+      
       const response = await fetch(`http://localhost:3001/api/grupos/${grupoEditando?.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          nome: nomeGrupo,
-          descricao: descricaoGrupo || null,
-          ponto_focal_nome: pontoFocalPrincipal?.nome || null,
-          ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
-          ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
-          ponto_focal_principal: !!pontoFocalPrincipal,
-          pontos_focais: pontosFocais.length > 0 ? pontosFocais.map(pf => ({
-            nome: pf.nome,
-            descricao: pf.descricao,
-            observacoes: pf.observacoes,
-            is_principal: pf.isPrincipal,
-            ordem: pontosFocais.indexOf(pf) + 1
-          })) : null,
-        })
+        body: JSON.stringify(dadosParaEnviar)
       });
+      
       if (response.ok) {
         showNotification('success', 'Grupo atualizado com sucesso!');
         handleLimpar();
@@ -478,11 +517,7 @@ export default function GruposPage() {
     setGrupoEditando(null);
   };
 
-  // Função para abrir modal de exclusão
-  const handleExcluirGrupo = (grupo: Grupo) => {
-    setGrupoExcluindo(grupo);
-    setShowDeleteModal(true);
-  };
+
 
   // Função para inativar regiões associadas ao grupo
   const inativarRegioesPorGrupo = async (grupoId: number, token: string) => {
@@ -582,6 +617,91 @@ export default function GruposPage() {
     setGrupoExcluindo(null);
   };
 
+  // Função para reativar grupo
+  const handleReativarGrupo = async (grupo: Grupo) => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:3001/api/grupos/${grupo.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nome: grupo.nome,
+          descricao: grupo.descricao,
+          status: 'ativo'
+        })
+      });
+
+      if (response.ok) {
+        showNotification('success', 'Grupo reativado com sucesso!');
+        await carregarGrupos();
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao reativar grupo: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao reativar grupo:', error);
+      showNotification('error', 'Erro ao reativar grupo. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Função para inativar grupo (soft delete) - igual ao antigo handleExcluirGrupo
+  const handleInativarGrupo = (grupo: Grupo) => {
+    setGrupoExcluindo(grupo);
+    setShowDeleteModal(true);
+  };
+
+  // Função para abrir modal de exclusão definitiva (apenas SUPER_ADMIN)
+  const handleExcluirDefinitivo = (grupo: Grupo) => {
+    setGrupoExcluindoDefinitivo(grupo);
+    setShowDeleteDefinitivoModal(true);
+  };
+
+  // Função para confirmar exclusão definitiva
+  const handleConfirmarExclusaoDefinitiva = async () => {
+    if (!grupoExcluindoDefinitivo) return;
+    
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:3001/api/grupos/${grupoExcluindoDefinitivo.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        showNotification('success', 'Grupo excluído definitivamente!');
+        await carregarGrupos();
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao excluir grupo: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir grupo:', error);
+      showNotification('error', 'Erro ao excluir grupo. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+      setShowDeleteDefinitivoModal(false);
+      setGrupoExcluindoDefinitivo(null);
+    }
+  };
+
+  // Função para cancelar exclusão definitiva
+  const handleCancelarExclusaoDefinitiva = () => {
+    setShowDeleteDefinitivoModal(false);
+    setGrupoExcluindoDefinitivo(null);
+  };
+
   // Função para abrir modal de visualização
   const handleVisualizarGrupo = (grupo: Grupo) => {
     setGrupoVisualizando(grupo);
@@ -591,12 +711,15 @@ export default function GruposPage() {
     
     // Primeiro, tentar carregar do array de pontos focais (nova estrutura)
     if (grupo.pontos_focais && Array.isArray(grupo.pontos_focais) && grupo.pontos_focais.length > 0) {
-      grupo.pontos_focais.forEach((pf: any) => {
+      grupo.pontos_focais.forEach((pf: any, index: number) => {
         pontosFocaisExistentes.push({
-          id: pf.id.toString(),
+          id: pf.id?.toString() || `pf-${index}`,
           nome: pf.nome || '',
+          cargo: pf.cargo || '',
           descricao: pf.descricao || '',
           observacoes: pf.observacoes || '',
+          telefone: pf.telefone || '',
+          email: pf.email || '',
           isPrincipal: pf.is_principal || false
         });
       });
@@ -606,14 +729,17 @@ export default function GruposPage() {
       pontosFocaisExistentes.push({
         id: 'existing',
         nome: grupo.ponto_focal_nome || '',
+        cargo: '', // Campo não existe na estrutura antiga
         descricao: grupo.ponto_focal_descricao || '',
         observacoes: grupo.ponto_focal_observacoes || '',
+        telefone: '', // Campo não existe na estrutura antiga
+        email: '', // Campo não existe na estrutura antiga
         isPrincipal: grupo.ponto_focal_principal || false
       });
     }
     
     setPontosFocaisVisualizacao(pontosFocaisExistentes);
-    setShowPontoFocalVisualizacao(false); // Começar fechado
+    setShowPontoFocalVisualizacao(pontosFocaisExistentes.length > 0); // Abrir automaticamente se houver pontos focais
     setShowViewGroupModal(true);
   };
 
@@ -655,11 +781,11 @@ export default function GruposPage() {
 
   const getRoleName = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN':
+      case 'super_admin':
         return 'Super Administrador';
-      case 'ADMIN':
+      case 'admin':
         return 'Administrador';
-      case 'USER':
+      case 'user':
         return 'Usuário';
       default:
         return role;
@@ -668,11 +794,11 @@ export default function GruposPage() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN':
+      case 'super_admin':
         return 'bg-purple-100 text-purple-800';
-      case 'ADMIN':
+      case 'admin':
         return 'bg-blue-100 text-blue-800';
-      case 'USER':
+      case 'user':
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -1027,7 +1153,7 @@ export default function GruposPage() {
                                 {grupo.status}
                               </span>
                             </td>
-                                        <td className="px-12 py-3 text-sm">
+                            <td className="px-12 py-3 text-sm">
               <div className="flex space-x-2 justify-center">
                 <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarGrupo(grupo)}>
                   Visualizar
@@ -1037,8 +1163,30 @@ export default function GruposPage() {
                     Editar
                   </button>
                 )}
-                {permissions.grupos.canDelete && (
-                  <button className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" onClick={() => handleExcluirGrupo(grupo)}>
+                {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando o grupo está inativo */}
+                {(user?.role === 'admin' || user?.role === 'super_admin') && grupo.status === 'inativo' && (
+                  <button 
+                    className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
+                    onClick={() => handleReativarGrupo(grupo)}
+                  >
+                    Reativar
+                  </button>
+                )}
+                {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando o grupo está ativo */}
+                {(user?.role === 'admin' || user?.role === 'super_admin') && grupo.status === 'ativo' && (
+                  <button 
+                    className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
+                    onClick={() => handleInativarGrupo(grupo)}
+                  >
+                    Inativar
+                  </button>
+                )}
+                {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
+                {user?.role === 'super_admin' && (
+                  <button 
+                    className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
+                    onClick={() => handleExcluirDefinitivo(grupo)}
+                  >
                     Excluir
                   </button>
                 )}
@@ -1202,7 +1350,7 @@ export default function GruposPage() {
         </div>
       )}
 
-              {/* Modal de Confirmação de Exclusão */}
+              {/* Modal de Confirmação de Exclusão (Inativação) */}
         {showDeleteModal && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
@@ -1240,6 +1388,51 @@ export default function GruposPage() {
                   className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Inativando...' : 'Sim, Inativar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão Definitiva */}
+      {showDeleteDefinitivoModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Excluir Definitivamente</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja excluir DEFINITIVAMENTE o grupo &quot;{grupoExcluindoDefinitivo?.nome}&quot;?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-red-800">
+                  <strong>ATENÇÃO:</strong> Esta ação é irreversível! O grupo será excluído permanentemente do banco de dados e não poderá ser recuperado. Certifique-se de que não há empresas ou regiões associadas a este grupo.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelarExclusaoDefinitiva}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarExclusaoDefinitiva}
+                  disabled={isSubmitting}
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Excluindo...' : 'Sim, Excluir Definitivamente'}
                 </button>
               </div>
             </div>

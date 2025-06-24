@@ -1,8 +1,11 @@
 export interface PontoFocal {
   id?: string; // Para identificação temporária no frontend
   nome: string;
+  cargo: string;
   descricao: string;
   observacoes: string;
+  telefone: string;
+  email: string;
   isPrincipal: boolean;
 }
 

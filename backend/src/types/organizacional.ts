@@ -9,8 +9,11 @@ export interface GrupoPontoFocal {
   id: number;
   grupo_id: number;
   nome: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal: boolean;
   ordem: number;
   created_at: Date;
@@ -21,16 +24,22 @@ export interface GrupoPontoFocal {
 
 export interface CreateGrupoPontoFocalData {
   nome: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal?: boolean;
   ordem?: number;
 }
 
 export interface UpdateGrupoPontoFocalData {
   nome?: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal?: boolean;
   ordem?: number;
 }
@@ -40,8 +49,11 @@ export interface EmpresaPontoFocal {
   id: number;
   empresa_id: number;
   nome: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal: boolean;
   ordem: number;
   created_at: Date;
@@ -52,16 +64,22 @@ export interface EmpresaPontoFocal {
 
 export interface CreateEmpresaPontoFocalData {
   nome: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal?: boolean;
   ordem?: number;
 }
 
 export interface UpdateEmpresaPontoFocalData {
   nome?: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal?: boolean;
   ordem?: number;
 }
@@ -157,9 +175,11 @@ export interface Empresa {
   tipo_inscricao?: 'cnpj' | 'cpf';
   numero_inscricao?: string;
   cno?: string;
+  cnae_codigo?: string;
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
+  endereco_tipo_logradouro?: string;
   endereco_logradouro?: string;
   endereco_numero?: string;
   endereco_complemento?: string;
@@ -195,9 +215,11 @@ export interface CreateEmpresaData {
   tipo_inscricao?: 'cnpj' | 'cpf';
   numero_inscricao?: string;
   cno?: string;
+  cnae_codigo?: string;
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
+  endereco_tipo_logradouro?: string;
   endereco_logradouro?: string;
   endereco_numero?: string;
   endereco_complemento?: string;
@@ -229,9 +251,11 @@ export interface UpdateEmpresaData {
   tipo_inscricao?: 'cnpj' | 'cpf';
   numero_inscricao?: string;
   cno?: string;
+  cnae_codigo?: string;
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
+  endereco_tipo_logradouro?: string;
   endereco_logradouro?: string;
   endereco_numero?: string;
   endereco_complemento?: string;

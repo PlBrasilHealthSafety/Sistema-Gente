@@ -30,14 +30,17 @@ export class GrupoPontoFocalModel {
     for (let i = 0; i < pontosFocais.length; i++) {
       const pontoFocal = pontosFocais[i];
       const result = await query(`
-        INSERT INTO grupo_pontos_focais (grupo_id, nome, descricao, observacoes, is_principal, ordem, created_by)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO grupo_pontos_focais (grupo_id, nome, cargo, descricao, observacoes, telefone, email, is_principal, ordem, created_by)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING *
       `, [
         grupoId,
         pontoFocal.nome,
+        pontoFocal.cargo || null,
         pontoFocal.descricao || null,
         pontoFocal.observacoes || null,
+        pontoFocal.telefone || null,
+        pontoFocal.email || null,
         pontoFocal.is_principal || false,
         pontoFocal.ordem || (i + 1),
         userId

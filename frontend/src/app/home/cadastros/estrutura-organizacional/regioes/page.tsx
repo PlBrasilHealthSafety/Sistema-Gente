@@ -81,8 +81,10 @@ export default function RegioesPage() {
   });
   const [showEditRegionModal, setShowEditRegionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteDefinitivoModal, setShowDeleteDefinitivoModal] = useState(false);
   const [regiaoEditando, setRegiaoEditando] = useState<Regiao | null>(null);
   const [regiaoExcluindo, setRegiaoExcluindo] = useState<Regiao | null>(null);
+  const [regiaoExcluindoDefinitivo, setRegiaoExcluindoDefinitivo] = useState<Regiao | null>(null);
   const [showViewRegionModal, setShowViewRegionModal] = useState(false);
   const [regiaoVisualizando, setRegiaoVisualizando] = useState<Regiao | null>(null);
   
@@ -495,10 +497,16 @@ export default function RegioesPage() {
     setRegiaoEditando(null);
   };
 
-  // Função para abrir modal de inativação
-  const handleExcluirRegiao = (regiao: Regiao) => {
+  // Função para abrir modal de inativação (soft delete)
+  const handleInativarRegiao = (regiao: Regiao) => {
     setRegiaoExcluindo(regiao);
     setShowDeleteModal(true);
+  };
+
+  // Função para abrir modal de exclusão definitiva (apenas SUPER_ADMIN)
+  const handleExcluirDefinitivo = (regiao: Regiao) => {
+    setRegiaoExcluindoDefinitivo(regiao);
+    setShowDeleteDefinitivoModal(true);
   };
 
   // Função para confirmar inativação (soft delete - marcar como inativo)
@@ -545,6 +553,82 @@ export default function RegioesPage() {
   const handleCancelarExclusao = () => {
     setShowDeleteModal(false);
     setRegiaoExcluindo(null);
+  };
+
+  // Função para confirmar exclusão definitiva
+  const handleConfirmarExclusaoDefinitiva = async () => {
+    if (!regiaoExcluindoDefinitivo) return;
+    
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:3001/api/regioes/${regiaoExcluindoDefinitivo.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        showNotification('success', 'Região excluída definitivamente!');
+        await carregarRegioes();
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao excluir região: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir região:', error);
+      showNotification('error', 'Erro ao excluir região. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+      setShowDeleteDefinitivoModal(false);
+      setRegiaoExcluindoDefinitivo(null);
+    }
+  };
+
+  // Função para cancelar exclusão definitiva
+  const handleCancelarExclusaoDefinitiva = () => {
+    setShowDeleteDefinitivoModal(false);
+    setRegiaoExcluindoDefinitivo(null);
+  };
+
+  // Função para reativar região
+  const handleReativarRegiao = async (regiao: Regiao) => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:3001/api/regioes/${regiao.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nome: regiao.nome,
+          descricao: regiao.descricao,
+          uf: regiao.uf,
+          cidade: regiao.cidade,
+          grupo_id: regiao.grupo_id,
+          status: 'ativo'
+        })
+      });
+
+      if (response.ok) {
+        showNotification('success', 'Região reativada com sucesso!');
+        await carregarRegioes();
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao reativar região: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao reativar região:', error);
+      showNotification('error', 'Erro ao reativar região. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Função para buscar cidades por UF usando API do IBGE
@@ -632,11 +716,11 @@ export default function RegioesPage() {
 
   const getRoleName = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN':
+      case 'super_admin':
         return 'Super Administrador';
-      case 'ADMIN':
+      case 'admin':
         return 'Administrador';
-      case 'USER':
+      case 'user':
         return 'Usuário';
       default:
         return role;
@@ -645,11 +729,11 @@ export default function RegioesPage() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN':
+      case 'super_admin':
         return 'bg-purple-100 text-purple-800';
-      case 'ADMIN':
+      case 'admin':
         return 'bg-blue-100 text-blue-800';
-      case 'USER':
+      case 'user':
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -1087,8 +1171,30 @@ export default function RegioesPage() {
                                     Editar
                                   </button>
                                 )}
-                                {permissions.regioes.canDelete && (
-                                  <button className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" onClick={() => handleExcluirRegiao(regiao)}>
+                                {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando a região está inativa */}
+                                {(user?.role === 'admin' || user?.role === 'super_admin') && regiao.status === 'inativo' && (
+                                  <button 
+                                    className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
+                                    onClick={() => handleReativarRegiao(regiao)}
+                                  >
+                                    Reativar
+                                  </button>
+                                )}
+                                {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando a região está ativa */}
+                                {(user?.role === 'admin' || user?.role === 'super_admin') && regiao.status === 'ativo' && (
+                                  <button 
+                                    className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
+                                    onClick={() => handleInativarRegiao(regiao)}
+                                  >
+                                    Inativar
+                                  </button>
+                                )}
+                                {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
+                                {user?.role === 'super_admin' && (
+                                  <button 
+                                    className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
+                                    onClick={() => handleExcluirDefinitivo(regiao)}
+                                  >
                                     Excluir
                                   </button>
                                 )}
@@ -1374,6 +1480,51 @@ export default function RegioesPage() {
                   className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Inativando...' : 'Sim, Inativar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão Definitiva */}
+      {showDeleteDefinitivoModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Excluir Definitivamente</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja excluir DEFINITIVAMENTE a região &quot;{regiaoExcluindoDefinitivo?.nome}&quot;?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-red-800">
+                  <strong>ATENÇÃO:</strong> Esta ação é irreversível! A região será excluída permanentemente do banco de dados e não poderá ser recuperada.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelarExclusaoDefinitiva}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarExclusaoDefinitiva}
+                  disabled={isSubmitting}
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Excluindo...' : 'Sim, Excluir Definitivamente'}
                 </button>
               </div>
             </div>

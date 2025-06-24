@@ -279,10 +279,44 @@ export class GrupoModel {
     return (result.rowCount || 0) > 0;
   }
 
+  // Deletar grupo definitivamente (hard delete - apenas SUPER_ADMIN)
+  static async hardDelete(id: number): Promise<boolean> {
+    // Primeiro deletar pontos focais associados
+    await GrupoPontoFocalModel.deleteByGrupoId(id);
+    
+    // Depois deletar o grupo
+    const result = await query(
+      'DELETE FROM grupos WHERE id = $1',
+      [id]
+    );
+    
+    return (result.rowCount || 0) > 0;
+  }
+
   // Verificar se o grupo tem filhos
   static async hasChildren(id: number): Promise<boolean> {
     const result = await query(
       'SELECT COUNT(*) as count FROM grupos WHERE grupo_pai_id = $1',
+      [id]
+    );
+    
+    return parseInt(result.rows[0].count) > 0;
+  }
+
+  // Verificar se o grupo tem empresas associadas
+  static async hasAssociatedEmpresas(id: number): Promise<boolean> {
+    const result = await query(
+      'SELECT COUNT(*) as count FROM empresas WHERE grupo_id = $1',
+      [id]
+    );
+    
+    return parseInt(result.rows[0].count) > 0;
+  }
+
+  // Verificar se o grupo tem regiões associadas
+  static async hasAssociatedRegioes(id: number): Promise<boolean> {
+    const result = await query(
+      'SELECT COUNT(*) as count FROM regioes WHERE grupo_id = $1',
       [id]
     );
     

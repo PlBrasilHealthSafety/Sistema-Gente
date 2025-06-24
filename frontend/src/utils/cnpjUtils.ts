@@ -59,8 +59,8 @@ export async function buscarEmpresaPorCNPJ(cnpj: string): Promise<EmpresaInfo | 
       email: data.email || '',
       telefone: data.telefone || '',
       cnae: {
-        codigo: data.cnae_fiscal || '',
-        descricao: data.descricao_situacao_cadastral || ''
+        codigo: data.cnae_fiscal ? data.cnae_fiscal.toString() : '',
+        descricao: data.cnae_fiscal_descricao || data.descricao_atividade_principal || ''
       }
     };
   } catch (error) {

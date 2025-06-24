@@ -1,6 +1,15 @@
 import { Empresa } from '../types/empresa.types';
 import PontoFocalTooltip from '@/components/PontoFocalTooltip';
 
+interface User {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+}
+
 interface Permissions {
   canEdit: boolean;
   canDelete: boolean;
@@ -11,14 +20,18 @@ interface TabelaEmpresasProps {
   empresas: Empresa[];
   onEditar: (empresa: Empresa) => void;
   onExcluir: (empresa: Empresa) => void;
+  onInativar: (empresa: Empresa) => void;
+  onReativar: (empresa: Empresa) => void;
+  onExcluirDefinitivo: (empresa: Empresa) => void;
   onVisualizar: (empresa: Empresa) => void;
   pesquisaTexto?: string;
   permissions: Permissions;
+  user: User;
 }
 
 
 
-export default function TabelaEmpresas({ empresas, onEditar, onExcluir, onVisualizar, pesquisaTexto, permissions }: TabelaEmpresasProps) {
+export default function TabelaEmpresas({ empresas, onEditar, onExcluir, onInativar, onReativar, onExcluirDefinitivo, onVisualizar, pesquisaTexto, permissions, user }: TabelaEmpresasProps) {
   return (
     <div className="p-6">
       <div className="border border-gray-200 rounded-lg">
@@ -78,10 +91,29 @@ export default function TabelaEmpresas({ empresas, onEditar, onExcluir, onVisual
                           Editar
                         </button>
                       )}
-                      {permissions.canDelete && (
+                      {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando a empresa está inativa */}
+                      {(user.role === 'admin' || user.role === 'super_admin') && empresa.status === 'inativo' && (
+                        <button 
+                          className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
+                          onClick={() => onReativar(empresa)}
+                        >
+                          Reativar
+                        </button>
+                      )}
+                      {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando a empresa está ativa */}
+                      {(user.role === 'admin' || user.role === 'super_admin') && empresa.status === 'ativo' && (
+                        <button 
+                          className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
+                          onClick={() => onInativar(empresa)}
+                        >
+                          Inativar
+                        </button>
+                      )}
+                      {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
+                      {user.role === 'super_admin' && (
                         <button 
                           className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
-                          onClick={() => onExcluir(empresa)}
+                          onClick={() => onExcluirDefinitivo(empresa)}
                         >
                           Excluir
                         </button>

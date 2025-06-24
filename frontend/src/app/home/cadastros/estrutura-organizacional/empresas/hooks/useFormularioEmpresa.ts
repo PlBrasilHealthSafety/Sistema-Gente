@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Endereco, FormErrors, Grupo, Regiao, Empresa } from '../types/empresa.types';
 import { validateEmpresaForm, hasFormErrors } from '../utils/validations';
 import { 
@@ -12,8 +12,12 @@ import {
   formatarCno
 } from '../utils/formatters';
 import { buscarEmpresaPorCNPJ, formatarCNPJ, isValidCNPJ } from '@/utils/cnpjUtils';
+import { PontoFocal } from '@/types/pontoFocal';
 
 export const useFormularioEmpresa = () => {
+  // Ref para controlar timeout do CNPJ
+  const cnpjTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Estados do formulário
   const [activeTab, setActiveTab] = useState('dados-empresa');
   const [tipoEstabelecimento, setTipoEstabelecimento] = useState('matriz');
@@ -52,15 +56,20 @@ export const useFormularioEmpresa = () => {
   const [tipoInscricao, setTipoInscricao] = useState('');
   const [grupoSelecionado, setGrupoSelecionado] = useState('');
   const [regiaoSelecionada, setRegiaoSelecionada] = useState('');
-  const [cnaeDescricao, setCnaeDescricao] = useState('');
-  const [risco, setRisco] = useState('');
+  const [cnaeCodigo, setCnaeCodigo] = useState<string>('');
+  const [cnaeDescricao, setCnaeDescricao] = useState<string>('');
+  const [risco, setRisco] = useState<string>('');
   
-  // Estados para Ponto Focal
+  // Estados para Ponto Focal (mantidos para compatibilidade)
   const [showPontoFocal, setShowPontoFocal] = useState(false);
   const [pontoFocalNome, setPontoFocalNome] = useState('');
   const [pontoFocalDescricao, setPontoFocalDescricao] = useState('');
   const [pontoFocalObservacoes, setPontoFocalObservacoes] = useState('');
   const [pontoFocalPrincipal, setPontoFocalPrincipal] = useState(false);
+  
+  // Estados para Múltiplos Pontos Focais
+  const [pontosFocais, setPontosFocais] = useState<PontoFocal[]>([]);
+  const [hasValidationErrors, setHasValidationErrors] = useState(false);
   
   // Estados para erros
   const [errors, setErrors] = useState<FormErrors>({
@@ -68,6 +77,7 @@ export const useFormularioEmpresa = () => {
     razaoSocial: '',
     grupoSelecionado: '',
     regiaoSelecionada: '',
+    cnaeCodigo: '',
     cnaeDescricao: '',
     risco: '',
     cep: '',
@@ -144,7 +154,13 @@ export const useFormularioEmpresa = () => {
 
   // Função para buscar dados da empresa por CNPJ
   const buscarDadosEmpresa = useCallback(async (cnpj: string) => {
+    // Evitar múltiplas chamadas simultâneas
+    if (loadingCnpj) {
+      return;
+    }
+    
     try {
+      console.log('Buscando dados para CNPJ:', cnpj);
       setLoadingCnpj(true);
       setCnpjError('');
       
@@ -178,8 +194,11 @@ export const useFormularioEmpresa = () => {
         }
         
         // Preencher CNAE
-        if (empresaInfo.cnae.codigo || empresaInfo.cnae.descricao) {
-          setCnaeDescricao(`${empresaInfo.cnae.codigo} - ${empresaInfo.cnae.descricao}`);
+        if (empresaInfo.cnae.codigo) {
+          setCnaeCodigo(empresaInfo.cnae.codigo);
+        }
+        if (empresaInfo.cnae.descricao) {
+          setCnaeDescricao(empresaInfo.cnae.descricao);
         }
         
         setCnpjError('');
@@ -197,7 +216,7 @@ export const useFormularioEmpresa = () => {
     } finally {
       setLoadingCnpj(false);
     }
-  }, []);
+  }, [loadingCnpj]);
 
   const handleNumeroInscricaoChange = useCallback((value: string) => {
     const formatted = formatarNumeroInscricao(value, tipoInscricao);
@@ -211,14 +230,22 @@ export const useFormularioEmpresa = () => {
       setCnpjSuccess('');
     }
     
-    // Se for CNPJ e estiver completo, buscar dados
+    // Limpar timeout anterior se existir
+    if (cnpjTimeoutRef.current) {
+      clearTimeout(cnpjTimeoutRef.current);
+      cnpjTimeoutRef.current = null;
+    }
+    
+    // Se for CNPJ e estiver completo, buscar dados com debounce
     if (tipoInscricao === 'cnpj') {
       const cnpjLimpo = value.replace(/[^\d]/g, '');
       if (cnpjLimpo.length === 14 && isValidCNPJ(formatted)) {
-        buscarDadosEmpresa(cnpjLimpo);
+        cnpjTimeoutRef.current = setTimeout(() => {
+          buscarDadosEmpresa(cnpjLimpo);
+        }, 800);
       }
     }
-  }, [tipoInscricao, cnpjError, cnpjSuccess, buscarDadosEmpresa]);
+  }, [tipoInscricao, cnpjError, cnpjSuccess]);
 
   const handleCpfRepresentanteChange = useCallback((value: string) => {
     const formatted = formatCPF(value);
@@ -243,6 +270,19 @@ export const useFormularioEmpresa = () => {
   const handleCnoChange = useCallback((value: string) => {
     const formatted = formatarCno(value);
     setCno(formatted);
+  }, []);
+
+  // Handler para CNAE código (apenas números, máximo 7 dígitos)
+  const handleCnaeCodigoChange = useCallback((value: string) => {
+    const onlyNumbers = (value || '').toString().replace(/\D/g, '');
+    if (onlyNumbers.length <= 7) {
+      setCnaeCodigo(onlyNumbers);
+    }
+  }, []);
+
+  // Validação para CNAE de 7 dígitos
+  const isValidCNAE = useCallback((cnae: string): boolean => {
+    return /^\d{7}$/.test(cnae);
   }, []);
 
   // Função para filtrar regiões por grupo
@@ -294,6 +334,7 @@ export const useFormularioEmpresa = () => {
       razaoSocial,
       grupoSelecionado,
       regiaoSelecionada,
+      cnaeCodigo,
       cnaeDescricao,
       risco,
       cep,
@@ -313,45 +354,84 @@ export const useFormularioEmpresa = () => {
     const newErrors = validateEmpresaForm(formData);
     setErrors(newErrors);
     return !hasFormErrors(newErrors);
-  }, [nomeFantasia, razaoSocial, grupoSelecionado, regiaoSelecionada, cnaeDescricao, risco, cep, endereco, tipoInscricao, numeroInscricao, cno, telefone, email]);
+  }, [nomeFantasia, razaoSocial, grupoSelecionado, regiaoSelecionada, cnaeCodigo, cnaeDescricao, risco, cep, endereco, tipoInscricao, numeroInscricao, cno, telefone, email]);
+
+  // Função para mapear pontos focais para backend
+  const mapearPontosFocaisParaBackend = useCallback((pontosFocais: PontoFocal[]) => {
+    return pontosFocais.map((pf, index) => ({
+      nome: pf.nome,
+      cargo: pf.cargo || '',
+      descricao: pf.descricao || '',
+      observacoes: pf.observacoes || '',
+      telefone: pf.telefone || '',
+      email: pf.email || '',
+      is_principal: pf.isPrincipal,
+      ordem: index + 1
+    }));
+  }, []);
 
   // Função para obter dados do formulário
   const getFormData = useCallback(() => {
-    return {
-      nome_fantasia: nomeFantasia,
-      razao_social: razaoSocial,
-      tipo_estabelecimento: tipoEstabelecimento.toUpperCase(),
-      tipo_inscricao: tipoInscricao,
-      numero_inscricao: numeroInscricao,
-      cno: cno,
-      cnae_descricao: cnaeDescricao,
-      risco: risco,
-      endereco_cep: cep,
-      endereco_logradouro: endereco.logradouro || null,
-      endereco_numero: endereco.numero,
-      endereco_complemento: endereco.complemento || null,
-      endereco_bairro: endereco.bairro || null,
-      endereco_cidade: endereco.cidade || null,
-      endereco_uf: endereco.uf || null,
-      contato_nome: contato || null,
-      contato_telefone: telefone || null,
-      contato_email: email || null,
-      representante_legal_nome: nomeRepresentante || null,
-      representante_legal_cpf: cpfRepresentante || null,
-      observacoes: observacao || null,
-      observacoes_os: observacaoOS || null,
-      ponto_focal_nome: pontoFocalNome || null,
-      ponto_focal_descricao: pontoFocalDescricao || null,
-      ponto_focal_observacoes: pontoFocalObservacoes || null,
+    // Validar e converter grupo_id e regiao_id corretamente
+    const grupoId = grupoSelecionado ? parseInt(grupoSelecionado) : null;
+    const regiaoId = regiaoSelecionada ? parseInt(regiaoSelecionada) : null;
+    
+    // Verificar se a conversão foi bem-sucedida
+    if (!grupoId || isNaN(grupoId)) {
+      throw new Error('Grupo é obrigatório e deve ser válido');
+    }
+    
+    if (!regiaoId || isNaN(regiaoId)) {
+      throw new Error('Região é obrigatória e deve ser válida');
+    }
+    
+    const baseData = {
+      nome_fantasia: nomeFantasia.trim(),
+      razao_social: razaoSocial.trim(),
+      tipo_estabelecimento: tipoEstabelecimento.toUpperCase() as 'MATRIZ' | 'FILIAL',
+      tipo_inscricao: tipoInscricao || undefined,
+      numero_inscricao: numeroInscricao.trim() || undefined,
+      cno: cno.trim() || undefined,
+      cnae_codigo: cnaeCodigo.trim() || undefined,
+      cnae_descricao: cnaeDescricao.trim() || undefined,
+      risco: risco || undefined,
+      endereco_cep: cep.replace(/\D/g, '') || undefined,
+      endereco_tipo_logradouro: endereco.tipoLogradouro || undefined,
+      endereco_logradouro: endereco.logradouro.trim() || undefined,
+      endereco_numero: endereco.numero.trim() || undefined,
+      endereco_complemento: endereco.complemento.trim() || undefined,
+      endereco_bairro: endereco.bairro.trim() || undefined,
+      endereco_cidade: endereco.cidade.trim() || undefined,
+      endereco_uf: endereco.uf || undefined,
+      contato_nome: contato.trim() || undefined,
+      contato_telefone: telefone.trim() || undefined,
+      contato_email: email.trim() || undefined,
+      representante_legal_nome: nomeRepresentante.trim() || undefined,
+      representante_legal_cpf: cpfRepresentante.replace(/\D/g, '') || undefined,
+      observacoes: observacao.trim() || undefined,
+      observacoes_os: observacaoOS.trim() || undefined,
+      ponto_focal_nome: pontoFocalNome.trim() || undefined,
+      ponto_focal_descricao: pontoFocalDescricao.trim() || undefined,
+      ponto_focal_observacoes: pontoFocalObservacoes.trim() || undefined,
       ponto_focal_principal: pontoFocalPrincipal,
-      grupo_id: grupoSelecionado,
-      regiao_id: regiaoSelecionada
+      grupo_id: grupoId,
+      regiao_id: regiaoId
     };
+
+    // Adicionar pontos focais se existirem
+    if (pontosFocais.length > 0) {
+      return {
+        ...baseData,
+        pontos_focais: mapearPontosFocaisParaBackend(pontosFocais)
+      };
+    }
+
+    return baseData;
   }, [
     nomeFantasia, razaoSocial, tipoEstabelecimento, tipoInscricao, numeroInscricao,
-    cno, cnaeDescricao, risco, cep, endereco, contato, telefone, email,
+    cno, cnaeCodigo, cnaeDescricao, risco, cep, endereco, contato, telefone, email,
     nomeRepresentante, cpfRepresentante, observacao, observacaoOS, pontoFocalNome, pontoFocalDescricao, pontoFocalObservacoes, pontoFocalPrincipal,
-    grupoSelecionado, regiaoSelecionada
+    grupoSelecionado, regiaoSelecionada, pontosFocais, mapearPontosFocaisParaBackend
   ]);
 
   // Função para limpar formulário
@@ -386,6 +466,7 @@ export const useFormularioEmpresa = () => {
     setCepError('');
     setCnpjError('');
     setCnpjSuccess('');
+    setCnaeCodigo('');
     setCnaeDescricao('');
     setRisco('');
     setClassificacaoPorte('ME');
@@ -395,11 +476,14 @@ export const useFormularioEmpresa = () => {
     setPontoFocalDescricao('');
     setPontoFocalObservacoes('');
     setPontoFocalPrincipal(false);
+    setPontosFocais([]);
+    setHasValidationErrors(false);
     setErrors({
       nomeFantasia: '',
       razaoSocial: '',
       grupoSelecionado: '',
       regiaoSelecionada: '',
+      cnaeCodigo: '',
       cnaeDescricao: '',
       risco: '',
       cep: '',
@@ -417,6 +501,42 @@ export const useFormularioEmpresa = () => {
     });
   }, []);
 
+  // Função para carregar pontos focais de uma empresa
+  const carregarPontosFocaisEmpresa = useCallback((empresa: Empresa): PontoFocal[] => {
+    const pontosFocaisExistentes: PontoFocal[] = [];
+
+    // Se há múltiplos pontos focais, usar eles
+    if (empresa.pontos_focais && empresa.pontos_focais.length > 0) {
+      empresa.pontos_focais.forEach(pf => {
+        pontosFocaisExistentes.push({
+          id: pf.id ? pf.id.toString() : `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          nome: pf.nome || '',
+          cargo: pf.cargo || '',
+          descricao: pf.descricao || '',
+          observacoes: pf.observacoes || '',
+          telefone: pf.telefone || '',
+          email: pf.email || '',
+          isPrincipal: pf.is_principal || false
+        });
+      });
+    } 
+    // Caso contrário, verificar se há ponto focal legado
+    else if (empresa.ponto_focal_nome || empresa.ponto_focal_descricao || empresa.ponto_focal_observacoes) {
+      pontosFocaisExistentes.push({
+        id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        nome: empresa.ponto_focal_nome || '',
+        cargo: '',
+        descricao: empresa.ponto_focal_descricao || '',
+        observacoes: empresa.ponto_focal_observacoes || '',
+        telefone: '',
+        email: '',
+        isPrincipal: empresa.ponto_focal_principal || true
+      });
+    }
+
+    return pontosFocaisExistentes;
+  }, []);
+
   // Função para carregar dados de uma empresa (para edição)
   const carregarEmpresa = useCallback((empresa: Empresa, regioesAtivas: Regiao[], gruposAtivos: Grupo[]) => {
     setNomeFantasia(empresa.nome_fantasia);
@@ -425,12 +545,34 @@ export const useFormularioEmpresa = () => {
     setTipoInscricao(empresa.tipo_inscricao || '');
     setNumeroInscricao(empresa.numero_inscricao || '');
     setCno(empresa.cno || '');
-    setCnaeDescricao(empresa.cnae_descricao || '');
-    setRisco(empresa.risco || '');
+    setCnaeCodigo((empresa.cnae_codigo || '').toString());
+    setCnaeDescricao((empresa.cnae_descricao || '').toString());
+    setRisco((empresa.risco || '').toString());
     setCep(empresa.endereco_cep || '');
+    // Verificar se há tipo de logradouro salvo no banco
+    let tipoLogradouro = (empresa as any).endereco_tipo_logradouro || '';
+    let logradouro = empresa.endereco_logradouro || '';
+    
+    // Se não há tipo de logradouro no banco, tentar extrair do campo logradouro
+    if (!tipoLogradouro && logradouro) {
+      const tiposLogradouro = ['Rua', 'Avenida', 'Travessa', 'Alameda', 'Praça', 'Estrada'];
+      for (const tipo of tiposLogradouro) {
+        if (logradouro.toLowerCase().startsWith(tipo.toLowerCase())) {
+          tipoLogradouro = tipo;
+          logradouro = logradouro.substring(tipo.length).trim();
+          break;
+        }
+      }
+    }
+    
+    // Se ainda não tem tipo, usar "Rua" como padrão
+    if (!tipoLogradouro) {
+      tipoLogradouro = 'Rua';
+    }
+    
     setEndereco({
-      logradouro: empresa.endereco_logradouro || '',
-      tipoLogradouro: '',
+      logradouro: logradouro,
+      tipoLogradouro: tipoLogradouro,
       numero: empresa.endereco_numero || '',
       complemento: empresa.endereco_complemento || '',
       bairro: empresa.endereco_bairro || '',
@@ -449,6 +591,11 @@ export const useFormularioEmpresa = () => {
     setPontoFocalObservacoes(empresa.ponto_focal_observacoes || '');
     setPontoFocalPrincipal(empresa.ponto_focal_principal || false);
     setShowPontoFocal(!!(empresa.ponto_focal_nome || empresa.ponto_focal_descricao || empresa.ponto_focal_observacoes));
+    
+    // Carregar pontos focais
+    const pontosFocaisExistentes = carregarPontosFocaisEmpresa(empresa);
+    setPontosFocais(pontosFocaisExistentes);
+    
     setGrupoSelecionado(empresa.grupo_id ? empresa.grupo_id.toString() : '');
     setRegiaoSelecionada(empresa.regiao_id ? empresa.regiao_id.toString() : '');
     
@@ -467,7 +614,7 @@ export const useFormularioEmpresa = () => {
     } else {
       setGruposFiltradosPorRegiao(gruposAtivos);
     }
-  }, [handleRegiaoChange]);
+  }, [handleRegiaoChange, carregarPontosFocaisEmpresa]);
 
   // Função para limpar erro de um campo específico
   const clearFieldError = useCallback((field: keyof FormErrors) => {
@@ -506,6 +653,7 @@ export const useFormularioEmpresa = () => {
     tipoInscricao,
     grupoSelecionado,
     regiaoSelecionada,
+    cnaeCodigo,
     cnaeDescricao,
     risco,
     errors,
@@ -516,6 +664,8 @@ export const useFormularioEmpresa = () => {
     pontoFocalDescricao,
     pontoFocalObservacoes,
     pontoFocalPrincipal,
+    pontosFocais,
+    hasValidationErrors,
 
     // Setters
     setActiveTab,
@@ -531,6 +681,7 @@ export const useFormularioEmpresa = () => {
     setNomeFantasia,
     setRazaoSocial,
     setTipoInscricao,
+    setCnaeCodigo,
     setCnaeDescricao,
     setRisco,
     setNomeRepresentante,
@@ -546,6 +697,8 @@ export const useFormularioEmpresa = () => {
     setPontoFocalDescricao,
     setPontoFocalObservacoes,
     setPontoFocalPrincipal,
+    setPontosFocais,
+    setHasValidationErrors,
 
     // Handlers
     handleCepChange,
@@ -555,6 +708,7 @@ export const useFormularioEmpresa = () => {
     handleNomeRepresentanteChange,
     handleContatoChange,
     handleCnoChange,
+    handleCnaeCodigoChange,
     handleGrupoChange,
     handleRegiaoChange,
 
@@ -568,6 +722,7 @@ export const useFormularioEmpresa = () => {
 
     // Validações inline
     isValidCPF: (cpf: string) => isValidCPF(cpf),
-    isValidTelefone: (tel: string) => isValidTelefone(tel)
+    isValidTelefone: (tel: string) => isValidTelefone(tel),
+    isValidCNAE
   };
 }; 

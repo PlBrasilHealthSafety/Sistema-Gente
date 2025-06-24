@@ -145,6 +145,7 @@ export default function EmpresasPage() {
     tipoInscricao,
     grupoSelecionado,
     regiaoSelecionada,
+    cnaeCodigo,
     cnaeDescricao,
     risco,
     errors,
@@ -163,6 +164,7 @@ export default function EmpresasPage() {
     setNomeFantasia,
     setRazaoSocial,
     setTipoInscricao,
+    setCnaeCodigo,
     setCnaeDescricao,
     setRisco,
     setObservacao,
@@ -183,6 +185,7 @@ export default function EmpresasPage() {
     handleNomeRepresentanteChange,
     handleContatoChange,
     handleCnoChange,
+    handleCnaeCodigoChange,
     handleGrupoChange,
     handleRegiaoChange,
     validateForm,
@@ -201,18 +204,18 @@ export default function EmpresasPage() {
 
   const getRoleName = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN': return 'Super Administrador';
-      case 'ADMIN': return 'Administrador';
-      case 'USER': return 'Usuário';
+      case 'super_admin': return 'Super Administrador';
+      case 'admin': return 'Administrador';
+      case 'user': return 'Usuário';
       default: return role;
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'SUPER_ADMIN': return 'bg-purple-100 text-purple-800';
-      case 'ADMIN': return 'bg-blue-100 text-blue-800';
-      case 'USER': return 'bg-green-100 text-green-800';
+      case 'super_admin': return 'bg-purple-100 text-purple-800';
+      case 'admin': return 'bg-blue-100 text-blue-800';
+      case 'user': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -308,13 +311,7 @@ export default function EmpresasPage() {
       
       // Adicionar múltiplos pontos focais se existirem
       if (pontosFocais.length > 0) {
-        empresaData.pontos_focais = pontosFocais.map((pf, index) => ({
-          nome: pf.nome,
-          descricao: pf.descricao,
-          observacoes: pf.observacoes,
-          is_principal: pf.isPrincipal,
-          ordem: index + 1
-        }));
+        empresaData.pontos_focais = mapearPontosFocaisParaBackend(pontosFocais);
       }
       
       await empresasService.criarEmpresa(empresaData);
@@ -349,12 +346,22 @@ export default function EmpresasPage() {
     setShowNewCompanyModal(true);
   };
 
-  // Handlers para edição
-  const handleEditarEmpresa = (empresa: Empresa) => {
-    setEmpresaEditando(empresa);
-    carregarEmpresa(empresa, regioesAtivas, gruposAtivos);
-    
-    // Carregar pontos focais existentes
+  // Função helper para mapear pontos focais para envio ao backend
+  const mapearPontosFocaisParaBackend = (pontosFocais: PontoFocal[]) => {
+    return pontosFocais.map((pf, index) => ({
+      nome: pf.nome,
+      cargo: pf.cargo,
+      descricao: pf.descricao,
+      observacoes: pf.observacoes,
+      telefone: pf.telefone,
+      email: pf.email,
+      is_principal: pf.isPrincipal,
+      ordem: index + 1
+    }));
+  };
+
+  // Função helper para carregar pontos focais
+  const carregarPontosFocaisEmpresa = (empresa: Empresa): PontoFocal[] => {
     const pontosFocaisExistentes: PontoFocal[] = [];
     
     // Primeiro, tentar carregar do array de pontos focais (nova estrutura)
@@ -363,8 +370,11 @@ export default function EmpresasPage() {
         pontosFocaisExistentes.push({
           id: pf.id.toString(),
           nome: pf.nome || '',
+          cargo: pf.cargo || '',
           descricao: pf.descricao || '',
           observacoes: pf.observacoes || '',
+          telefone: pf.telefone || '',
+          email: pf.email || '',
           isPrincipal: pf.is_principal || false
         });
       });
@@ -374,12 +384,25 @@ export default function EmpresasPage() {
       pontosFocaisExistentes.push({
         id: 'existing',
         nome: empresa.ponto_focal_nome || '',
+        cargo: '',
         descricao: empresa.ponto_focal_descricao || '',
         observacoes: empresa.ponto_focal_observacoes || '',
+        telefone: '',
+        email: '',
         isPrincipal: empresa.ponto_focal_principal || false
       });
     }
     
+    return pontosFocaisExistentes;
+  };
+
+  // Handlers para edição
+  const handleEditarEmpresa = (empresa: Empresa) => {
+    setEmpresaEditando(empresa);
+    carregarEmpresa(empresa, regioesAtivas, gruposAtivos);
+    
+    // Carregar pontos focais existentes
+    const pontosFocaisExistentes = carregarPontosFocaisEmpresa(empresa);
     setPontosFocais(pontosFocaisExistentes);
     
     // Configurar regiões e grupos filtrados
@@ -406,13 +429,7 @@ export default function EmpresasPage() {
       
       // Adicionar múltiplos pontos focais se existirem
       if (pontosFocais.length > 0) {
-        empresaData.pontos_focais = pontosFocais.map((pf, index) => ({
-          nome: pf.nome,
-          descricao: pf.descricao,
-          observacoes: pf.observacoes,
-          is_principal: pf.isPrincipal,
-          ordem: index + 1
-        }));
+        empresaData.pontos_focais = mapearPontosFocaisParaBackend(pontosFocais);
       }
       
       await empresasService.atualizarEmpresa(empresaEditando!.id, empresaData);
@@ -444,6 +461,76 @@ export default function EmpresasPage() {
     setShowDeleteModal(true);
   };
 
+  // Handlers para inativação (soft delete)
+  const handleInativarEmpresa = (empresa: Empresa) => {
+    setEmpresaExcluindo(empresa);
+    setShowDeleteModal(true);
+  };
+
+  // Handler para excluir definitivamente (apenas SUPER_ADMIN)
+  const handleExcluirDefinitivo = async (empresa: Empresa) => {
+    if (confirm(`Tem certeza que deseja EXCLUIR DEFINITIVAMENTE a empresa "${empresa.nome_fantasia}"? Esta ação NÃO pode ser desfeita!`)) {
+      setIsSubmitting(true);
+      try {
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`http://localhost:3001/api/empresas/${empresa.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          showNotification('success', 'Empresa excluída definitivamente!');
+          await carregarEmpresas();
+        } else {
+          const error = await response.json();
+          showNotification('error', `Erro ao excluir empresa: ${error.message}`);
+        }
+      } catch (error) {
+        console.error('Erro ao excluir empresa:', error);
+        showNotification('error', 'Erro ao excluir empresa. Tente novamente.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  // Handler para reativar empresa
+  const handleReativarEmpresa = async (empresa: Empresa) => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:3001/api/empresas/${empresa.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...empresa,
+          status: 'ativo'
+        })
+      });
+
+      if (response.ok) {
+        showNotification('success', 'Empresa reativada com sucesso!');
+        await carregarEmpresas();
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao reativar empresa: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Erro ao reativar empresa:', error);
+      showNotification('error', 'Erro ao reativar empresa. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleConfirmarExclusao = async () => {
     if (!empresaExcluindo) return;
     
@@ -473,31 +560,7 @@ export default function EmpresasPage() {
     setEmpresaVisualizando(empresa);
     
     // Carregar pontos focais existentes para visualização
-    const pontosFocaisExistentes: PontoFocal[] = [];
-    
-    // Primeiro, tentar carregar do array de pontos focais (nova estrutura)
-    if (empresa.pontos_focais && Array.isArray(empresa.pontos_focais) && empresa.pontos_focais.length > 0) {
-      empresa.pontos_focais.forEach((pf: any) => {
-        pontosFocaisExistentes.push({
-          id: pf.id.toString(),
-          nome: pf.nome || '',
-          descricao: pf.descricao || '',
-          observacoes: pf.observacoes || '',
-          isPrincipal: pf.is_principal || false
-        });
-      });
-    } 
-    // Fallback: carregar dos campos antigos (compatibilidade)
-    else if (empresa.ponto_focal_nome || empresa.ponto_focal_descricao || empresa.ponto_focal_observacoes) {
-      pontosFocaisExistentes.push({
-        id: 'existing',
-        nome: empresa.ponto_focal_nome || '',
-        descricao: empresa.ponto_focal_descricao || '',
-        observacoes: empresa.ponto_focal_observacoes || '',
-        isPrincipal: empresa.ponto_focal_principal || false
-      });
-    }
-    
+    const pontosFocaisExistentes = carregarPontosFocaisEmpresa(empresa);
     setPontosFocaisVisualizacao(pontosFocaisExistentes);
     setShowPontoFocalVisualizacao(false); // Começar fechado
     setShowViewCompanyModal(true);
@@ -998,9 +1061,33 @@ export default function EmpresasPage() {
                             />
                           </div>
 
-                          <div className="md:col-span-2">
+                          <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              CNAE e Descrição <span className="text-red-500">*</span>
+                              CNAE <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={cnaeCodigo}
+                              onChange={(e) => {
+                                handleCnaeCodigoChange(e.target.value);
+                                if (e.target.value.trim() && errors.cnaeCodigo) {
+                                  setErrors({...errors, cnaeCodigo: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.cnaeCodigo ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
+                              placeholder="Digite o código CNAE (7 dígitos)"
+                              maxLength={7}
+                            />
+                            {errors.cnaeCodigo && (
+                              <p className="text-red-500 text-xs mt-1">{errors.cnaeCodigo}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Descrição da Atividade <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -1014,7 +1101,7 @@ export default function EmpresasPage() {
                               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
                                 errors.cnaeDescricao ? 'border-red-300 bg-red-50' : 'border-gray-300'
                               }`}
-                              placeholder="Digite o CNAE e descrição"
+                              placeholder="Digite a descrição da atividade"
                             />
                             {errors.cnaeDescricao && (
                               <p className="text-red-500 text-xs mt-1">{errors.cnaeDescricao}</p>
@@ -1023,7 +1110,7 @@ export default function EmpresasPage() {
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Risco <span className="text-red-500">*</span>
+                              Grau de Risco <span className="text-red-500">*</span>
                             </label>
                             <select
                               value={risco}
@@ -1037,11 +1124,11 @@ export default function EmpresasPage() {
                                 errors.risco ? 'border-red-300 bg-red-50' : 'border-gray-300'
                               }`}
                             >
-                              <option value="">Selecione o grau de risco...</option>
-                              <option value="1">Grau de Risco 1: Baixo risco</option>
-                              <option value="2">Grau de Risco 2: Risco moderado</option>
-                              <option value="3">Grau de Risco 3: Risco significativo</option>
-                              <option value="4">Grau de Risco 4: Alto risco</option>
+                              <option value="">Selecione...</option>
+                              <option value="1">1</option>
+                              <option value="2">2</option>
+                              <option value="3">3</option>
+                              <option value="4">4</option>
                             </select>
                             {errors.risco && (
                               <p className="text-red-500 text-xs mt-1">{errors.risco}</p>
@@ -1363,68 +1450,7 @@ export default function EmpresasPage() {
                             )}
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Contato
-                            </label>
-                            <input
-                              type="text"
-                              value={contato}
-                              onChange={(e) => handleContatoChange(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                              placeholder="Nome do contato (apenas letras)"
-                            />
-                          </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Telefone <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="tel"
-                              value={telefone}
-                              onChange={(e) => {
-                                handleTelefoneChange(e.target.value);
-                                if (e.target.value.trim() && errors.telefone) {
-                                  setErrors({...errors, telefone: ''});
-                                }
-                              }}
-                              maxLength={15}
-                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
-                                errors.telefone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                              }`}
-                              placeholder="(00) 00000-0000"
-                            />
-                            {telefone && !isValidTelefone(telefone) && (
-                              <p className="text-red-500 text-xs mt-1">Telefone inválido (10 ou 11 dígitos)</p>
-                            )}
-                            {errors.telefone && (
-                              <p className="text-red-500 text-xs mt-1">{errors.telefone}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              E-mail <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="email"
-                              value={email}
-                              onChange={(e) => {
-                                setEmail(e.target.value);
-                                if (e.target.value.trim() && errors.email) {
-                                  setErrors({...errors, email: ''});
-                                }
-                              }}
-                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
-                                errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                              }`}
-                              placeholder="email@exemplo.com"
-                            />
-                            {errors.email && (
-                              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                            )}
-                          </div>
                         </div>
                       </div>
 
@@ -1441,19 +1467,6 @@ export default function EmpresasPage() {
                         <h4 className="text-sm font-medium text-gray-700 mb-4 bg-gray-100 px-3 py-2 rounded">Informações adicionais</h4>
                         
                         <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Observação
-                            </label>
-                            <textarea
-                              rows={3}
-                              value={observacao}
-                              onChange={(e) => setObservacao(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                              placeholder="Digite observações gerais sobre a empresa..."
-                            />
-                          </div>
-
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                               Observação para Ordem de Serviço
@@ -1526,12 +1539,16 @@ export default function EmpresasPage() {
                   pesquisaTexto={pesquisaTexto}
                   onEditar={handleEditarEmpresa}
                   onExcluir={handleExcluirEmpresa}
+                  onInativar={handleInativarEmpresa}
+                  onReativar={handleReativarEmpresa}
+                  onExcluirDefinitivo={handleExcluirDefinitivo}
                   onVisualizar={handleVisualizarEmpresa}
                   permissions={{
                     canEdit: permissions.empresas.canEdit,
                     canDelete: permissions.empresas.canDelete,
                     canViewSensitive: permissions.canViewSensitive
                   }}
+                  user={user!}
                 />
               )}
             </div>
@@ -1624,7 +1641,19 @@ export default function EmpresasPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CNAE e Descrição
+                      CNAE
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.cnae_codigo || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Descrição da Atividade
                     </label>
                     <input
                       type="text"
@@ -1636,20 +1665,12 @@ export default function EmpresasPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Risco
+                      Grau de Risco
                     </label>
                     <input
                       type="text"
                       value={
-                        empresaVisualizando?.risco 
-                          ? `Grau de Risco ${empresaVisualizando.risco}: ${
-                              empresaVisualizando.risco === '1' ? 'Baixo risco' :
-                              empresaVisualizando.risco === '2' ? 'Risco moderado' :
-                              empresaVisualizando.risco === '3' ? 'Risco significativo' :
-                              empresaVisualizando.risco === '4' ? 'Alto risco' :
-                              empresaVisualizando.risco
-                            }`
-                          : 'Não informado'
+                      empresaVisualizando?.risco || 'Não informado'
                       }
                       readOnly
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
@@ -1844,7 +1865,31 @@ export default function EmpresasPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CNAE e Descrição <span className="text-red-500">*</span>
+                      CNAE <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={cnaeCodigo}
+                      onChange={(e) => {
+                        handleCnaeCodigoChange(e.target.value);
+                        if (e.target.value.trim() && errors.cnaeCodigo) {
+                          setErrors({...errors, cnaeCodigo: ''});
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                        errors.cnaeCodigo ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                      placeholder="Digite o código CNAE (7 dígitos)"
+                      maxLength={7}
+                    />
+                    {errors.cnaeCodigo && (
+                      <p className="text-red-500 text-xs mt-1">{errors.cnaeCodigo}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Descrição da Atividade <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1858,7 +1903,7 @@ export default function EmpresasPage() {
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
                         errors.cnaeDescricao ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
-                      placeholder="Digite o CNAE e descrição"
+                      placeholder="Digite a descrição da atividade"
                     />
                     {errors.cnaeDescricao && (
                       <p className="text-red-500 text-xs mt-1">{errors.cnaeDescricao}</p>
@@ -1881,11 +1926,11 @@ export default function EmpresasPage() {
                         errors.risco ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                     >
-                      <option value="">Selecione o grau de risco...</option>
-                      <option value="1">Grau de Risco 1: Baixo risco</option>
-                      <option value="2">Grau de Risco 2: Risco moderado</option>
-                      <option value="3">Grau de Risco 3: Risco significativo</option>
-                      <option value="4">Grau de Risco 4: Alto risco</option>
+                      <option value="">Selecione...</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
                     </select>
                     {errors.risco && (
                       <p className="text-red-500 text-xs mt-1">{errors.risco}</p>

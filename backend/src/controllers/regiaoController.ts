@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { RegiaoModel } from '../models/Regiao';
 import { CreateRegiaoData, UpdateRegiaoData, StatusItem } from '../types/organizacional';
+import { UserRole } from '../types/user';
 
 // Listar todas as regiões
 export const getAllRegioes = async (req: Request, res: Response) => {
@@ -333,17 +334,28 @@ export const updateRegiao = async (req: Request, res: Response) => {
   }
 };
 
-// Deletar região (apenas SUPER_ADMIN e ADMIN)
+// Deletar região (apenas SUPER_ADMIN - exclusão física)
 export const deleteRegiao = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const regiaoId = parseInt(id);
     const userId = req.user!.id;
+    const userRole = req.user!.role;
 
     console.log(`=== DELETAR REGIÃO ===`);
     console.log(`ID recebido: ${id}`);
     console.log(`ID parseado: ${regiaoId}`);
     console.log(`User ID: ${userId}`);
+    console.log(`User Role: ${userRole}`);
+
+    // Verificar se é SUPER_ADMIN
+    if (userRole !== UserRole.SUPER_ADMIN) {
+      return res.status(403).json({
+        success: false,
+        message: 'Apenas Super Administradores podem excluir regiões definitivamente',
+        error: 'INSUFFICIENT_PERMISSIONS'
+      });
+    }
 
     if (isNaN(regiaoId)) {
       console.log(`Erro: ID da região inválido`);
@@ -376,13 +388,14 @@ export const deleteRegiao = async (req: Request, res: Response) => {
       console.log(`Erro: Região está sendo usada por empresas`);
       return res.status(409).json({
         success: false,
-        message: 'Não é possível excluir uma região que possui empresas vinculadas',
+        message: 'Não é possível excluir uma região que possui empresas vinculadas. Primeiro mova as empresas para outra região ou exclua-as.',
         error: 'REGION_IN_USE'
       });
     }
 
-    console.log(`Executando exclusão (soft delete) da região ${regiaoId}...`);
-    const success = await RegiaoModel.delete(regiaoId, userId);
+    // Usar hard delete para SUPER_ADMIN
+    console.log(`Executando exclusão física (hard delete) da região ${regiaoId}...`);
+    const success = await RegiaoModel.hardDelete(regiaoId);
     console.log(`Exclusão bem-sucedida:`, success ? 'Sim' : 'Não');
 
     if (!success) {
@@ -393,10 +406,10 @@ export const deleteRegiao = async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`=== REGIÃO ${regiaoId} EXCLUÍDA COM SUCESSO ===`);
+    console.log(`=== REGIÃO ${regiaoId} EXCLUÍDA DEFINITIVAMENTE COM SUCESSO ===`);
     res.json({
       success: true,
-      message: 'Região excluída com sucesso'
+      message: 'Região excluída definitivamente com sucesso'
     });
   } catch (error) {
     console.error('=== ERRO AO EXCLUIR REGIÃO ===');

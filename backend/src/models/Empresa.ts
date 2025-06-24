@@ -16,6 +16,7 @@ export class EmpresaModel {
         tipo_inscricao VARCHAR(10),
         numero_inscricao VARCHAR(20),
         cno VARCHAR(20),
+        cnae_codigo VARCHAR(7),
         cnae_descricao TEXT,
         risco VARCHAR(50),
         endereco_cep VARCHAR(10),
@@ -138,8 +139,12 @@ export class EmpresaModel {
 
     const empresa = result.rows[0];
     
+    // Carregar pontos focais
+    const pontosFocais = await EmpresaPontoFocalModel.findByEmpresaId(id);
+    
     return {
       ...empresa,
+      pontos_focais: pontosFocais,
       grupo: empresa.grupo_id_ref ? {
         id: empresa.grupo_id_ref,
         nome: empresa.grupo_nome,
@@ -178,6 +183,7 @@ export class EmpresaModel {
       tipo_inscricao,
       numero_inscricao,
       cno,
+      cnae_codigo,
       cnae_descricao,
       risco,
       endereco_cep,
@@ -206,23 +212,44 @@ export class EmpresaModel {
     // Gerar código automaticamente se não fornecido
     let finalCodigo = codigo;
     if (!finalCodigo) {
-      const countResult = await query('SELECT COUNT(*) FROM empresas');
-      const count = parseInt(countResult.rows[0].count) + 1;
-      finalCodigo = `EMP${count.toString().padStart(4, '0')}`;
+      // Tentar gerar um código único até encontrar um que não existe
+      let tentativas = 0;
+      const maxTentativas = 10;
+      
+      do {
+        const countResult = await query('SELECT COUNT(*) FROM empresas');
+        const count = parseInt(countResult.rows[0].count) + 1 + tentativas;
+        finalCodigo = `EMP${count.toString().padStart(4, '0')}`;
+        
+        // Verificar se o código já existe
+        const existingCode = await this.findByCodigo(finalCodigo);
+        if (!existingCode) {
+          break; // Código único encontrado
+        }
+        
+        tentativas++;
+        if (tentativas >= maxTentativas) {
+          // Se não conseguir gerar um código único, usar timestamp
+          finalCodigo = `EMP${Date.now().toString().slice(-4)}`;
+          break;
+        }
+      } while (tentativas < maxTentativas);
     }
+    
+    const { endereco_tipo_logradouro } = empresaData;
     
     const result = await query(
       `INSERT INTO empresas (
         codigo, razao_social, nome_fantasia, tipo_estabelecimento, tipo_inscricao, numero_inscricao,
-        cno, cnae_descricao, risco, endereco_cep, endereco_logradouro, endereco_numero,
+        cno, cnae_codigo, cnae_descricao, risco, endereco_cep, endereco_tipo_logradouro, endereco_logradouro, endereco_numero,
         endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf,
         contato_nome, contato_telefone, contato_email, representante_legal_nome, representante_legal_cpf,
         observacoes, observacoes_os, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, ponto_focal_principal, status, grupo_id, regiao_id, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)
        RETURNING *`,
       [
         finalCodigo, razao_social, nome_fantasia, tipo_estabelecimento, tipo_inscricao, numero_inscricao,
-        cno, cnae_descricao, risco, endereco_cep, endereco_logradouro, endereco_numero,
+        cno, cnae_codigo, cnae_descricao, risco, endereco_cep, endereco_tipo_logradouro, endereco_logradouro, endereco_numero,
         endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf,
         contato_nome, contato_telefone, contato_email, representante_legal_nome, representante_legal_cpf,
         observacoes, observacoes_os, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, ponto_focal_principal, status, grupo_id, regiao_id, userId
@@ -384,9 +411,11 @@ export class EmpresaModel {
       tipo_inscricao: empresaData.tipo_inscricao,
       numero_inscricao: empresaData.numero_inscricao,
       cno: empresaData.cno,
+      cnae_codigo: empresaData.cnae_codigo,
       cnae_descricao: empresaData.cnae_descricao,
       risco: empresaData.risco,
       endereco_cep: empresaData.endereco_cep,
+      endereco_tipo_logradouro: empresaData.endereco_tipo_logradouro,
       endereco_logradouro: empresaData.endereco_logradouro,
       endereco_numero: empresaData.endereco_numero,
       endereco_complemento: empresaData.endereco_complemento,
@@ -433,7 +462,10 @@ export class EmpresaModel {
       values
     );
     
-    return result.rows.length > 0 ? result.rows[0] : null;
+    if (result.rows.length === 0) return null;
+    
+    // Retornar empresa atualizada com pontos focais
+    return await this.findById(id);
   }
 
   // Deletar empresa (soft delete - desativar)
@@ -441,6 +473,20 @@ export class EmpresaModel {
     const result = await query(
       'UPDATE empresas SET status = $1, updated_at = CURRENT_TIMESTAMP, updated_by = $2 WHERE id = $3',
       [StatusItem.INATIVO, userId, id]
+    );
+    
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Deletar empresa definitivamente (hard delete - apenas SUPER_ADMIN)
+  static async hardDelete(id: number): Promise<boolean> {
+    // Primeiro deletar pontos focais associados
+    await EmpresaPontoFocalModel.deleteByEmpresaId(id);
+    
+    // Depois deletar a empresa
+    const result = await query(
+      'DELETE FROM empresas WHERE id = $1',
+      [id]
     );
     
     return (result.rowCount || 0) > 0;

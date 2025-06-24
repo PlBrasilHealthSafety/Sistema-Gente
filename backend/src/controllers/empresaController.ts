@@ -4,6 +4,7 @@ import { EmpresaPontoFocalModel } from '../models/EmpresaPontoFocal';
 import { GrupoModel } from '../models/Grupo';
 import { RegiaoModel } from '../models/Regiao';
 import { CreateEmpresaData, UpdateEmpresaData, StatusItem, CreateEmpresaPontoFocalData } from '../types/organizacional';
+import { UserRole } from '../types/user';
 
 // Função auxiliar para validar CNPJ
 const isValidCNPJ = (cnpj: string): boolean => {
@@ -296,6 +297,7 @@ export const createEmpresa = async (req: Request, res: Response) => {
       });
     }
 
+    // Validar grupo_id
     if (!empresaData.grupo_id) {
       return res.status(400).json({
         success: false,
@@ -304,10 +306,29 @@ export const createEmpresa = async (req: Request, res: Response) => {
       });
     }
 
+    const grupoId = Number(empresaData.grupo_id);
+    if (isNaN(grupoId) || grupoId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Grupo deve ser um número válido',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Validar regiao_id
     if (!empresaData.regiao_id) {
       return res.status(400).json({
         success: false,
         message: 'Região é obrigatória',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    const regiaoId = Number(empresaData.regiao_id);
+    if (isNaN(regiaoId) || regiaoId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Região deve ser um número válido',
         error: 'VALIDATION_ERROR'
       });
     }
@@ -359,28 +380,24 @@ export const createEmpresa = async (req: Request, res: Response) => {
       }
     }
 
-    // Verificar se grupo existe (se fornecido)
-    if (empresaData.grupo_id) {
-      const grupo = await GrupoModel.findById(empresaData.grupo_id);
-      if (!grupo) {
-        return res.status(400).json({
-          success: false,
-          message: 'Grupo não encontrado',
-          error: 'GROUP_NOT_FOUND'
-        });
-      }
+    // Verificar se grupo existe
+    const grupo = await GrupoModel.findById(grupoId);
+    if (!grupo) {
+      return res.status(400).json({
+        success: false,
+        message: 'Grupo não encontrado',
+        error: 'GROUP_NOT_FOUND'
+      });
     }
 
-    // Verificar se região existe (se fornecida)
-    if (empresaData.regiao_id) {
-      const regiao = await RegiaoModel.findById(empresaData.regiao_id);
-      if (!regiao) {
-        return res.status(400).json({
-          success: false,
-          message: 'Região não encontrada',
-          error: 'REGION_NOT_FOUND'
-        });
-      }
+    // Verificar se região existe
+    const regiao = await RegiaoModel.findById(regiaoId);
+    if (!regiao) {
+      return res.status(400).json({
+        success: false,
+        message: 'Região não encontrada',
+        error: 'REGION_NOT_FOUND'
+      });
     }
 
     // Limpar e formatar dados
@@ -396,6 +413,7 @@ export const createEmpresa = async (req: Request, res: Response) => {
             : formatCPF(empresaData.numero_inscricao))
         : undefined,
       cno: empresaData.cno?.trim(),
+      cnae_codigo: empresaData.cnae_codigo?.trim(),
       cnae_descricao: empresaData.cnae_descricao?.trim(),
       risco: empresaData.risco?.trim(),
       endereco_cep: empresaData.endereco_cep?.replace(/[^\d]/g, ''),
@@ -417,8 +435,8 @@ export const createEmpresa = async (req: Request, res: Response) => {
       ponto_focal_observacoes: empresaData.ponto_focal_observacoes?.trim(),
       ponto_focal_principal: empresaData.ponto_focal_principal || false,
       status: empresaData.status || StatusItem.ATIVO,
-      grupo_id: empresaData.grupo_id,
-      regiao_id: empresaData.regiao_id
+      grupo_id: grupoId,
+      regiao_id: regiaoId
     };
 
     const empresa = await EmpresaModel.create(cleanedData, userId);
@@ -430,8 +448,11 @@ export const createEmpresa = async (req: Request, res: Response) => {
         if (pontoFocal.nome && pontoFocal.nome.trim()) {
           const pontoFocalData: CreateEmpresaPontoFocalData = {
             nome: pontoFocal.nome.trim(),
+            cargo: pontoFocal.cargo?.trim() || undefined,
             descricao: pontoFocal.descricao?.trim() || undefined,
             observacoes: pontoFocal.observacoes?.trim() || undefined,
+            telefone: pontoFocal.telefone?.trim() || undefined,
+            email: pontoFocal.email?.trim() || undefined,
             is_principal: (pontoFocal as any).isPrincipal || (pontoFocal as any).is_principal || false,
             ordem: i + 1
           };
@@ -453,13 +474,60 @@ export const createEmpresa = async (req: Request, res: Response) => {
     console.error('Error stack:', error.stack);
     console.error('Error code:', error.code);
     console.error('Error constraint:', error.constraint);
+    console.error('Error detail:', error.detail);
+    
+    // Erro de violação de constraint de chave estrangeira
+    if (error.code === '23503') {
+      if (error.constraint?.includes('grupo')) {
+        return res.status(400).json({
+          success: false,
+          message: 'Grupo selecionado não existe',
+          error: 'INVALID_GROUP_REFERENCE'
+        });
+      }
+      if (error.constraint?.includes('regiao')) {
+        return res.status(400).json({
+          success: false,
+          message: 'Região selecionada não existe',
+          error: 'INVALID_REGION_REFERENCE'
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: 'Referência inválida nos dados fornecidos',
+        error: 'INVALID_REFERENCE'
+      });
+    }
     
     // Erro de duplicata
-    if (error.code === '23505' && error.constraint === 'empresas_numero_inscricao_key') {
+    if (error.code === '23505') {
+      if (error.constraint === 'empresas_numero_inscricao_key') {
+        return res.status(409).json({
+          success: false,
+          message: 'Número de inscrição já cadastrado',
+          error: 'NUMERO_INSCRICAO_ALREADY_EXISTS'
+        });
+      }
+      if (error.constraint === 'empresas_codigo_key') {
+        return res.status(409).json({
+          success: false,
+          message: 'Código de empresa já existe',
+          error: 'CODIGO_ALREADY_EXISTS'
+        });
+      }
       return res.status(409).json({
         success: false,
-        message: 'Número de inscrição já cadastrado',
-        error: 'NUMERO_INSCRICAO_ALREADY_EXISTS'
+        message: 'Dados duplicados encontrados',
+        error: 'DUPLICATE_DATA'
+      });
+    }
+
+    // Erro de validação de constraint de CHECK
+    if (error.code === '23514') {
+      return res.status(400).json({
+        success: false,
+        message: 'Valor inválido para um dos campos',
+        error: 'CONSTRAINT_VIOLATION'
       });
     }
 
@@ -627,8 +695,11 @@ export const updateEmpresa = async (req: Request, res: Response) => {
         if (pontoFocal.nome && pontoFocal.nome.trim()) {
           const pontoFocalData: CreateEmpresaPontoFocalData = {
             nome: pontoFocal.nome.trim(),
+            cargo: pontoFocal.cargo?.trim() || undefined,
             descricao: pontoFocal.descricao?.trim() || undefined,
             observacoes: pontoFocal.observacoes?.trim() || undefined,
+            telefone: pontoFocal.telefone?.trim() || undefined,
+            email: pontoFocal.email?.trim() || undefined,
             is_principal: (pontoFocal as any).isPrincipal || (pontoFocal as any).is_principal || false,
             ordem: i + 1
           };
@@ -662,12 +733,21 @@ export const updateEmpresa = async (req: Request, res: Response) => {
   }
 };
 
-// Deletar empresa (apenas SUPER_ADMIN e ADMIN)
+// Deletar empresa (apenas SUPER_ADMIN)
 export const deleteEmpresa = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const empresaId = parseInt(id);
-    const userId = req.user!.id;
+    const userRole = req.user!.role;
+
+    // Verificar se é SUPER_ADMIN
+    if (userRole !== UserRole.SUPER_ADMIN) {
+      return res.status(403).json({
+        success: false,
+        message: 'Apenas SUPER_ADMIN pode excluir empresas definitivamente',
+        error: 'FORBIDDEN'
+      });
+    }
 
     if (isNaN(empresaId)) {
       return res.status(400).json({
@@ -687,7 +767,8 @@ export const deleteEmpresa = async (req: Request, res: Response) => {
       });
     }
 
-    const success = await EmpresaModel.delete(empresaId, userId);
+    // Usar hard delete para SUPER_ADMIN
+    const success = await EmpresaModel.hardDelete(empresaId);
 
     if (!success) {
       return res.status(404).json({
@@ -699,7 +780,7 @@ export const deleteEmpresa = async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      message: 'Empresa excluída com sucesso'
+      message: 'Empresa excluída definitivamente com sucesso'
     });
   } catch (error) {
     console.error('Erro ao excluir empresa:', error);

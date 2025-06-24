@@ -52,16 +52,17 @@ class EmpresasService {
           const error = JSON.parse(errorText);
           errorMessage = error.message || errorMessage;
         } catch {
-          errorMessage = `Status: ${response.status}`;
+          errorMessage = `Erro ${response.status}: ${response.statusText}`;
         }
         
         throw new Error(errorMessage);
       }
 
-      return await response.json();
+      const result = await response.json();
+      return result.data || result;
     } catch (error) {
       console.error('Erro ao criar empresa:', error);
-      throw error;
+      throw new Error(error instanceof Error ? error.message : 'Erro interno do servidor ao criar empresa');
     }
   }
 
