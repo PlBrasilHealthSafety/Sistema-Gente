@@ -111,10 +111,47 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       href: '/home/funcionarios'
     },
     {
-      id: 'empresa',
-      name: 'Empresa',
+      id: 'empresas',
+      name: 'Empresas',
       icon: '🏢',
-      href: '/home/empresa'
+      href: '', // Sem href - apenas agrupador
+      children: [
+        {
+          id: 'listagem-empresas',
+          name: 'Listagem de Empresas',
+          icon: '',
+          href: '/home/empresas/listagem-de-empresas'
+        },
+        {
+          id: 'cadastros-empresas',
+          name: 'Cadastros',
+          icon: '',
+          href: '', // Sem href - apenas agrupador
+          children: [
+            { id: 'centros-custos', name: 'Centros de Custos', icon: '', href: '/home/empresas/cadastros/centros-custos' },
+            { id: 'estrutura-empresa', name: 'Estrutura da Empresa', icon: '', href: '/home/empresas/cadastros/estrutura-empresa' },
+            { id: 'ambientes-trabalho', name: 'Ambientes de Trabalho', icon: '', href: '/home/empresas/cadastros/ambientes-trabalho' },
+            { id: 'montagem-ambiente', name: 'Montagem do Ambiente', icon: '', href: '/home/empresas/cadastros/montagem-ambiente' },
+            { id: 'copia-pcmso-pgr', name: 'Cópia PCMSO/PGR', icon: '', href: '/home/empresas/cadastros/copia-pcmso-pgr' },
+            { id: 'anexar-arquivos', name: 'Anexar Arquivos', icon: '', href: '/home/empresas/cadastros/anexar-arquivos' },
+            { id: 'avaliacao', name: 'Avaliação', icon: '', href: '/home/empresas/cadastros/avaliacao' },
+            { id: 'controle-vencimentos', name: 'Controle de Vencimentos', icon: '', href: '/home/empresas/cadastros/controle-vencimentos' },
+            { id: 'campanha-periodicos', name: 'Campanha de Periódicos', icon: '', href: '/home/empresas/cadastros/campanha-periodicos' },
+            { id: 'assinatura-digital', name: 'Assinatura Digital', icon: '', href: '/home/empresas/cadastros/assinatura-digital' }
+          ]
+        },
+        {
+          id: 'cipa',
+          name: 'CIPA',
+          icon: '',
+          href: '', // Sem href - apenas agrupador
+          children: [
+            { id: 'evento-processo-eleitoral', name: 'Evento do Processo Eleitoral', icon: '', href: '/home/empresas/cipa/evento-processo-eleitoral' },
+            { id: 'processo-eleitoral', name: 'Processo Eleitoral', icon: '', href: '/home/empresas/cipa/processo-eleitoral' },
+            { id: 'cifa', name: 'CIFA', icon: '', href: '/home/empresas/cipa/cifa' }
+          ]
+        }
+      ]
     },
     {
       id: 'faturamento',
