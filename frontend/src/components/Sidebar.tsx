@@ -111,10 +111,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       href: '/home/funcionarios'
     },
     {
-      id: 'empresa',
-      name: 'Empresa',
+      id: 'empresas',
+      name: 'Empresas',
       icon: '🏢',
-      href: '/home/empresa'
+      href: '/home/empresas'
     },
     {
       id: 'faturamento',
