@@ -429,53 +429,6 @@ export const EditarEmpresaModal: React.FC<EditarEmpresaModalProps> = ({
                   </div>
                 </div>
 
-                {/* Contato */}
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Contato</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nome do Contato
-                      </label>
-                      <input
-                        type="text"
-                        value={contato}
-                        onChange={(e) => handleContatoChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Nome do responsável"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Telefone
-                      </label>
-                      <input
-                        type="text"
-                        value={telefone}
-                        onChange={(e) => handleTelefoneChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="(11) 99999-9999"
-                      />
-                      {telefone && !isValidTelefone(telefone) && (
-                        <p className="text-yellow-600 text-xs mt-1">Formato de telefone inválido</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        E-mail
-                      </label>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="contato@empresa.com"
-                      />
-                    </div>
-                  </div>
-                </div>
 
                 {/* Representante Legal */}
                 <div>
@@ -512,35 +465,20 @@ export const EditarEmpresaModal: React.FC<EditarEmpresaModalProps> = ({
                   </div>
                 </div>
 
-                {/* Observações */}
+                {/* Observações OS */}
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Observações</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Observações Gerais
-                      </label>
-                      <textarea
-                        value={observacao}
-                        onChange={(e) => setObservacao(e.target.value)}
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Observações gerais sobre a empresa..."
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Observações OS
-                      </label>
-                      <textarea
-                        value={observacaoOS}
-                        onChange={(e) => setObservacaoOS(e.target.value)}
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Observações específicas para OS..."
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Observações OS
+                    </label>
+                    <textarea
+                      value={observacaoOS}
+                      onChange={(e) => setObservacaoOS(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Observações específicas para OS..."
+                    />
                   </div>
                 </div>
               </div>

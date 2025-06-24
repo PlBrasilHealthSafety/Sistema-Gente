@@ -226,19 +226,27 @@ export const createGrupo = async (req: Request, res: Response) => {
 
     // Criar múltiplos pontos focais se fornecidos
     if (pontos_focais && Array.isArray(pontos_focais) && pontos_focais.length > 0) {
+      console.log('Pontos focais recebidos do frontend:', pontos_focais);
+      
       const pontosFocaisProcessados: CreateGrupoPontoFocalData[] = pontos_focais.map((pf, index) => ({
         nome: pf.nome?.trim() || '',
+        cargo: pf.cargo?.trim(),
         descricao: pf.descricao?.trim(),
         observacoes: pf.observacoes?.trim(),
+        telefone: pf.telefone?.trim(),
+        email: pf.email?.trim(),
         is_principal: pf.is_principal || false,
         ordem: pf.ordem || (index + 1)
       }));
+
+      console.log('Pontos focais processados para salvar:', pontosFocaisProcessados);
 
       await GrupoPontoFocalModel.createMultiple(grupo.id, pontosFocaisProcessados, userId);
       
       // Recarregar grupo com pontos focais
       const grupoComPontosFocais = await GrupoModel.findById(grupo.id);
       if (grupoComPontosFocais) {
+        console.log('Grupo recarregado com pontos focais:', grupoComPontosFocais.pontos_focais);
         grupo.pontos_focais = grupoComPontosFocais.pontos_focais;
       }
     }
@@ -360,14 +368,21 @@ export const updateGrupo = async (req: Request, res: Response) => {
 
     // Atualizar múltiplos pontos focais se fornecidos
     if (updateData.pontos_focais !== undefined) {
+      console.log('Atualizando pontos focais:', updateData.pontos_focais);
+      
       if (Array.isArray(updateData.pontos_focais) && updateData.pontos_focais.length > 0) {
         const pontosFocaisProcessados: CreateGrupoPontoFocalData[] = updateData.pontos_focais.map((pf, index) => ({
           nome: pf.nome?.trim() || '',
+          cargo: pf.cargo?.trim(),
           descricao: pf.descricao?.trim(),
           observacoes: pf.observacoes?.trim(),
+          telefone: pf.telefone?.trim(),
+          email: pf.email?.trim(),
           is_principal: pf.is_principal || false,
           ordem: pf.ordem || (index + 1)
         }));
+
+        console.log('Pontos focais processados para atualização:', pontosFocaisProcessados);
 
         await GrupoPontoFocalModel.updateByGrupoId(grupoId, pontosFocaisProcessados, userId);
       } else {
@@ -378,6 +393,7 @@ export const updateGrupo = async (req: Request, res: Response) => {
       // Recarregar grupo com pontos focais atualizados
       const grupoAtualizado = await GrupoModel.findById(grupoId);
       if (grupoAtualizado) {
+        console.log('Grupo atualizado com pontos focais:', grupoAtualizado.pontos_focais);
         grupo.pontos_focais = grupoAtualizado.pontos_focais;
       }
     }

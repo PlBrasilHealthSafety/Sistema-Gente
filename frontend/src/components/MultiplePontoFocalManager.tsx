@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { PontoFocal } from '@/types/pontoFocal';
 
 interface MultiplePontoFocalManagerProps {
@@ -8,25 +8,141 @@ interface MultiplePontoFocalManagerProps {
   onPontosFocaisChange: (pontosFocais: PontoFocal[]) => void;
   showSection: boolean;
   onToggleSection: () => void;
+  onValidationChange?: (hasErrors: boolean) => void; // Callback opcional para informar sobre erros
 }
 
 export default function MultiplePontoFocalManager({
   pontosFocais,
   onPontosFocaisChange,
   showSection,
-  onToggleSection
+  onToggleSection,
+  onValidationChange
 }: MultiplePontoFocalManagerProps) {
+  
+  // Estado para armazenar erros de validação
+  const [errosValidacao, setErrosValidacao] = useState<{[key: string]: {telefone?: string, email?: string}}>({});
   
   // Função para gerar ID único temporário
   const generateTempId = () => `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  // Função para validar telefone
+  const validarTelefone = (telefone: string): string | null => {
+    if (!telefone.trim()) return null; // Campo opcional
+    
+    // Remove todos os caracteres não numéricos
+    const numeroLimpo = telefone.replace(/\D/g, '');
+    
+    // Verifica se tem pelo menos 10 dígitos (telefone fixo) ou 11 dígitos (celular)
+    if (numeroLimpo.length < 10) {
+      return 'Telefone deve ter pelo menos 10 dígitos';
+    }
+    
+    if (numeroLimpo.length > 11) {
+      return 'Telefone deve ter no máximo 11 dígitos';
+    }
+    
+    // Se tem 11 dígitos, verifica se o primeiro dígito do celular é 9
+    if (numeroLimpo.length === 11) {
+      const codigoArea = numeroLimpo.substring(0, 2);
+      const primeiroDigitoCelular = numeroLimpo.substring(2, 3);
+      
+      // Códigos de área válidos do Brasil (principais)
+      const codigosAreaValidos = [
+        '11', '12', '13', '14', '15', '16', '17', '18', '19', // SP
+        '21', '22', '24', // RJ/ES
+        '27', '28', // ES
+        '31', '32', '33', '34', '35', '37', '38', // MG
+        '41', '42', '43', '44', '45', '46', // PR
+        '47', '48', '49', // SC
+        '51', '53', '54', '55', // RS
+        '61', // DF
+        '62', '64', // GO
+        '63', // TO
+        '65', '66', // MT
+        '67', // MS
+        '68', // AC
+        '69', // RO
+        '71', '73', '74', '75', '77', // BA
+        '79', // SE
+        '81', '87', // PE
+        '82', // AL
+        '83', // PB
+        '84', // RN
+        '85', '88', // CE
+        '86', '89', // PI
+        '91', '93', '94', // PA
+        '92', '97', // AM
+        '95', // RR
+        '96', // AP
+        '98', '99' // MA
+      ];
+      
+      if (!codigosAreaValidos.includes(codigoArea)) {
+        return 'Código de área inválido';
+      }
+      
+      if (primeiroDigitoCelular !== '9') {
+        return 'Celular deve começar com 9 após o código de área';
+      }
+    }
+    
+    return null;
+  };
+
+  // Função para validar email
+  const validarEmail = (email: string): string | null => {
+    if (!email.trim()) return null; // Campo opcional
+    
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!regexEmail.test(email)) {
+      return 'Email deve ter um formato válido (exemplo@dominio.com)';
+    }
+    
+    // Verificações adicionais
+    if (email.length > 254) {
+      return 'Email muito longo (máximo 254 caracteres)';
+    }
+    
+    const partes = email.split('@');
+    if (partes[0].length > 64) {
+      return 'Parte local do email muito longa (máximo 64 caracteres)';
+    }
+    
+    return null;
+  };
+
+  // Função para validar campo e atualizar erros
+  const validarCampo = (pontoFocalId: string, campo: 'telefone' | 'email', valor: string) => {
+    let erro: string | null = null;
+    
+    if (campo === 'telefone') {
+      erro = validarTelefone(valor);
+    } else if (campo === 'email') {
+      erro = validarEmail(valor);
+    }
+    
+    setErrosValidacao(prev => ({
+      ...prev,
+      [pontoFocalId]: {
+        ...prev[pontoFocalId],
+        [campo]: erro || undefined
+      }
+    }));
+    
+    return erro === null;
+  };
 
   // Função para adicionar novo ponto focal
   const adicionarPontoFocal = () => {
     const novoPontoFocal: PontoFocal = {
       id: generateTempId(),
       nome: '',
+      cargo: '',
       descricao: '',
       observacoes: '',
+      telefone: '',
+      email: '',
       isPrincipal: pontosFocais.length === 0 // Primeiro ponto focal é principal por padrão
     };
 
@@ -44,6 +160,13 @@ export default function MultiplePontoFocalManager({
         pontosFocaisAtualizados[0].isPrincipal = true;
       }
     }
+    
+    // Remover erros de validação do ponto focal removido
+    setErrosValidacao(prev => {
+      const novosErros = { ...prev };
+      delete novosErros[id];
+      return novosErros;
+    });
     
     onPontosFocaisChange(pontosFocaisAtualizados);
   };
@@ -75,6 +198,16 @@ export default function MultiplePontoFocalManager({
       }
     }
   }, [pontosFocais, onPontosFocaisChange]);
+
+  // Efeito para notificar quando há erros de validação
+  useEffect(() => {
+    if (onValidationChange) {
+      const hasErrors = Object.values(errosValidacao).some(erros => 
+        erros.telefone || erros.email
+      );
+      onValidationChange(hasErrors);
+    }
+  }, [errosValidacao, onValidationChange]);
 
   return (
     <div className="mt-3">
@@ -170,10 +303,23 @@ export default function MultiplePontoFocalManager({
                       </label>
                       <input
                         type="text"
-                        value={pontoFocal.nome}
+                        value={pontoFocal.nome || ''}
                         onChange={(e) => atualizarPontoFocal(pontoFocal.id!, 'nome', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm"
                         placeholder="Digite o nome do ponto focal..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Cargo do Ponto Focal
+                      </label>
+                      <input
+                        type="text"
+                        value={pontoFocal.cargo || ''}
+                        onChange={(e) => atualizarPontoFocal(pontoFocal.id!, 'cargo', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm"
+                        placeholder="Digite o cargo do ponto focal..."
                       />
                     </div>
 
@@ -183,7 +329,7 @@ export default function MultiplePontoFocalManager({
                       </label>
                       <textarea
                         rows={2}
-                        value={pontoFocal.descricao}
+                        value={pontoFocal.descricao || ''}
                         onChange={(e) => atualizarPontoFocal(pontoFocal.id!, 'descricao', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm"
                         placeholder="Digite a descrição do ponto focal..."
@@ -192,11 +338,69 @@ export default function MultiplePontoFocalManager({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Telefone do Ponto Focal
+                      </label>
+                      <input
+                        type="text"
+                        value={pontoFocal.telefone || ''}
+                        onChange={(e) => {
+                          const valor = e.target.value;
+                          atualizarPontoFocal(pontoFocal.id!, 'telefone', valor);
+                          validarCampo(pontoFocal.id!, 'telefone', valor);
+                        }}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm ${
+                          errosValidacao[pontoFocal.id!]?.telefone 
+                            ? 'border-red-300 bg-red-50' 
+                            : 'border-gray-300'
+                        }`}
+                        placeholder="Ex: (11) 99999-9999 ou 11999999999"
+                      />
+                      {errosValidacao[pontoFocal.id!]?.telefone && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {errosValidacao[pontoFocal.id!].telefone}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email do Ponto Focal
+                      </label>
+                      <input
+                        type="email"
+                        value={pontoFocal.email || ''}
+                        onChange={(e) => {
+                          const valor = e.target.value;
+                          atualizarPontoFocal(pontoFocal.id!, 'email', valor);
+                          validarCampo(pontoFocal.id!, 'email', valor);
+                        }}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm ${
+                          errosValidacao[pontoFocal.id!]?.email 
+                            ? 'border-red-300 bg-red-50' 
+                            : 'border-gray-300'
+                        }`}
+                        placeholder="Ex: nome@empresa.com.br"
+                      />
+                      {errosValidacao[pontoFocal.id!]?.email && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {errosValidacao[pontoFocal.id!].email}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Observações Importantes
                       </label>
                       <textarea
                         rows={2}
-                        value={pontoFocal.observacoes}
+                        value={pontoFocal.observacoes || ''}
                         onChange={(e) => atualizarPontoFocal(pontoFocal.id!, 'observacoes', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm"
                         placeholder="Observações para reuniões..."

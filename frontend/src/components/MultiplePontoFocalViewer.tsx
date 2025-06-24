@@ -85,7 +85,19 @@ const MultiplePontoFocalViewer: React.FC<MultiplePontoFocalViewerProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={pontoFocal.nome}
+                      value={pontoFocal.nome || ''}
+                      readOnly
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Cargo
+                    </label>
+                    <input
+                      type="text"
+                      value={pontoFocal.cargo || ''}
                       readOnly
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                     />
@@ -96,7 +108,7 @@ const MultiplePontoFocalViewer: React.FC<MultiplePontoFocalViewerProps> = ({
                       Descrição
                     </label>
                     <textarea
-                      value={pontoFocal.descricao}
+                      value={pontoFocal.descricao || ''}
                       readOnly
                       rows={2}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed resize-none"
@@ -105,10 +117,34 @@ const MultiplePontoFocalViewer: React.FC<MultiplePontoFocalViewerProps> = ({
 
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Telefone
+                    </label>
+                    <input
+                      type="text"
+                      value={pontoFocal.telefone || ''}
+                      readOnly
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={pontoFocal.email || ''}
+                      readOnly
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
                       Observações
                     </label>
                     <textarea
-                      value={pontoFocal.observacoes}
+                      value={pontoFocal.observacoes || ''}
                       readOnly
                       rows={2}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed resize-none"

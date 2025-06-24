@@ -9,8 +9,11 @@ export interface GrupoPontoFocal {
   id: number;
   grupo_id: number;
   nome: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal: boolean;
   ordem: number;
   created_at: Date;
@@ -21,16 +24,22 @@ export interface GrupoPontoFocal {
 
 export interface CreateGrupoPontoFocalData {
   nome: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal?: boolean;
   ordem?: number;
 }
 
 export interface UpdateGrupoPontoFocalData {
   nome?: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal?: boolean;
   ordem?: number;
 }

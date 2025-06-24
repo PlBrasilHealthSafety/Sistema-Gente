@@ -237,6 +237,8 @@ export default function GruposPage() {
         console.log('Valid data:', validData);
         console.log('Valid data length:', validData.length);
         
+
+        
         setGrupos(validData);
         setFilteredGrupos(validData);
         
@@ -314,6 +316,20 @@ export default function GruposPage() {
     }
   };
 
+  // Função helper para mapear pontos focais para envio ao backend
+  const mapearPontosFocaisParaBackend = (pontosFocais: PontoFocal[]) => {
+    return pontosFocais.map(pf => ({
+      nome: pf.nome,
+      cargo: pf.cargo,
+      descricao: pf.descricao,
+      observacoes: pf.observacoes,
+      telefone: pf.telefone,
+      email: pf.email,
+      is_principal: pf.isPrincipal,
+      ordem: pontosFocais.indexOf(pf) + 1
+    }));
+  };
+
   // Função para incluir novo grupo
   const handleIncluir = async () => {
     if (!nomeGrupo.trim()) {
@@ -328,27 +344,34 @@ export default function GruposPage() {
       // Usar o ponto focal principal se há múltiplos pontos focais
       const pontoFocalPrincipal = pontosFocais.find(pf => pf.isPrincipal);
       
+      const dadosParaEnviar = {
+        nome: nomeGrupo,
+        descricao: descricaoGrupo || null,
+        ponto_focal_nome: pontoFocalPrincipal?.nome || null,
+        ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
+        ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
+        ponto_focal_principal: !!pontoFocalPrincipal,
+        pontos_focais: pontosFocais.length > 0 ? pontosFocais.map(pf => ({
+          nome: pf.nome,
+          cargo: pf.cargo,
+          descricao: pf.descricao,
+          observacoes: pf.observacoes,
+          telefone: pf.telefone,
+          email: pf.email,
+          is_principal: pf.isPrincipal,
+          ordem: pontosFocais.indexOf(pf) + 1
+        })) : null,
+      };
+      
+
+      
       const response = await fetch('http://localhost:3001/api/grupos', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          nome: nomeGrupo,
-          descricao: descricaoGrupo || null,
-          ponto_focal_nome: pontoFocalPrincipal?.nome || null,
-          ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
-          ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
-          ponto_focal_principal: !!pontoFocalPrincipal,
-          pontos_focais: pontosFocais.length > 0 ? pontosFocais.map(pf => ({
-            nome: pf.nome,
-            descricao: pf.descricao,
-            observacoes: pf.observacoes,
-            is_principal: pf.isPrincipal,
-            ordem: pontosFocais.indexOf(pf) + 1
-          })) : null,
-        })
+        body: JSON.stringify(dadosParaEnviar)
       });
 
       if (response.ok) {
@@ -393,12 +416,15 @@ export default function GruposPage() {
     
     // Primeiro, tentar carregar do array de pontos focais (nova estrutura)
     if (grupo.pontos_focais && Array.isArray(grupo.pontos_focais) && grupo.pontos_focais.length > 0) {
-      grupo.pontos_focais.forEach((pf: GrupoPontoFocal) => {
+      grupo.pontos_focais.forEach((pf: any) => {
         pontosFocaisExistentes.push({
           id: pf.id.toString(),
           nome: pf.nome || '',
+          cargo: pf.cargo || '',
           descricao: pf.descricao || '',
           observacoes: pf.observacoes || '',
+          telefone: pf.telefone || '',
+          email: pf.email || '',
           isPrincipal: pf.is_principal || false
         });
       });
@@ -408,8 +434,11 @@ export default function GruposPage() {
       pontosFocaisExistentes.push({
         id: 'existing',
         nome: grupo.ponto_focal_nome || '',
+        cargo: '',
         descricao: grupo.ponto_focal_descricao || '',
         observacoes: grupo.ponto_focal_observacoes || '',
+        telefone: '',
+        email: '',
         isPrincipal: grupo.ponto_focal_principal || false
       });
     }
@@ -433,28 +462,36 @@ export default function GruposPage() {
       // Usar o ponto focal principal se há múltiplos pontos focais
       const pontoFocalPrincipal = pontosFocais.find(pf => pf.isPrincipal);
       
+      const dadosParaEnviar = {
+        nome: nomeGrupo,
+        descricao: descricaoGrupo || null,
+        ponto_focal_nome: pontoFocalPrincipal?.nome || null,
+        ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
+        ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
+        ponto_focal_principal: !!pontoFocalPrincipal,
+        pontos_focais: pontosFocais.length > 0 ? pontosFocais.map(pf => ({
+          nome: pf.nome,
+          cargo: pf.cargo,
+          descricao: pf.descricao,
+          observacoes: pf.observacoes,
+          telefone: pf.telefone,
+          email: pf.email,
+          is_principal: pf.isPrincipal,
+          ordem: pontosFocais.indexOf(pf) + 1
+        })) : null,
+      };
+      
+
+      
       const response = await fetch(`http://localhost:3001/api/grupos/${grupoEditando?.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          nome: nomeGrupo,
-          descricao: descricaoGrupo || null,
-          ponto_focal_nome: pontoFocalPrincipal?.nome || null,
-          ponto_focal_descricao: pontoFocalPrincipal?.descricao || null,
-          ponto_focal_observacoes: pontoFocalPrincipal?.observacoes || null,
-          ponto_focal_principal: !!pontoFocalPrincipal,
-          pontos_focais: pontosFocais.length > 0 ? pontosFocais.map(pf => ({
-            nome: pf.nome,
-            descricao: pf.descricao,
-            observacoes: pf.observacoes,
-            is_principal: pf.isPrincipal,
-            ordem: pontosFocais.indexOf(pf) + 1
-          })) : null,
-        })
+        body: JSON.stringify(dadosParaEnviar)
       });
+      
       if (response.ok) {
         showNotification('success', 'Grupo atualizado com sucesso!');
         handleLimpar();
@@ -674,12 +711,15 @@ export default function GruposPage() {
     
     // Primeiro, tentar carregar do array de pontos focais (nova estrutura)
     if (grupo.pontos_focais && Array.isArray(grupo.pontos_focais) && grupo.pontos_focais.length > 0) {
-      grupo.pontos_focais.forEach((pf: any) => {
+      grupo.pontos_focais.forEach((pf: any, index: number) => {
         pontosFocaisExistentes.push({
-          id: pf.id.toString(),
+          id: pf.id?.toString() || `pf-${index}`,
           nome: pf.nome || '',
+          cargo: pf.cargo || '',
           descricao: pf.descricao || '',
           observacoes: pf.observacoes || '',
+          telefone: pf.telefone || '',
+          email: pf.email || '',
           isPrincipal: pf.is_principal || false
         });
       });
@@ -689,14 +729,17 @@ export default function GruposPage() {
       pontosFocaisExistentes.push({
         id: 'existing',
         nome: grupo.ponto_focal_nome || '',
+        cargo: '', // Campo não existe na estrutura antiga
         descricao: grupo.ponto_focal_descricao || '',
         observacoes: grupo.ponto_focal_observacoes || '',
+        telefone: '', // Campo não existe na estrutura antiga
+        email: '', // Campo não existe na estrutura antiga
         isPrincipal: grupo.ponto_focal_principal || false
       });
     }
     
     setPontosFocaisVisualizacao(pontosFocaisExistentes);
-    setShowPontoFocalVisualizacao(false); // Começar fechado
+    setShowPontoFocalVisualizacao(pontosFocaisExistentes.length > 0); // Abrir automaticamente se houver pontos focais
     setShowViewGroupModal(true);
   };
 
