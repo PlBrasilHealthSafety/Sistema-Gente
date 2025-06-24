@@ -16,6 +16,7 @@ export class EmpresaModel {
         tipo_inscricao VARCHAR(10),
         numero_inscricao VARCHAR(20),
         cno VARCHAR(20),
+        cnae_codigo VARCHAR(7),
         cnae_descricao TEXT,
         risco VARCHAR(50),
         endereco_cep VARCHAR(10),
@@ -178,6 +179,7 @@ export class EmpresaModel {
       tipo_inscricao,
       numero_inscricao,
       cno,
+      cnae_codigo,
       cnae_descricao,
       risco,
       endereco_cep,
@@ -206,23 +208,42 @@ export class EmpresaModel {
     // Gerar código automaticamente se não fornecido
     let finalCodigo = codigo;
     if (!finalCodigo) {
-      const countResult = await query('SELECT COUNT(*) FROM empresas');
-      const count = parseInt(countResult.rows[0].count) + 1;
-      finalCodigo = `EMP${count.toString().padStart(4, '0')}`;
+      // Tentar gerar um código único até encontrar um que não existe
+      let tentativas = 0;
+      const maxTentativas = 10;
+      
+      do {
+        const countResult = await query('SELECT COUNT(*) FROM empresas');
+        const count = parseInt(countResult.rows[0].count) + 1 + tentativas;
+        finalCodigo = `EMP${count.toString().padStart(4, '0')}`;
+        
+        // Verificar se o código já existe
+        const existingCode = await this.findByCodigo(finalCodigo);
+        if (!existingCode) {
+          break; // Código único encontrado
+        }
+        
+        tentativas++;
+        if (tentativas >= maxTentativas) {
+          // Se não conseguir gerar um código único, usar timestamp
+          finalCodigo = `EMP${Date.now().toString().slice(-4)}`;
+          break;
+        }
+      } while (tentativas < maxTentativas);
     }
     
     const result = await query(
       `INSERT INTO empresas (
         codigo, razao_social, nome_fantasia, tipo_estabelecimento, tipo_inscricao, numero_inscricao,
-        cno, cnae_descricao, risco, endereco_cep, endereco_logradouro, endereco_numero,
+        cno, cnae_codigo, cnae_descricao, risco, endereco_cep, endereco_logradouro, endereco_numero,
         endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf,
         contato_nome, contato_telefone, contato_email, representante_legal_nome, representante_legal_cpf,
         observacoes, observacoes_os, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, ponto_focal_principal, status, grupo_id, regiao_id, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)
        RETURNING *`,
       [
         finalCodigo, razao_social, nome_fantasia, tipo_estabelecimento, tipo_inscricao, numero_inscricao,
-        cno, cnae_descricao, risco, endereco_cep, endereco_logradouro, endereco_numero,
+        cno, cnae_codigo, cnae_descricao, risco, endereco_cep, endereco_logradouro, endereco_numero,
         endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf,
         contato_nome, contato_telefone, contato_email, representante_legal_nome, representante_legal_cpf,
         observacoes, observacoes_os, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, ponto_focal_principal, status, grupo_id, regiao_id, userId
@@ -384,6 +405,7 @@ export class EmpresaModel {
       tipo_inscricao: empresaData.tipo_inscricao,
       numero_inscricao: empresaData.numero_inscricao,
       cno: empresaData.cno,
+      cnae_codigo: empresaData.cnae_codigo,
       cnae_descricao: empresaData.cnae_descricao,
       risco: empresaData.risco,
       endereco_cep: empresaData.endereco_cep,

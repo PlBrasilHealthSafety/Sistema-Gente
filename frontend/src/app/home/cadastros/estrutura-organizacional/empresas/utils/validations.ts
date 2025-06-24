@@ -5,6 +5,7 @@ export const validateEmpresaForm = (formData: {
   razaoSocial: string;
   grupoSelecionado: string;
   regiaoSelecionada: string;
+  cnaeCodigo: string;
   cnaeDescricao: string;
   risco: string;
   cep: string;
@@ -25,6 +26,7 @@ export const validateEmpresaForm = (formData: {
     razaoSocial: '',
     grupoSelecionado: '',
     regiaoSelecionada: '',
+    cnaeCodigo: '',
     cnaeDescricao: '',
     risco: '',
     cep: '',
@@ -41,73 +43,96 @@ export const validateEmpresaForm = (formData: {
     email: ''
   };
 
-  if (!formData.nomeFantasia.trim()) {
+  // Garantir que todos os campos sejam strings
+  const nomeFantasia = (formData.nomeFantasia || '').toString();
+  const razaoSocial = (formData.razaoSocial || '').toString();
+  const grupoSelecionado = (formData.grupoSelecionado || '').toString();
+  const regiaoSelecionada = (formData.regiaoSelecionada || '').toString();
+  const cnaeCodigo = (formData.cnaeCodigo || '').toString();
+  const cnaeDescricao = (formData.cnaeDescricao || '').toString();
+  const risco = (formData.risco || '').toString();
+  const cep = (formData.cep || '').toString();
+  const numeroEndereco = (formData.numeroEndereco || '').toString();
+  const tipoInscricao = (formData.tipoInscricao || '').toString();
+  const numeroInscricao = (formData.numeroInscricao || '').toString();
+  const cno = (formData.cno || '').toString();
+  const tipoLogradouro = (formData.tipoLogradouro || '').toString();
+  const logradouro = (formData.logradouro || '').toString();
+  const uf = (formData.uf || '').toString();
+  const cidade = (formData.cidade || '').toString();
+  const bairro = (formData.bairro || '').toString();
+  const telefone = (formData.telefone || '').toString();
+  const email = (formData.email || '').toString();
+
+  if (!nomeFantasia || !nomeFantasia.trim()) {
     errors.nomeFantasia = 'Nome fantasia é obrigatório';
   }
 
-  if (!formData.razaoSocial.trim()) {
+  if (!razaoSocial || !razaoSocial.trim()) {
     errors.razaoSocial = 'Razão social é obrigatória';
   }
 
-  if (!formData.grupoSelecionado) {
+  if (!grupoSelecionado) {
     errors.grupoSelecionado = 'Grupo é obrigatório';
   }
 
-  if (!formData.regiaoSelecionada) {
+  if (!regiaoSelecionada) {
     errors.regiaoSelecionada = 'Região é obrigatória';
   }
 
-  if (!formData.cnaeDescricao.trim()) {
-    errors.cnaeDescricao = 'CNAE e descrição é obrigatório';
+  if (!cnaeCodigo || !cnaeCodigo.trim()) {
+    errors.cnaeCodigo = 'CNAE é obrigatório';
+  } else if (!/^\d{7}$/.test(cnaeCodigo)) {
+    errors.cnaeCodigo = 'CNAE deve ter exatamente 7 dígitos';
   }
 
-  if (!formData.risco.trim()) {
+  if (!cnaeDescricao || !cnaeDescricao.trim()) {
+    errors.cnaeDescricao = 'Descrição da atividade é obrigatória';
+  }
+
+  if (!risco || !risco.trim()) {
     errors.risco = 'Risco é obrigatório';
   }
 
-  if (!formData.cep.trim()) {
+  if (!cep || !cep.trim()) {
     errors.cep = 'CEP é obrigatório';
   }
 
-  if (!formData.numeroEndereco.trim()) {
+  if (!numeroEndereco || !numeroEndereco.trim()) {
     errors.numeroEndereco = 'Número é obrigatório';
   }
 
-  if (!formData.tipoInscricao) {
+  if (!tipoInscricao) {
     errors.tipoInscricao = 'Tipo de inscrição é obrigatório';
   }
 
-  if (!formData.numeroInscricao.trim()) {
+  if (!numeroInscricao || !numeroInscricao.trim()) {
     errors.numeroInscricao = 'Número de inscrição é obrigatório';
   }
 
-  if (!formData.tipoLogradouro) {
+  if (!tipoLogradouro) {
     errors.tipoLogradouro = 'Tipo de logradouro é obrigatório';
   }
 
-  if (!formData.logradouro.trim()) {
+  if (!logradouro || !logradouro.trim()) {
     errors.logradouro = 'Logradouro é obrigatório';
   }
 
-  if (!formData.uf) {
+  if (!uf) {
     errors.uf = 'UF é obrigatório';
   }
 
-  if (!formData.cidade.trim()) {
+  if (!cidade || !cidade.trim()) {
     errors.cidade = 'Cidade é obrigatória';
   }
 
-  if (!formData.bairro.trim()) {
+  if (!bairro || !bairro.trim()) {
     errors.bairro = 'Bairro é obrigatório';
   }
 
-  if (!formData.telefone.trim()) {
-    errors.telefone = 'Telefone é obrigatório';
-  }
-
-  if (!formData.email.trim()) {
-    errors.email = 'E-mail é obrigatório';
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+  // Telefone e email não são mais obrigatórios - foram movidos para ponto focal
+  // Validação apenas se preenchidos
+  if (email && email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.email = 'E-mail deve ter um formato válido';
   }
 

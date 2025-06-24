@@ -145,6 +145,7 @@ export default function EmpresasPage() {
     tipoInscricao,
     grupoSelecionado,
     regiaoSelecionada,
+    cnaeCodigo,
     cnaeDescricao,
     risco,
     errors,
@@ -163,6 +164,7 @@ export default function EmpresasPage() {
     setNomeFantasia,
     setRazaoSocial,
     setTipoInscricao,
+    setCnaeCodigo,
     setCnaeDescricao,
     setRisco,
     setObservacao,
@@ -183,6 +185,7 @@ export default function EmpresasPage() {
     handleNomeRepresentanteChange,
     handleContatoChange,
     handleCnoChange,
+    handleCnaeCodigoChange,
     handleGrupoChange,
     handleRegiaoChange,
     validateForm,
@@ -1058,9 +1061,33 @@ export default function EmpresasPage() {
                             />
                           </div>
 
-                          <div className="md:col-span-2">
+                          <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              CNAE e Descrição <span className="text-red-500">*</span>
+                              CNAE <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={cnaeCodigo}
+                              onChange={(e) => {
+                                handleCnaeCodigoChange(e.target.value);
+                                if (e.target.value.trim() && errors.cnaeCodigo) {
+                                  setErrors({...errors, cnaeCodigo: ''});
+                                }
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                                errors.cnaeCodigo ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
+                              placeholder="Digite o código CNAE (7 dígitos)"
+                              maxLength={7}
+                            />
+                            {errors.cnaeCodigo && (
+                              <p className="text-red-500 text-xs mt-1">{errors.cnaeCodigo}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Descrição da Atividade <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -1074,7 +1101,7 @@ export default function EmpresasPage() {
                               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
                                 errors.cnaeDescricao ? 'border-red-300 bg-red-50' : 'border-gray-300'
                               }`}
-                              placeholder="Digite o CNAE e descrição"
+                              placeholder="Digite a descrição da atividade"
                             />
                             {errors.cnaeDescricao && (
                               <p className="text-red-500 text-xs mt-1">{errors.cnaeDescricao}</p>
@@ -1614,7 +1641,19 @@ export default function EmpresasPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CNAE e Descrição
+                      CNAE
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaVisualizando?.cnae_codigo || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Descrição da Atividade
                     </label>
                     <input
                       type="text"
@@ -1826,7 +1865,31 @@ export default function EmpresasPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CNAE e Descrição <span className="text-red-500">*</span>
+                      CNAE <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={cnaeCodigo}
+                      onChange={(e) => {
+                        handleCnaeCodigoChange(e.target.value);
+                        if (e.target.value.trim() && errors.cnaeCodigo) {
+                          setErrors({...errors, cnaeCodigo: ''});
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                        errors.cnaeCodigo ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                      placeholder="Digite o código CNAE (7 dígitos)"
+                      maxLength={7}
+                    />
+                    {errors.cnaeCodigo && (
+                      <p className="text-red-500 text-xs mt-1">{errors.cnaeCodigo}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Descrição da Atividade <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1840,7 +1903,7 @@ export default function EmpresasPage() {
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
                         errors.cnaeDescricao ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
-                      placeholder="Digite o CNAE e descrição"
+                      placeholder="Digite a descrição da atividade"
                     />
                     {errors.cnaeDescricao && (
                       <p className="text-red-500 text-xs mt-1">{errors.cnaeDescricao}</p>

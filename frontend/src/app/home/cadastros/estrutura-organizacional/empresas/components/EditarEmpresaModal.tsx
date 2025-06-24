@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Empresa, Grupo, Regiao, NotificationInput } from '../types/empresa.types';
 import { useFormularioEmpresa } from '../hooks/useFormularioEmpresa';
 import { empresasService } from '../services/empresasService';
+import MultiplePontoFocalManager from '@/components/MultiplePontoFocalManager';
 
 interface EditarEmpresaModalProps {
   isOpen: boolean;
@@ -45,11 +46,14 @@ export const EditarEmpresaModal: React.FC<EditarEmpresaModalProps> = ({
     tipoInscricao,
     grupoSelecionado,
     regiaoSelecionada,
+    cnaeCodigo,
     cnaeDescricao,
     risco,
     errors,
     regioesFiltradas,
     gruposFiltradosPorRegiao,
+    pontosFocais,
+    hasValidationErrors,
 
     // Setters
     setActiveTab,
@@ -64,8 +68,11 @@ export const EditarEmpresaModal: React.FC<EditarEmpresaModalProps> = ({
     setNomeFantasia,
     setRazaoSocial,
     setTipoInscricao,
+    setCnaeCodigo,
     setCnaeDescricao,
     setRisco,
+    setPontosFocais,
+    setHasValidationErrors,
 
     // Handlers
     handleCepChange,
@@ -75,6 +82,7 @@ export const EditarEmpresaModal: React.FC<EditarEmpresaModalProps> = ({
     handleNomeRepresentanteChange,
     handleContatoChange,
     handleCnoChange,
+    handleCnaeCodigoChange,
     handleGrupoChange,
     handleRegiaoChange,
 
@@ -481,6 +489,18 @@ export const EditarEmpresaModal: React.FC<EditarEmpresaModalProps> = ({
                     />
                   </div>
                 </div>
+
+                {/* Pontos Focais */}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Pontos Focais</h3>
+                  <MultiplePontoFocalManager
+                    pontosFocais={pontosFocais}
+                    onPontosFocaisChange={setPontosFocais}
+                    showSection={true}
+                    onToggleSection={() => {}}
+                    onValidationChange={setHasValidationErrors}
+                  />
+                </div>
               </div>
             )}
 
@@ -563,7 +583,29 @@ export const EditarEmpresaModal: React.FC<EditarEmpresaModalProps> = ({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        CNAE Principal <span className="text-red-500">*</span>
+                        CNAE <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={cnaeCodigo}
+                        onChange={(e) => {
+                          handleCnaeCodigoChange(e.target.value);
+                          if (errors.cnaeCodigo) clearFieldError('cnaeCodigo');
+                        }}
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors.cnaeCodigo ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        placeholder="Código CNAE (7 dígitos)"
+                        maxLength={7}
+                      />
+                      {errors.cnaeCodigo && (
+                        <p className="text-red-500 text-xs mt-1">{errors.cnaeCodigo}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Descrição da Atividade <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -575,7 +617,7 @@ export const EditarEmpresaModal: React.FC<EditarEmpresaModalProps> = ({
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           errors.cnaeDescricao ? 'border-red-500' : 'border-gray-300'
                         }`}
-                        placeholder="Descrição do CNAE"
+                        placeholder="Descrição da atividade"
                       />
                       {errors.cnaeDescricao && (
                         <p className="text-red-500 text-xs mt-1">{errors.cnaeDescricao}</p>

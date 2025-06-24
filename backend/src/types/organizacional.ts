@@ -166,6 +166,7 @@ export interface Empresa {
   tipo_inscricao?: 'cnpj' | 'cpf';
   numero_inscricao?: string;
   cno?: string;
+  cnae_codigo?: string;
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
@@ -204,6 +205,7 @@ export interface CreateEmpresaData {
   tipo_inscricao?: 'cnpj' | 'cpf';
   numero_inscricao?: string;
   cno?: string;
+  cnae_codigo?: string;
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
@@ -238,6 +240,7 @@ export interface UpdateEmpresaData {
   tipo_inscricao?: 'cnpj' | 'cpf';
   numero_inscricao?: string;
   cno?: string;
+  cnae_codigo?: string;
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
