@@ -31,14 +31,17 @@ export class EmpresaPontoFocalModel {
   ): Promise<EmpresaPontoFocal> {
     const result = await query(
       `INSERT INTO empresa_pontos_focais 
-       (empresa_id, nome, descricao, observacoes, is_principal, ordem, created_by, updated_by) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+       (empresa_id, nome, cargo, descricao, observacoes, telefone, email, is_principal, ordem, created_by, updated_by) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
        RETURNING *`,
       [
         empresaId,
         data.nome,
+        data.cargo || null,
         data.descricao || null,
         data.observacoes || null,
+        data.telefone || null,
+        data.email || null,
         data.is_principal || false,
         data.ordem || 0,
         userId,
@@ -65,6 +68,12 @@ export class EmpresaPontoFocalModel {
       paramCount++;
     }
 
+    if (data.cargo !== undefined) {
+      fields.push(`cargo = $${paramCount}`);
+      values.push(data.cargo);
+      paramCount++;
+    }
+
     if (data.descricao !== undefined) {
       fields.push(`descricao = $${paramCount}`);
       values.push(data.descricao);
@@ -74,6 +83,18 @@ export class EmpresaPontoFocalModel {
     if (data.observacoes !== undefined) {
       fields.push(`observacoes = $${paramCount}`);
       values.push(data.observacoes);
+      paramCount++;
+    }
+
+    if (data.telefone !== undefined) {
+      fields.push(`telefone = $${paramCount}`);
+      values.push(data.telefone);
+      paramCount++;
+    }
+
+    if (data.email !== undefined) {
+      fields.push(`email = $${paramCount}`);
+      values.push(data.email);
       paramCount++;
     }
 

@@ -396,6 +396,7 @@ export const useFormularioEmpresa = () => {
       cnae_descricao: cnaeDescricao.trim() || undefined,
       risco: risco || undefined,
       endereco_cep: cep.replace(/\D/g, '') || undefined,
+      endereco_tipo_logradouro: endereco.tipoLogradouro || undefined,
       endereco_logradouro: endereco.logradouro.trim() || undefined,
       endereco_numero: endereco.numero.trim() || undefined,
       endereco_complemento: endereco.complemento.trim() || undefined,
@@ -548,9 +549,30 @@ export const useFormularioEmpresa = () => {
     setCnaeDescricao((empresa.cnae_descricao || '').toString());
     setRisco((empresa.risco || '').toString());
     setCep(empresa.endereco_cep || '');
+    // Verificar se há tipo de logradouro salvo no banco
+    let tipoLogradouro = (empresa as any).endereco_tipo_logradouro || '';
+    let logradouro = empresa.endereco_logradouro || '';
+    
+    // Se não há tipo de logradouro no banco, tentar extrair do campo logradouro
+    if (!tipoLogradouro && logradouro) {
+      const tiposLogradouro = ['Rua', 'Avenida', 'Travessa', 'Alameda', 'Praça', 'Estrada'];
+      for (const tipo of tiposLogradouro) {
+        if (logradouro.toLowerCase().startsWith(tipo.toLowerCase())) {
+          tipoLogradouro = tipo;
+          logradouro = logradouro.substring(tipo.length).trim();
+          break;
+        }
+      }
+    }
+    
+    // Se ainda não tem tipo, usar "Rua" como padrão
+    if (!tipoLogradouro) {
+      tipoLogradouro = 'Rua';
+    }
+    
     setEndereco({
-      logradouro: empresa.endereco_logradouro || '',
-      tipoLogradouro: '',
+      logradouro: logradouro,
+      tipoLogradouro: tipoLogradouro,
       numero: empresa.endereco_numero || '',
       complemento: empresa.endereco_complemento || '',
       bairro: empresa.endereco_bairro || '',

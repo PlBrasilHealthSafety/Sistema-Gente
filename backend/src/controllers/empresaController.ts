@@ -448,8 +448,11 @@ export const createEmpresa = async (req: Request, res: Response) => {
         if (pontoFocal.nome && pontoFocal.nome.trim()) {
           const pontoFocalData: CreateEmpresaPontoFocalData = {
             nome: pontoFocal.nome.trim(),
+            cargo: pontoFocal.cargo?.trim() || undefined,
             descricao: pontoFocal.descricao?.trim() || undefined,
             observacoes: pontoFocal.observacoes?.trim() || undefined,
+            telefone: pontoFocal.telefone?.trim() || undefined,
+            email: pontoFocal.email?.trim() || undefined,
             is_principal: (pontoFocal as any).isPrincipal || (pontoFocal as any).is_principal || false,
             ordem: i + 1
           };
@@ -692,8 +695,11 @@ export const updateEmpresa = async (req: Request, res: Response) => {
         if (pontoFocal.nome && pontoFocal.nome.trim()) {
           const pontoFocalData: CreateEmpresaPontoFocalData = {
             nome: pontoFocal.nome.trim(),
+            cargo: pontoFocal.cargo?.trim() || undefined,
             descricao: pontoFocal.descricao?.trim() || undefined,
             observacoes: pontoFocal.observacoes?.trim() || undefined,
+            telefone: pontoFocal.telefone?.trim() || undefined,
+            email: pontoFocal.email?.trim() || undefined,
             is_principal: (pontoFocal as any).isPrincipal || (pontoFocal as any).is_principal || false,
             ordem: i + 1
           };

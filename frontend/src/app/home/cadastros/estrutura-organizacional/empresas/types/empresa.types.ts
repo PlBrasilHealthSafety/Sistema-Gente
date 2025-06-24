@@ -49,6 +49,7 @@ export interface Empresa {
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
+  endereco_tipo_logradouro?: string;
   endereco_logradouro?: string;
   endereco_numero?: string;
   endereco_complemento?: string;
@@ -122,6 +123,7 @@ export interface EmpresaFormData {
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
+  endereco_tipo_logradouro?: string;
   endereco_logradouro?: string;
   endereco_numero?: string;
   endereco_complemento?: string;

@@ -139,8 +139,12 @@ export class EmpresaModel {
 
     const empresa = result.rows[0];
     
+    // Carregar pontos focais
+    const pontosFocais = await EmpresaPontoFocalModel.findByEmpresaId(id);
+    
     return {
       ...empresa,
+      pontos_focais: pontosFocais,
       grupo: empresa.grupo_id_ref ? {
         id: empresa.grupo_id_ref,
         nome: empresa.grupo_nome,
@@ -232,18 +236,20 @@ export class EmpresaModel {
       } while (tentativas < maxTentativas);
     }
     
+    const { endereco_tipo_logradouro } = empresaData;
+    
     const result = await query(
       `INSERT INTO empresas (
         codigo, razao_social, nome_fantasia, tipo_estabelecimento, tipo_inscricao, numero_inscricao,
-        cno, cnae_codigo, cnae_descricao, risco, endereco_cep, endereco_logradouro, endereco_numero,
+        cno, cnae_codigo, cnae_descricao, risco, endereco_cep, endereco_tipo_logradouro, endereco_logradouro, endereco_numero,
         endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf,
         contato_nome, contato_telefone, contato_email, representante_legal_nome, representante_legal_cpf,
         observacoes, observacoes_os, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, ponto_focal_principal, status, grupo_id, regiao_id, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)
        RETURNING *`,
       [
         finalCodigo, razao_social, nome_fantasia, tipo_estabelecimento, tipo_inscricao, numero_inscricao,
-        cno, cnae_codigo, cnae_descricao, risco, endereco_cep, endereco_logradouro, endereco_numero,
+        cno, cnae_codigo, cnae_descricao, risco, endereco_cep, endereco_tipo_logradouro, endereco_logradouro, endereco_numero,
         endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf,
         contato_nome, contato_telefone, contato_email, representante_legal_nome, representante_legal_cpf,
         observacoes, observacoes_os, ponto_focal_nome, ponto_focal_descricao, ponto_focal_observacoes, ponto_focal_principal, status, grupo_id, regiao_id, userId
@@ -409,6 +415,7 @@ export class EmpresaModel {
       cnae_descricao: empresaData.cnae_descricao,
       risco: empresaData.risco,
       endereco_cep: empresaData.endereco_cep,
+      endereco_tipo_logradouro: empresaData.endereco_tipo_logradouro,
       endereco_logradouro: empresaData.endereco_logradouro,
       endereco_numero: empresaData.endereco_numero,
       endereco_complemento: empresaData.endereco_complemento,
@@ -455,7 +462,10 @@ export class EmpresaModel {
       values
     );
     
-    return result.rows.length > 0 ? result.rows[0] : null;
+    if (result.rows.length === 0) return null;
+    
+    // Retornar empresa atualizada com pontos focais
+    return await this.findById(id);
   }
 
   // Deletar empresa (soft delete - desativar)

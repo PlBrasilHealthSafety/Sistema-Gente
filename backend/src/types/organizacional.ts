@@ -49,8 +49,11 @@ export interface EmpresaPontoFocal {
   id: number;
   empresa_id: number;
   nome: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal: boolean;
   ordem: number;
   created_at: Date;
@@ -61,16 +64,22 @@ export interface EmpresaPontoFocal {
 
 export interface CreateEmpresaPontoFocalData {
   nome: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal?: boolean;
   ordem?: number;
 }
 
 export interface UpdateEmpresaPontoFocalData {
   nome?: string;
+  cargo?: string;
   descricao?: string;
   observacoes?: string;
+  telefone?: string;
+  email?: string;
   is_principal?: boolean;
   ordem?: number;
 }
@@ -170,6 +179,7 @@ export interface Empresa {
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
+  endereco_tipo_logradouro?: string;
   endereco_logradouro?: string;
   endereco_numero?: string;
   endereco_complemento?: string;
@@ -209,6 +219,7 @@ export interface CreateEmpresaData {
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
+  endereco_tipo_logradouro?: string;
   endereco_logradouro?: string;
   endereco_numero?: string;
   endereco_complemento?: string;
@@ -244,6 +255,7 @@ export interface UpdateEmpresaData {
   cnae_descricao?: string;
   risco?: string;
   endereco_cep?: string;
+  endereco_tipo_logradouro?: string;
   endereco_logradouro?: string;
   endereco_numero?: string;
   endereco_complemento?: string;
