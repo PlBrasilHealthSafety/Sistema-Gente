@@ -513,7 +513,7 @@ export default function CadastroProfissionaisPage() {
               </div>
               
               <h1 className="text-3xl font-bold text-[#1D3C44] mb-2">
-                👨‍⚕️ Consulta de Profissional
+                👨‍⚕️ Cadastro de Profissionais
               </h1>
               <p className="text-gray-600">
                 Gerencie o cadastro de profissionais do sistema
