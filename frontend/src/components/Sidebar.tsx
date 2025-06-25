@@ -89,17 +89,23 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           id: 'tabelas-basicas',
           name: 'Tabelas Básicas',
           icon: '',
-          href: '/home/cadastros/tabelas-basicas',
+          href: '', // Sem href - apenas agrupador
           children: [
-            { id: 'profissionais', name: 'Profissionais', icon: '', href: '/home/cadastros/profissionais' },
-            { id: 'credenciados', name: 'Credenciados', icon: '', href: '/home/cadastros/credenciados' },
-            { id: 'servicos', name: 'Serviços', icon: '', href: '/home/cadastros/servicos' },
-            { id: 'agentes-risco', name: 'Agentes de Risco', icon: '', href: '/home/cadastros/agentes-risco' },
-            { id: 'tipos-afastamento', name: 'Tipos de Afastamento', icon: '', href: '/home/cadastros/tipos-afastamento' },
-            { id: 'especialidades', name: 'Especialidades', icon: '', href: '/home/cadastros/especialidades' },
-            { id: 'procedimentos', name: 'Procedimentos', icon: '', href: '/home/cadastros/procedimentos' },
-            { id: 'queixas', name: 'Queixas', icon: '', href: '/home/cadastros/queixas' },
-            { id: 'documentos', name: 'Documentos', icon: '', href: '/home/cadastros/documentos' }
+            { id: 'cadastro-profissionais', name: 'Cadastro de Profissionais', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-profissionais' },
+            { id: 'cadastro-credenciados', name: 'Cadastro de Credenciados', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-credenciados' },
+            { id: 'cadastro-servicos', name: 'Cadastro de Serviços', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-servicos' },
+            { id: 'cadastro-agentes-risco', name: 'Cadastro de Agentes de Risco', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-agentes-de-risco' },
+            { id: 'cadastro-tipos-afastamento', name: 'Cadastro de Tipos de Afastamento', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-tipos-de-afastamento' },
+            { id: 'cadastro-especialidades', name: 'Cadastro de Especialidades', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-especialidades' },
+            { id: 'cadastro-procedimentos', name: 'Cadastro de Procedimentos', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-procedimentos' },
+            { id: 'cadastro-queixas', name: 'Cadastro de Queixas', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-queixas' },
+            { id: 'cadastro-documentos', name: 'Cadastro de Documentos', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-documentos' },
+            { id: 'agenda', name: 'Agenda', icon: '', href: '/home/cadastros/tabelas-basicas/agenda' },
+            { id: 'cadastro-unidades-atendimento', name: 'Cadastro de Unidades de Atendimento', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-unidades-de-atendimento' },
+            { id: 'cadastro-tipo-deficiencias', name: 'Cadastro de Tipo de Deficiências', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-tipo-de-deficiencias' },
+            { id: 'cadastro-classificacoes', name: 'Cadastro de Classificações', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-classificacoes' },
+            { id: 'cadastro-avaliacoes', name: 'Cadastro de Avaliações', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-avaliacoes' },
+            { id: 'cadastro-alertas-empresa', name: 'Cadastro de Alertas de Empresa', icon: '', href: '/home/cadastros/tabelas-basicas/cadastro-de-alertas-de-empresa' }
           ]
         }
       ]
