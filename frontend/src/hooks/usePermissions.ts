@@ -59,6 +59,11 @@ interface Permissions {
     canEdit: boolean;
     canDelete: boolean;
   };
+  profissionais: {
+    canCreate: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+  };
 }
 
 export const usePermissions = (user: user | null): Permissions => {
@@ -81,6 +86,11 @@ export const usePermissions = (user: user | null): Permissions => {
           canDelete: false,
         },
         empresas: {
+          canCreate: false,
+          canEdit: false,
+          canDelete: false,
+        },
+        profissionais: {
           canCreate: false,
           canEdit: false,
           canDelete: false,
@@ -112,6 +122,11 @@ export const usePermissions = (user: user | null): Permissions => {
             canEdit: true,
             canDelete: true,
           },
+          profissionais: {
+            canCreate: true,
+            canEdit: true,
+            canDelete: true,
+          },
         };
 
       case 'admin':
@@ -137,6 +152,11 @@ export const usePermissions = (user: user | null): Permissions => {
             canEdit: true,    // Pode editar suas empresas
             canDelete: false, // Não pode excluir empresas
           },
+          profissionais: {
+            canCreate: true,  // Pode criar profissionais
+            canEdit: true,    // Pode editar profissionais
+            canDelete: false, // Não pode excluir profissionais
+          },
         };
 
       case 'user':
@@ -158,6 +178,11 @@ export const usePermissions = (user: user | null): Permissions => {
             canDelete: false,
           },
           empresas: {
+            canCreate: false,
+            canEdit: false,
+            canDelete: false,
+          },
+          profissionais: {
             canCreate: false,
             canEdit: false,
             canDelete: false,
@@ -186,13 +211,18 @@ export const usePermissions = (user: user | null): Permissions => {
             canEdit: false,
             canDelete: false,
           },
+          profissionais: {
+            canCreate: false,
+            canEdit: false,
+            canDelete: false,
+          },
         };
     }
   }, [user]);
 };
 
 // Hook auxiliar para verificar permissões específicas
-export const useCanPerform = (user: user | null, action: 'create' | 'edit' | 'delete', entity?: 'grupos' | 'regioes' | 'empresas') => {
+export const useCanPerform = (user: user | null, action: 'create' | 'edit' | 'delete', entity?: 'grupos' | 'regioes' | 'empresas' | 'profissionais') => {
   const permissions = usePermissions(user);
   
   if (entity) {

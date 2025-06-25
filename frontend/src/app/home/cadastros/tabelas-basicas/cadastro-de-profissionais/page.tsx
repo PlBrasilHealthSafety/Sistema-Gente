@@ -118,6 +118,16 @@ export default function CadastroProfissionaisPage() {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [autocompleteResults, setAutocompleteResults] = useState<Profissional[]>([]);
 
+  // Estados para modais
+  const [showViewProfissionalModal, setShowViewProfissionalModal] = useState(false);
+  const [showEditProfissionalModal, setShowEditProfissionalModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteDefinitivoModal, setShowDeleteDefinitivoModal] = useState(false);
+  const [profissionalVisualizando, setProfissionalVisualizando] = useState<Profissional | null>(null);
+  const [profissionalEditando, setProfissionalEditando] = useState<Profissional | null>(null);
+  const [profissionalExcluindo, setProfissionalExcluindo] = useState<Profissional | null>(null);
+  const [profissionalExcluindoDefinitivo, setProfissionalExcluindoDefinitivo] = useState<Profissional | null>(null);
+
   // Estados para CEP e endereço
   const [, setGrupos] = useState<Grupo[]>([]);
   const [, setRegioes] = useState<Regiao[]>([]);
@@ -506,6 +516,21 @@ export default function CadastroProfissionaisPage() {
           updated_by: 1,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
+        },
+        {
+          id: 3,
+          nome: 'Dr. Carlos Oliveira',
+          categoria: 'Fisioterapeuta',
+          sigla_conselho: 'CREFITO',
+          numero_conselho: '98765',
+          externo: false,
+          ofensor: 'Clínica C',
+          clinica: 'Clínica Sul',
+          situacao: 'inativo',
+          created_by: 1,
+          updated_by: 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
       ];
       
@@ -722,6 +747,144 @@ export default function CadastroProfissionaisPage() {
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Função para abrir modal de visualização
+  const handleVisualizarProfissional = (profissional: Profissional) => {
+    setProfissionalVisualizando(profissional);
+    setShowViewProfissionalModal(true);
+  };
+
+  // Função para fechar modal de visualização
+  const handleFecharVisualizacao = () => {
+    setShowViewProfissionalModal(false);
+    setProfissionalVisualizando(null);
+  };
+
+  // Função para abrir modal de edição
+  const handleEditarProfissional = (profissional: Profissional) => {
+    setProfissionalEditando(profissional);
+    setNomeProfissional(profissional.nome);
+    setCategoria(profissional.categoria);
+    setSiglaConselho(profissional.sigla_conselho);
+    setNumeroConselho(profissional.numero_conselho);
+    setExterno(profissional.externo);
+    setOfensor(profissional.ofensor);
+    setClinica(profissional.clinica);
+    setSituacao(profissional.situacao === 'ativo' ? 'Ativo' : 'Inativo');
+    
+    setShowEditProfissionalModal(true);
+  };
+
+  // Função para salvar edição
+  const handleSalvarEdicao = async () => {
+    if (!nomeProfissional.trim()) {
+      showNotification('error', 'Por favor, informe o nome do profissional.');
+      return;
+    }
+    if (!categoria.trim()) {
+      showNotification('error', 'Por favor, informe a categoria.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      // Simulando edição até implementar API
+      showNotification('success', 'Profissional atualizado com sucesso!');
+      handleLimpar();
+      await carregarProfissionais();
+      setShowEditProfissionalModal(false);
+      setProfissionalEditando(null);
+    } catch (error) {
+      console.error('Erro ao atualizar profissional:', error);
+      showNotification('error', 'Erro ao atualizar profissional. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Função para fechar modal de edição
+  const handleFecharEdicao = () => {
+    handleLimpar();
+    setShowEditProfissionalModal(false);
+    setProfissionalEditando(null);
+  };
+
+  // Função para abrir modal de inativação (soft delete)
+  const handleInativarProfissional = (profissional: Profissional) => {
+    setProfissionalExcluindo(profissional);
+    setShowDeleteModal(true);
+  };
+
+  // Função para abrir modal de exclusão definitiva (apenas SUPER_ADMIN)
+  const handleExcluirDefinitivo = (profissional: Profissional) => {
+    setProfissionalExcluindoDefinitivo(profissional);
+    setShowDeleteDefinitivoModal(true);
+  };
+
+  // Função para confirmar inativação (soft delete - marcar como inativo)
+  const handleConfirmarExclusao = async () => {
+    if (!profissionalExcluindo) return;
+    
+    setIsSubmitting(true);
+    try {
+      // Simulando inativação até implementar API
+      showNotification('success', 'Profissional inativado com sucesso!');
+      await carregarProfissionais();
+      setShowDeleteModal(false);
+      setProfissionalExcluindo(null);
+    } catch (error) {
+      console.error('Erro ao inativar profissional:', error);
+      showNotification('error', 'Erro ao inativar profissional. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Função para cancelar inativação
+  const handleCancelarExclusao = () => {
+    setShowDeleteModal(false);
+    setProfissionalExcluindo(null);
+  };
+
+  // Função para confirmar exclusão definitiva
+  const handleConfirmarExclusaoDefinitiva = async () => {
+    if (!profissionalExcluindoDefinitivo) return;
+    
+    setIsSubmitting(true);
+    try {
+      // Simulando exclusão até implementar API
+      showNotification('success', 'Profissional excluído definitivamente!');
+      await carregarProfissionais();
+    } catch (error) {
+      console.error('Erro ao excluir profissional:', error);
+      showNotification('error', 'Erro ao excluir profissional. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+      setShowDeleteDefinitivoModal(false);
+      setProfissionalExcluindoDefinitivo(null);
+    }
+  };
+
+  // Função para cancelar exclusão definitiva
+  const handleCancelarExclusaoDefinitiva = () => {
+    setShowDeleteDefinitivoModal(false);
+    setProfissionalExcluindoDefinitivo(null);
+  };
+
+  // Função para reativar profissional
+  const handleReativarProfissional = async (profissional: Profissional) => {
+    setIsSubmitting(true);
+    try {
+      // Simulando reativação até implementar API
+      showNotification('success', 'Profissional reativado com sucesso!');
+      await carregarProfissionais();
+    } catch (error) {
+      console.error('Erro ao reativar profissional:', error);
+      showNotification('error', 'Erro ao reativar profissional. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1702,6 +1865,8 @@ export default function CadastroProfissionaisPage() {
                         <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Externo</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ofensor</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Clínica</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Situação</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1725,11 +1890,59 @@ export default function CadastroProfissionaisPage() {
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-900">{profissional.ofensor}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{profissional.clinica}</td>
+                            <td className="px-4 py-3 text-sm text-center">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                profissional.situacao === 'ativo' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {profissional.situacao}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <div className="flex space-x-2 justify-center">
+                                <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarProfissional(profissional)}>
+                                  Visualizar
+                                </button>
+                                {permissions.profissionais?.canEdit && (
+                                  <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarProfissional(profissional)}>
+                                    Editar
+                                  </button>
+                                )}
+                                {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando o profissional está inativo */}
+                                {(user?.role === 'admin' || user?.role === 'super_admin') && profissional.situacao === 'inativo' && (
+                                  <button 
+                                    className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
+                                    onClick={() => handleReativarProfissional(profissional)}
+                                  >
+                                    Reativar
+                                  </button>
+                                )}
+                                {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando o profissional está ativo */}
+                                {(user?.role === 'admin' || user?.role === 'super_admin') && profissional.situacao === 'ativo' && (
+                                  <button 
+                                    className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
+                                    onClick={() => handleInativarProfissional(profissional)}
+                                  >
+                                    Inativar
+                                  </button>
+                                )}
+                                {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
+                                {user?.role === 'super_admin' && (
+                                  <button 
+                                    className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
+                                    onClick={() => handleExcluirDefinitivo(profissional)}
+                                  >
+                                    Excluir
+                                  </button>
+                                )}
+                              </div>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                          <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                             Não existem dados para mostrar
                           </td>
                         </tr>
@@ -1742,6 +1955,377 @@ export default function CadastroProfissionaisPage() {
           </div>
         </main>
       </div>
+
+      {/* Modal de Visualização */}
+      {showViewProfissionalModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Visualizar Profissional</h3>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nome
+                    </label>
+                    <input
+                      type="text"
+                      value={profissionalVisualizando?.nome || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Categoria
+                    </label>
+                    <input
+                      type="text"
+                      value={profissionalVisualizando?.categoria || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sigla Conselho
+                    </label>
+                    <input
+                      type="text"
+                      value={profissionalVisualizando?.sigla_conselho || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Número Conselho
+                    </label>
+                    <input
+                      type="text"
+                      value={profissionalVisualizando?.numero_conselho || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Profissional Externo
+                    </label>
+                    <input
+                      type="text"
+                      value={profissionalVisualizando?.externo ? 'Sim' : 'Não'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ofensor
+                    </label>
+                    <input
+                      type="text"
+                      value={profissionalVisualizando?.ofensor || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Clínica
+                    </label>
+                    <input
+                      type="text"
+                      value={profissionalVisualizando?.clinica || 'Não informado'}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Situação
+                    </label>
+                    <input
+                      type="text"
+                      value={profissionalVisualizando?.situacao || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleFecharVisualizacao}
+                    className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    FECHAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição */}
+      {showEditProfissionalModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Editar Profissional</h3>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nome
+                    </label>
+                    <input
+                      type="text"
+                      value={nomeProfissional}
+                      onChange={(e) => setNomeProfissional(formatTexto(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Digite o nome do profissional (apenas letras)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Categoria
+                    </label>
+                    <select
+                      value={categoria}
+                      onChange={(e) => setCategoria(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
+                      <option value="">Selecione uma categoria</option>
+                      <option value="Médico">Médico</option>
+                      <option value="Enfermeiro">Enfermeiro</option>
+                      <option value="Técnico de Enfermagem">Técnico de Enfermagem</option>
+                      <option value="Auxiliar de Enfermagem">Auxiliar de Enfermagem</option>
+                      <option value="Fisioterapeuta">Fisioterapeuta</option>
+                      <option value="Psicólogo">Psicólogo</option>
+                      <option value="Nutricionista">Nutricionista</option>
+                      <option value="Fonoaudiólogo">Fonoaudiólogo</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sigla Conselho
+                    </label>
+                    <select
+                      value={siglaConselho}
+                      onChange={(e) => setSiglaConselho(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
+                      <option value="">Selecione a sigla</option>
+                      <option value="CRM">CRM</option>
+                      <option value="COREN">COREN</option>
+                      <option value="CREFITO">CREFITO</option>
+                      <option value="CRP">CRP</option>
+                      <option value="CRN">CRN</option>
+                      <option value="CRFa">CRFa</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Número Conselho
+                    </label>
+                    <input
+                      type="text"
+                      value={numeroConselho}
+                      onChange={(e) => setNumeroConselho(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Digite o número do conselho"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Profissional Externo
+                    </label>
+                    <select
+                      value={externo ? 'true' : 'false'}
+                      onChange={(e) => setExterno(e.target.value === 'true')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
+                      <option value="false">Não</option>
+                      <option value="true">Sim</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ofensor
+                    </label>
+                    <input
+                      type="text"
+                      value={ofensor}
+                      onChange={(e) => setOfensor(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Digite o ofensor"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Clínica
+                    </label>
+                    <input
+                      type="text"
+                      value={clinica}
+                      onChange={(e) => setClinica(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Digite a clínica"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Situação
+                    </label>
+                    <select
+                      value={situacao}
+                      onChange={(e) => setSituacao(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
+                      <option value="Ativo">Ativo</option>
+                      <option value="Inativo">Inativo</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleSalvarEdicao}
+                    disabled={isSubmitting}
+                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? 'SALVANDO...' : 'SALVAR'}
+                  </button>
+                  <button
+                    onClick={handleLimpar}
+                    className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    LIMPAR
+                  </button>
+                  <button
+                    onClick={handleFecharEdicao}
+                    className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    RETORNAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Inativação */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Inativação</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja inativar o profissional &quot;{profissionalExcluindo?.nome}&quot;?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>Atenção:</strong> O profissional será marcado como inativo e não aparecerá mais nos seletores. Esta ação pode ser revertida alterando o status para ativo novamente.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelarExclusao}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarExclusao}
+                  disabled={isSubmitting}
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Inativando...' : 'Sim, Inativar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão Definitiva */}
+      {showDeleteDefinitivoModal && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Excluir Definitivamente</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja excluir DEFINITIVAMENTE o profissional &quot;{profissionalExcluindoDefinitivo?.nome}&quot;?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-red-800">
+                  <strong>ATENÇÃO:</strong> Esta ação é irreversível! O profissional será excluído permanentemente do banco de dados e não poderá ser recuperado.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelarExclusaoDefinitiva}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarExclusaoDefinitiva}
+                  disabled={isSubmitting}
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Excluindo...' : 'Sim, Excluir Definitivamente'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

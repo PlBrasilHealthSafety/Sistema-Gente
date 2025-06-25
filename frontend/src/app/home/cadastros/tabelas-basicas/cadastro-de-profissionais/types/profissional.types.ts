@@ -21,50 +21,26 @@ export interface User {
 export interface Profissional {
   id: number;
   nome: string;
-  nacionalidade: string;
-  cpf: string;
+  cpf?: string;
+  rg?: string;
+  data_nascimento?: Date | string;
   nis?: string;
   categoria: string;
   sigla_conselho: string;
   numero_conselho: string;
-  reg_conselho: string;
-  uf_conselho: string;
-  reg_mte?: string;
-  
-  // Endereço
-  cep: string;
-  tipo_logradouro: string;
-  logradouro: string;
-  numero: string;
-  complemento?: string;
-  uf_endereco: string;
-  cidade: string;
-  bairro: string;
-  
-  // Contato
-  email: string;
   telefone?: string;
-  ddd: string;
-  celular: string;
-  
-  // Informações adicionais
-  observacao?: string;
-  agendamento_horario: boolean;
-  profissional_externo: boolean;
-  assinatura_digital?: string;
-  certificado_digital?: string;
-  situacao: 'ativo' | 'inativo';
-  
-  // Campos legados para compatibilidade
+  celular?: string;
+  email?: string;
+  observacoes?: string;
   externo: boolean;
   ofensor?: string;
   clinica?: string;
-  
-  // Metadados
-  created_by: number;
-  updated_by: number;
-  created_at: string;
-  updated_at: string;
+  situacao: 'ativo' | 'inativo'; // Mantendo compatibilidade com page.tsx
+  status?: 'ativo' | 'inativo'; // Para compatibilidade com hooks
+  created_by?: number;
+  updated_by?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Endereco {
@@ -108,36 +84,18 @@ export interface FormErrors {
 
 export interface ProfissionalFormData {
   nome: string;
-  nacionalidade: string;
   cpf: string;
+  rg?: string;
+  dataNascimento?: string;
   nis?: string;
   categoria: string;
-  sigla_conselho: string;
-  reg_conselho: string;
-  uf_conselho: string;
-  reg_mte?: string;
-  
-  // Endereço
-  cep: string;
-  tipo_logradouro: string;
-  logradouro: string;
-  numero: string;
-  complemento?: string;
-  uf_endereco: string;
-  cidade: string;
-  bairro: string;
-  
-  // Contato
-  email: string;
+  siglaConselho?: string;
+  numeroConselho?: string;
   telefone?: string;
-  ddd: string;
-  celular: string;
-  
-  // Informações adicionais
-  observacao?: string;
-  agendamento_horario: boolean;
-  profissional_externo: boolean;
-  assinatura_digital?: string;
-  certificado_digital?: string;
-  situacao?: 'ativo' | 'inativo';
+  celular?: string;
+  email?: string;
+  observacoes?: string;
+  externo: boolean;
+  ofensor?: string;
+  clinica?: string;
 } 

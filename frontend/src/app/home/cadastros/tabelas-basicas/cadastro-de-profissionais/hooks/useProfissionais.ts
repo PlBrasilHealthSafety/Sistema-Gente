@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNotification } from './useNotification';
 import { Profissional } from '../types/profissional.types';
 import { profissionaisService } from '../services/profissionaisService';
 
@@ -6,6 +7,7 @@ export const useProfissionais = () => {
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
   const [filteredProfissionais, setFilteredProfissionais] = useState<Profissional[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { showNotification } = useNotification();
 
   const carregarProfissionais = useCallback(async () => {
     console.log('=== CARREGANDO PROFISSIONAIS ===');
@@ -56,8 +58,11 @@ export const useProfissionais = () => {
 
     // Filtrar por situação se não for "todos"
     if (situacao && situacao !== 'todos') {
-      const status = situacao === 'ativo' ? 'ativo' : 'inativo';
-      filtered = filtered.filter(profissional => profissional.situacao === status);
+      const statusBuscado = situacao === 'ativo' ? 'ativo' : 'inativo';
+      filtered = filtered.filter(profissional => {
+        const statusProfissional = profissional.situacao || profissional.status || 'ativo';
+        return statusProfissional === statusBuscado;
+      });
     }
 
     setFilteredProfissionais(filtered);
@@ -86,12 +91,60 @@ export const useProfissionais = () => {
     }).slice(0, 5); // Limitar a 5 resultados
   }, [profissionais]);
 
+  const criarProfissional = useCallback(async (dadosProfissional: Partial<Profissional>) => {
+    try {
+      setIsLoading(true);
+      const novoProfissional = await profissionaisService.criarProfissional(dadosProfissional);
+      showNotification('success', 'Profissional cadastrado com sucesso!');
+      return { success: true, data: novoProfissional };
+    } catch (error: any) {
+      console.error('Erro ao criar profissional:', error);
+      showNotification('error', error.message || 'Erro ao cadastrar profissional');
+      return { success: false, error: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
+  const atualizarProfissional = useCallback(async (id: number, dadosProfissional: Partial<Profissional>) => {
+    try {
+      setIsLoading(true);
+      const profissionalAtualizado = await profissionaisService.atualizarProfissional(id, dadosProfissional);
+      showNotification('success', 'Profissional atualizado com sucesso!');
+      return { success: true, data: profissionalAtualizado };
+    } catch (error: any) {
+      console.error('Erro ao atualizar profissional:', error);
+      showNotification('error', error.message || 'Erro ao atualizar profissional');
+      return { success: false, error: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
+  const excluirProfissional = useCallback(async (id: number) => {
+    try {
+      setIsLoading(true);
+      await profissionaisService.excluirProfissional(id);
+      showNotification('success', 'Profissional excluído com sucesso!');
+      return { success: true };
+    } catch (error: any) {
+      console.error('Erro ao excluir profissional:', error);
+      showNotification('error', error.message || 'Erro ao excluir profissional');
+      return { success: false, error: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
   return {
     profissionais,
     filteredProfissionais,
-    isLoading,
+    loading: isLoading,
     carregarProfissionais,
     aplicarFiltros,
-    buscarAutocomplete
+    buscarAutocomplete,
+    criarProfissional,
+    atualizarProfissional,
+    excluirProfissional
   };
 }; 

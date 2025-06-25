@@ -4,6 +4,24 @@ import { formatCPF, formatTelefone, formatDDD } from '../utils/formatters';
 import { validateProfissionalForm, hasFormErrors } from '../utils/validations';
 import { formatCEP, isValidCEP } from '@/utils/masks';
 
+interface FormDataCompatibility {
+  nome: string;
+  cpf: string;
+  rg: string;
+  dataNascimento: string;
+  nis: string;
+  categoria: string;
+  siglaConselho: string;
+  numeroConselho: string;
+  telefone: string;
+  celular: string;
+  email: string;
+  observacoes: string;
+  externo: boolean;
+  ofensor: string;
+  clinica: string;
+}
+
 export const useFormularioProfissional = () => {
   // Estados do formulário de dados cadastrais
   const [nomeProfissional, setNomeProfissional] = useState('');
@@ -64,6 +82,45 @@ export const useFormularioProfissional = () => {
     ddd: '',
     celular: ''
   });
+
+  // Estados adicionais para compatibilidade
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rg, setRg] = useState('');
+  const [dataNascimento, setDataNascimento] = useState('');
+  const [numeroConselho, setNumeroConselho] = useState('');
+  const [observacoes, setObservacoes] = useState('');
+  const [externo, setExterno] = useState(false);
+  const [ofensor, setOfensor] = useState('');
+  const [clinica, setClinica] = useState('');
+
+  // Objeto formData para compatibilidade
+  const formData: FormDataCompatibility = {
+    nome: nomeProfissional,
+    cpf,
+    rg,
+    dataNascimento,
+    nis,
+    categoria,
+    siglaConselho,
+    numeroConselho,
+    telefone,
+    celular,
+    email,
+    observacoes,
+    externo,
+    ofensor,
+    clinica
+  };
+
+  // Objeto erros para compatibilidade
+  const erros = {
+    nome: errors.nomeProfissional,
+    cpf: errors.cpf,
+    nis: errors.cpf, // Assumindo que nis usa validação similar
+    categoria: errors.categoria,
+    telefone: errors.celular, // Assumindo que telefone usa validação similar
+    celular: errors.celular
+  };
 
   // Função para buscar CEP
   const buscarCep = async (cepValue: string) => {
@@ -136,7 +193,7 @@ export const useFormularioProfissional = () => {
 
   // Validação do formulário
   const validateForm = (): boolean => {
-    const formData = {
+    const formDataValidation = {
       nomeProfissional,
       nacionalidade,
       cpf,
@@ -156,9 +213,14 @@ export const useFormularioProfissional = () => {
       celular
     };
 
-    const newErrors = validateProfissionalForm(formData);
+    const newErrors = validateProfissionalForm(formDataValidation);
     setErrors(newErrors);
     return !hasFormErrors(newErrors);
+  };
+
+  // Validar formulário (compatibilidade)
+  const validarFormulario = (): boolean => {
+    return validateForm();
   };
 
   // Limpar formulário
@@ -200,6 +262,15 @@ export const useFormularioProfissional = () => {
     setCertificadoDigital('');
     setSituacao('Ativo');
     
+    // Compatibilidade
+    setRg('');
+    setDataNascimento('');
+    setNumeroConselho('');
+    setObservacoes('');
+    setExterno(false);
+    setOfensor('');
+    setClinica('');
+    
     // Limpar erros
     setErrors({
       nomeProfissional: '',
@@ -220,6 +291,53 @@ export const useFormularioProfissional = () => {
       ddd: '',
       celular: ''
     });
+  };
+
+  // Reset form (compatibilidade)
+  const resetForm = () => {
+    limparFormulario();
+  };
+
+  // Limpar erros (compatibilidade)
+  const limparErros = () => {
+    setErrors({
+      nomeProfissional: '',
+      nacionalidade: '',
+      cpf: '',
+      categoria: '',
+      siglaConselho: '',
+      regConselho: '',
+      ufConselho: '',
+      cep: '',
+      tipoLogradouro: '',
+      logradouro: '',
+      numero: '',
+      ufEndereco: '',
+      cidade: '',
+      bairro: '',
+      email: '',
+      ddd: '',
+      celular: ''
+    });
+  };
+
+  // Função para definir formData
+  const setFormData = (newFormData: Partial<FormDataCompatibility>) => {
+    if (newFormData.nome !== undefined) setNomeProfissional(newFormData.nome);
+    if (newFormData.cpf !== undefined) setCpf(newFormData.cpf);
+    if (newFormData.rg !== undefined) setRg(newFormData.rg);
+    if (newFormData.dataNascimento !== undefined) setDataNascimento(newFormData.dataNascimento);
+    if (newFormData.nis !== undefined) setNis(newFormData.nis);
+    if (newFormData.categoria !== undefined) setCategoria(newFormData.categoria);
+    if (newFormData.siglaConselho !== undefined) setSiglaConselho(newFormData.siglaConselho);
+    if (newFormData.numeroConselho !== undefined) setNumeroConselho(newFormData.numeroConselho);
+    if (newFormData.telefone !== undefined) setTelefone(newFormData.telefone);
+    if (newFormData.celular !== undefined) setCelular(newFormData.celular);
+    if (newFormData.email !== undefined) setEmail(newFormData.email);
+    if (newFormData.observacoes !== undefined) setObservacoes(newFormData.observacoes);
+    if (newFormData.externo !== undefined) setExterno(newFormData.externo);
+    if (newFormData.ofensor !== undefined) setOfensor(newFormData.ofensor);
+    if (newFormData.clinica !== undefined) setClinica(newFormData.clinica);
   };
 
   // Carregar dados de um profissional para edição
@@ -301,6 +419,15 @@ export const useFormularioProfissional = () => {
   };
 
   return {
+    // Propriedades de compatibilidade
+    formData,
+    erros,
+    isSubmitting,
+    resetForm,
+    setFormData,
+    validarFormulario,
+    limparErros,
+
     // Estados do formulário
     nomeProfissional,
     nacionalidade,
@@ -327,6 +454,15 @@ export const useFormularioProfissional = () => {
     situacao,
     errors,
 
+    // Estados adicionais
+    rg,
+    dataNascimento,
+    numeroConselho,
+    observacoes,
+    externo,
+    ofensor,
+    clinica,
+
     // Setters
     setNomeProfissional,
     setNacionalidade,
@@ -350,6 +486,7 @@ export const useFormularioProfissional = () => {
     setCertificadoDigital,
     setSituacao,
     setErrors,
+    setIsSubmitting,
 
     // Handlers
     handleCepChange,

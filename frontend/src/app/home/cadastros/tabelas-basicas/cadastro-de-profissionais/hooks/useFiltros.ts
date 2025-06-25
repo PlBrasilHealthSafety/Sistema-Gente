@@ -1,12 +1,81 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Profissional } from '../types/profissional.types';
 
-export const useFiltros = () => {
+interface FiltrosType {
+  tipoPesquisa: string;
+  nomeBusca: string;
+  situacaoBusca: string;
+}
+
+export const useFiltros = (profissionais: Profissional[] = []) => {
   const [tipoPesquisa, setTipoPesquisa] = useState('nome');
   const [nomeBusca, setNomeBusca] = useState('');
   const [situacaoBusca, setSituacaoBusca] = useState('ativo');
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [autocompleteResults, setAutocompleteResults] = useState<Profissional[]>([]);
+
+  // Objeto filtros para compatibilidade
+  const filtros: FiltrosType = {
+    tipoPesquisa,
+    nomeBusca,
+    situacaoBusca
+  };
+
+  // Profissionais filtrados
+  const profissionaisFiltrados = useMemo(() => {
+    if (!profissionais || profissionais.length === 0) return [];
+
+    return profissionais.filter(profissional => {
+      // Filtro por situação
+      if (situacaoBusca !== 'todos') {
+        const status = profissional.situacao || profissional.status || 'ativo';
+        const situacaoMatch = situacaoBusca === 'ativo' 
+          ? status === 'ativo' 
+          : status === 'inativo';
+        if (!situacaoMatch) return false;
+      }
+
+      // Filtro por busca
+      if (nomeBusca.trim()) {
+        switch (tipoPesquisa) {
+          case 'nome':
+            return profissional.nome?.toLowerCase().includes(nomeBusca.toLowerCase());
+          case 'categoria':
+            return profissional.categoria?.toLowerCase().includes(nomeBusca.toLowerCase());
+          case 'numero_conselho':
+            return profissional.numero_conselho?.toLowerCase().includes(nomeBusca.toLowerCase());
+          default:
+            return true;
+        }
+      }
+
+      return true;
+    });
+  }, [profissionais, tipoPesquisa, nomeBusca, situacaoBusca]);
+
+  // Função para atualizar filtros
+  const atualizarFiltro = (campo: string, valor: string) => {
+    switch (campo) {
+      case 'tipoPesquisa':
+        setTipoPesquisa(valor);
+        setNomeBusca(''); // Limpar busca ao trocar tipo
+        setShowAutocomplete(false);
+        break;
+      case 'nomeBusca':
+        setNomeBusca(valor);
+        break;
+      case 'situacaoBusca':
+        setSituacaoBusca(valor);
+        break;
+    }
+  };
+
+  // Função para aplicar filtros (pode ser expandida no futuro)
+  const aplicarFiltros = () => {
+    // Por enquanto, os filtros são aplicados automaticamente via useMemo
+    // Esta função pode ser expandida para funcionalidades adicionais
+    console.log('Aplicando filtros:', filtros);
+  };
 
   const limparFiltros = () => {
     setTipoPesquisa('nome');
@@ -66,6 +135,12 @@ export const useFiltros = () => {
   };
 
   return {
+    // Propriedades principais
+    filtros,
+    profissionaisFiltrados,
+    atualizarFiltro,
+    aplicarFiltros,
+
     // Estados
     tipoPesquisa,
     nomeBusca,

@@ -1,34 +1,46 @@
 import { Profissional } from '../types/profissional.types';
 import { formatTexto } from '@/utils/masks';
 
-interface FormularioBuscaProps {
-  // Estados de busca
+interface FiltrosType {
   tipoPesquisa: string;
   nomeBusca: string;
   situacaoBusca: string;
+}
+
+interface FormularioBuscaProps {
+  // Objeto filtros
+  filtros?: FiltrosType;
+  
+  // Estados de busca individuais (para compatibilidade)
+  tipoPesquisa?: string;
+  nomeBusca?: string;
+  situacaoBusca?: string;
   
   // Autocomplete
-  showAutocomplete: boolean;
-  autocompleteResults: Profissional[];
+  showAutocomplete?: boolean;
+  autocompleteResults?: Profissional[];
   
   // Callbacks
-  onTipoPesquisaChange: (tipo: string) => void;
-  onNomeBuscaChange: (texto: string) => void;
-  onSituacaoBuscaChange: (situacao: string) => void;
+  onFiltroChange?: (campo: string, valor: string) => void;
+  onTipoPesquisaChange?: (tipo: string) => void;
+  onNomeBuscaChange?: (texto: string) => void;
+  onSituacaoBuscaChange?: (situacao: string) => void;
   onProcurar: () => void;
   onNovoProfissional: () => void;
-  onRecarregar: () => void;
-  onSelectAutocomplete: (profissional: Profissional) => void;
-  getPlaceholder: (tipo: string) => string;
-  destacarTexto: (texto: string, busca: string) => React.ReactNode;
+  onRecarregar: () => void | Promise<void>;
+  onSelectAutocomplete?: (profissional: Profissional) => void;
+  getPlaceholder?: (tipo: string) => string;
+  destacarTexto?: (texto: string, busca: string) => React.ReactNode;
 }
 
 export default function FormularioBusca({
-  tipoPesquisa,
-  nomeBusca,
-  situacaoBusca,
-  showAutocomplete,
-  autocompleteResults,
+  filtros,
+  tipoPesquisa: tipoPesquisaProp,
+  nomeBusca: nomeBuscaProp,
+  situacaoBusca: situacaoBuscaProp,
+  showAutocomplete = false,
+  autocompleteResults = [],
+  onFiltroChange,
   onTipoPesquisaChange,
   onNomeBuscaChange,
   onSituacaoBuscaChange,
@@ -39,6 +51,76 @@ export default function FormularioBusca({
   getPlaceholder,
   destacarTexto
 }: FormularioBuscaProps) {
+  
+  // Usar valores do objeto filtros se disponível, senão usar props individuais
+  const tipoPesquisa = filtros?.tipoPesquisa ?? tipoPesquisaProp ?? 'nome';
+  const nomeBusca = filtros?.nomeBusca ?? nomeBuscaProp ?? '';
+  const situacaoBusca = filtros?.situacaoBusca ?? situacaoBuscaProp ?? 'ativo';
+
+  // Função para lidar com mudanças
+  const handleTipoPesquisaChange = (tipo: string) => {
+    if (onFiltroChange) {
+      onFiltroChange('tipoPesquisa', tipo);
+    } else if (onTipoPesquisaChange) {
+      onTipoPesquisaChange(tipo);
+    }
+  };
+
+  const handleNomeBuscaChange = (texto: string) => {
+    if (onFiltroChange) {
+      onFiltroChange('nomeBusca', texto);
+    } else if (onNomeBuscaChange) {
+      onNomeBuscaChange(texto);
+    }
+  };
+
+  const handleSituacaoBuscaChange = (situacao: string) => {
+    if (onFiltroChange) {
+      onFiltroChange('situacaoBusca', situacao);
+    } else if (onSituacaoBuscaChange) {
+      onSituacaoBuscaChange(situacao);
+    }
+  };
+
+  // Função padrão para placeholder
+  const defaultGetPlaceholder = (type: string) => {
+    switch (type) {
+      case 'nome':
+        return 'Digite o nome do profissional...';
+      case 'categoria':
+        return 'Digite a categoria (ex: Médico, Enfermeiro)...';
+      case 'numero_conselho':
+        return 'Digite o número do conselho...';
+      default:
+        return 'Digite para pesquisar...';
+    }
+  };
+
+  // Função padrão para destacar texto
+  const defaultDestacarTexto = (texto: string, busca: string): React.ReactNode => {
+    if (!busca.trim()) return texto;
+    
+    const regex = new RegExp(`(${busca})`, 'gi');
+    const parts = texto.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="bg-yellow-200 font-semibold">{part}</span>
+      ) : (
+        part
+      )
+    );
+  };
+
+  const handleRecarregar = async () => {
+    if (typeof onRecarregar === 'function') {
+      const result = onRecarregar();
+      if (result instanceof Promise) {
+        await result;
+      }
+    }
+  };
+
   return (
     <div className="p-6 border-b border-gray-200">
       <div className="flex flex-wrap gap-2 items-end">
@@ -48,7 +130,7 @@ export default function FormularioBusca({
           </label>
           <select 
             value={tipoPesquisa}
-            onChange={(e) => onTipoPesquisaChange(e.target.value)}
+            onChange={(e) => handleTipoPesquisaChange(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
           >
             <option value="nome">Nome</option>
@@ -63,7 +145,7 @@ export default function FormularioBusca({
             value={nomeBusca}
             onChange={(e) => {
               const value = tipoPesquisa === 'numero_conselho' ? e.target.value : formatTexto(e.target.value);
-              onNomeBuscaChange(value);
+              handleNomeBuscaChange(value);
             }}
             onFocus={() => {
               if (nomeBusca.trim()) {
@@ -75,12 +157,12 @@ export default function FormularioBusca({
                 // Hide autocomplete after delay to allow click
               }, 200);
             }}
-            placeholder={getPlaceholder(tipoPesquisa)}
+            placeholder={(getPlaceholder || defaultGetPlaceholder)(tipoPesquisa)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
           />
           
           {/* Dropdown do autocomplete */}
-          {showAutocomplete && autocompleteResults.length > 0 && (
+          {showAutocomplete && autocompleteResults.length > 0 && onSelectAutocomplete && (
             <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {autocompleteResults.map((profissional) => (
                 <div
@@ -88,10 +170,12 @@ export default function FormularioBusca({
                   onClick={() => onSelectAutocomplete(profissional)}
                   className="px-4 py-3 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
                 >
-                  <div className="font-medium text-gray-900">{destacarTexto(profissional.nome, nomeBusca)}</div>
+                  <div className="font-medium text-gray-900">
+                    {(destacarTexto || defaultDestacarTexto)(profissional.nome, nomeBusca)}
+                  </div>
                   <div className="text-sm text-gray-500">{profissional.categoria}</div>
                   <div className="text-xs text-blue-600 mt-1">
-                    Situação: {profissional.situacao}
+                    Situação: {profissional.situacao || profissional.status || 'ativo'}
                   </div>
                 </div>
               ))}
@@ -105,7 +189,7 @@ export default function FormularioBusca({
           </label>
           <select 
             value={situacaoBusca}
-            onChange={(e) => onSituacaoBuscaChange(e.target.value)}
+            onChange={(e) => handleSituacaoBuscaChange(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
           >
             <option value="ativo">Ativo</option>
@@ -129,7 +213,7 @@ export default function FormularioBusca({
         </button>
         
         <button 
-          onClick={onRecarregar}
+          onClick={handleRecarregar}
           className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
         >
           RECARREGAR

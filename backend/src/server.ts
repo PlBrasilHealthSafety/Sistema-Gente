@@ -9,6 +9,7 @@ import userRoutes from './routes/userRoutes';
 import grupoRoutes from './routes/grupoRoutes';
 import regiaoRoutes from './routes/regiaoRoutes';
 import empresaRoutes from './routes/empresaRoutes';
+import profissionalRoutes from './routes/profissionalRoutes';
 import { initializeDatabase } from './utils/initDatabase';
 
 // Configurar dotenv para usar local.env
@@ -30,6 +31,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/grupos', grupoRoutes);
 app.use('/api/regioes', regiaoRoutes);
 app.use('/api/empresas', empresaRoutes);
+app.use('/api/profissionais', profissionalRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {
@@ -43,6 +45,7 @@ app.get('/', (req, res) => {
       grupos: '/api/grupos',
       regioes: '/api/regioes',
       empresas: '/api/empresas',
+      profissionais: '/api/profissionais',
       health: '/health',
       db_test: '/db-test'
     }
