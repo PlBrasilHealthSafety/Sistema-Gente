@@ -77,6 +77,11 @@ export const useFiltros = (profissionais: Profissional[] = []) => {
     console.log('Aplicando filtros:', filtros);
   };
 
+  // Função para filtrar profissionais (compatibilidade)
+  const filtrarProfissionais = () => {
+    aplicarFiltros();
+  };
+
   const limparFiltros = () => {
     setTipoPesquisa('nome');
     setNomeBusca('');
@@ -140,6 +145,7 @@ export const useFiltros = (profissionais: Profissional[] = []) => {
     profissionaisFiltrados,
     atualizarFiltro,
     aplicarFiltros,
+    filtrarProfissionais,
 
     // Estados
     tipoPesquisa,

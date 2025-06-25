@@ -418,6 +418,41 @@ export const useFormularioProfissional = () => {
     };
   };
 
+  // Função para salvar profissional
+  const salvarProfissional = async (): Promise<boolean> => {
+    if (!validateForm()) {
+      return false;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const dadosProfissional = getFormData();
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('http://localhost:3001/api/profissionais', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dadosProfissional)
+      });
+
+      if (response.ok) {
+        limparFormulario();
+        return true;
+      } else {
+        console.error('Erro ao salvar profissional');
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro ao salvar profissional:', error);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     // Propriedades de compatibilidade
     formData,
@@ -465,6 +500,10 @@ export const useFormularioProfissional = () => {
 
     // Setters
     setNomeProfissional,
+    setNumeroConselho,
+    setExterno,
+    setOfensor,
+    setClinica,
     setNacionalidade,
     setCpf,
     setNis,
@@ -499,6 +538,7 @@ export const useFormularioProfissional = () => {
     validateForm,
     limparFormulario,
     carregarProfissional,
-    getFormData
+    getFormData,
+    salvarProfissional
   };
 }; 

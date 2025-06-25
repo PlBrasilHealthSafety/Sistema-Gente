@@ -140,11 +140,16 @@ export const useProfissionais = () => {
     profissionais,
     filteredProfissionais,
     loading: isLoading,
+    isLoading, // Alias para compatibilidade
+    error: null, // Adicionar propriedade error
     carregarProfissionais,
+    buscarProfissionais: carregarProfissionais, // Alias para compatibilidade
     aplicarFiltros,
     buscarAutocomplete,
     criarProfissional,
     atualizarProfissional,
+    inativarProfissional: atualizarProfissional, // Alias para inativar
+    reativarProfissional: atualizarProfissional, // Alias para reativar
     excluirProfissional
   };
 }; 

@@ -27,6 +27,7 @@ interface ProfissionalModalsProps {
   onOfensorChange: (value: string) => void;
   onClinicaChange: (value: string) => void;
   onSituacaoChange: (value: string) => void;
+  onSave: () => void;
   onSaveEdit: () => void;
   onClearEdit: () => void;
   onCloseEdit: () => void;
@@ -70,6 +71,7 @@ export default function ProfissionalModals({
   onOfensorChange,
   onClinicaChange,
   onSituacaoChange,
+  onSave,
   onSaveEdit,
   onClearEdit,
   onCloseEdit,
