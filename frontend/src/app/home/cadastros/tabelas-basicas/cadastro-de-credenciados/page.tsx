@@ -48,7 +48,7 @@ export default function CadastroCredenciados() {
   // Estados para filtros e busca
   const [pesquisarPor, setPesquisarPor] = useState('Nome');
   const [termoBusca, setTermoBusca] = useState('');
-  const [situacao, setSituacao] = useState('Ativo');
+  const [situacao, setSituacao] = useState('Todos');
   const [credenciadosFiltrados, setCredenciadosFiltrados] = useState<Credenciado[]>([]);
   
   // Estados para paginação
@@ -58,6 +58,13 @@ export default function CadastroCredenciados() {
   // Estados para formulário de cadastro
   const [showCadastroModal, setShowCadastroModal] = useState(false);
   const [activeTab, setActiveTab] = useState('dados-gerais');
+  const [modoEdicao, setModoEdicao] = useState(false);
+  const [credenciadoEditando, setCredenciadoEditando] = useState<string | null>(null);
+  
+  // Estados para modais de confirmação
+  const [showConfirmacaoExclusao, setShowConfirmacaoExclusao] = useState(false);
+  const [showConfirmacaoInativacao, setShowConfirmacaoInativacao] = useState(false);
+  const [credenciadoParaAcao, setCredenciadoParaAcao] = useState<Credenciado | null>(null);
   
   // Estados dos campos do formulário
   const [formData, setFormData] = useState({
@@ -74,7 +81,15 @@ export default function CadastroCredenciados() {
     uf: '',
     cidade: '',
     bairro: '',
-    horario: '',
+    horarioFuncionamento: {
+      segunda: { ativo: false, inicio: '', fim: '' },
+      terca: { ativo: false, inicio: '', fim: '' },
+      quarta: { ativo: false, inicio: '', fim: '' },
+      quinta: { ativo: false, inicio: '', fim: '' },
+      sexta: { ativo: false, inicio: '', fim: '' },
+      sabado: { ativo: false, inicio: '', fim: '' },
+      domingo: { ativo: false, inicio: '', fim: '' }
+    },
     observacoesExames: '',
     observacoesGerais: '',
     utilizarPercentual: false,
@@ -83,6 +98,12 @@ export default function CadastroCredenciados() {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Estados para aplicação rápida de horários
+  const [horarioRapido, setHorarioRapido] = useState({
+    inicio: '08:00',
+    fim: '18:00'
+  });
 
   // Verificação de autenticação
   useEffect(() => {
@@ -103,7 +124,7 @@ export default function CadastroCredenciados() {
   // Efeito para filtrar credenciados
   useEffect(() => {
     let resultados = mockCredenciados.filter(credenciado => {
-      const matchSituacao = credenciado.situacao === situacao;
+      const matchSituacao = situacao === 'Todos' || credenciado.situacao === situacao;
       const matchBusca = termoBusca === '' || 
         credenciado.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
         credenciado.cnpj.includes(termoBusca) ||
@@ -155,7 +176,15 @@ export default function CadastroCredenciados() {
       uf: '',
       cidade: '',
       bairro: '',
-      horario: '',
+      horarioFuncionamento: {
+        segunda: { ativo: false, inicio: '', fim: '' },
+        terca: { ativo: false, inicio: '', fim: '' },
+        quarta: { ativo: false, inicio: '', fim: '' },
+        quinta: { ativo: false, inicio: '', fim: '' },
+        sexta: { ativo: false, inicio: '', fim: '' },
+        sabado: { ativo: false, inicio: '', fim: '' },
+        domingo: { ativo: false, inicio: '', fim: '' }
+      },
       observacoesExames: '',
       observacoesGerais: '',
       utilizarPercentual: false,
@@ -166,6 +195,8 @@ export default function CadastroCredenciados() {
 
   const handleFecharCadastro = () => {
     setShowCadastroModal(false);
+    setModoEdicao(false);
+    setCredenciadoEditando(null);
     setFormData({
       nome: '',
       telefone: '',
@@ -180,7 +211,15 @@ export default function CadastroCredenciados() {
       uf: '',
       cidade: '',
       bairro: '',
-      horario: '',
+      horarioFuncionamento: {
+        segunda: { ativo: false, inicio: '', fim: '' },
+        terca: { ativo: false, inicio: '', fim: '' },
+        quarta: { ativo: false, inicio: '', fim: '' },
+        quinta: { ativo: false, inicio: '', fim: '' },
+        sexta: { ativo: false, inicio: '', fim: '' },
+        sabado: { ativo: false, inicio: '', fim: '' },
+        domingo: { ativo: false, inicio: '', fim: '' }
+      },
       observacoesExames: '',
       observacoesGerais: '',
       utilizarPercentual: false,
@@ -199,6 +238,63 @@ export default function CadastroCredenciados() {
   const handleCheckboxChange = (field: string, checked: boolean) => {
     setFormData(prev => ({ ...prev, [field]: checked }));
   };
+
+  // Função para gerenciar horários de funcionamento
+  const handleHorarioChange = (dia: string, campo: string, valor: string | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      horarioFuncionamento: {
+        ...prev.horarioFuncionamento,
+        [dia]: {
+          ...prev.horarioFuncionamento[dia as keyof typeof prev.horarioFuncionamento],
+          [campo]: valor
+        }
+      }
+    }));
+  };
+
+  // Funções para atalhos de horário
+  const aplicarHorarioTodosDias = (inicio: string, fim: string) => {
+    const novoHorario = { ...formData.horarioFuncionamento };
+    diasSemana.forEach(dia => {
+      novoHorario[dia.key as keyof typeof novoHorario] = { ativo: true, inicio, fim };
+    });
+    setFormData(prev => ({ ...prev, horarioFuncionamento: novoHorario }));
+  };
+
+  const aplicarHorarioSegundaSexta = (inicio: string, fim: string) => {
+    const novoHorario = { ...formData.horarioFuncionamento };
+    ['segunda', 'terca', 'quarta', 'quinta', 'sexta'].forEach(dia => {
+      novoHorario[dia as keyof typeof novoHorario] = { ativo: true, inicio, fim };
+    });
+    setFormData(prev => ({ ...prev, horarioFuncionamento: novoHorario }));
+  };
+
+  const aplicarHorarioFimSemana = (inicio: string, fim: string) => {
+    const novoHorario = { ...formData.horarioFuncionamento };
+    ['sabado', 'domingo'].forEach(dia => {
+      novoHorario[dia as keyof typeof novoHorario] = { ativo: true, inicio, fim };
+    });
+    setFormData(prev => ({ ...prev, horarioFuncionamento: novoHorario }));
+  };
+
+  const limparTodosHorarios = () => {
+    const novoHorario = { ...formData.horarioFuncionamento };
+    diasSemana.forEach(dia => {
+      novoHorario[dia.key as keyof typeof novoHorario] = { ativo: false, inicio: '', fim: '' };
+    });
+    setFormData(prev => ({ ...prev, horarioFuncionamento: novoHorario }));
+  };
+
+  const diasSemana = [
+    { key: 'segunda', label: 'Segunda-feira' },
+    { key: 'terca', label: 'Terça-feira' },
+    { key: 'quarta', label: 'Quarta-feira' },
+    { key: 'quinta', label: 'Quinta-feira' },
+    { key: 'sexta', label: 'Sexta-feira' },
+    { key: 'sabado', label: 'Sábado' },
+    { key: 'domingo', label: 'Domingo' }
+  ];
 
   const handleSalvarCredenciado = async () => {
     // Validar campos obrigatórios
@@ -272,13 +368,91 @@ export default function CadastroCredenciados() {
       uf: '',
       cidade: '',
       bairro: '',
-      horario: '',
+      horarioFuncionamento: {
+        segunda: { ativo: false, inicio: '', fim: '' },
+        terca: { ativo: false, inicio: '', fim: '' },
+        quarta: { ativo: false, inicio: '', fim: '' },
+        quinta: { ativo: false, inicio: '', fim: '' },
+        sexta: { ativo: false, inicio: '', fim: '' },
+        sabado: { ativo: false, inicio: '', fim: '' },
+        domingo: { ativo: false, inicio: '', fim: '' }
+      },
       observacoesExames: '',
       observacoesGerais: '',
       utilizarPercentual: false,
       situacaoCredenciado: 'Ativo'
     });
     setErrors({});
+  };
+
+  // Funções para ações da tabela
+  const handleEditarCredenciado = (credenciado: Credenciado) => {
+    setModoEdicao(true);
+    setCredenciadoEditando(credenciado.id);
+    setFormData({
+      nome: credenciado.nome,
+      telefone: '',
+      cnpj: credenciado.cnpj,
+      email: '',
+      site: '',
+      cep: '',
+      tipoLogradouro: '',
+      logradouro: '',
+      numero: '',
+      complemento: '',
+      uf: '',
+      cidade: credenciado.cidade,
+      bairro: '',
+      horarioFuncionamento: {
+        segunda: { ativo: false, inicio: '', fim: '' },
+        terca: { ativo: false, inicio: '', fim: '' },
+        quarta: { ativo: false, inicio: '', fim: '' },
+        quinta: { ativo: false, inicio: '', fim: '' },
+        sexta: { ativo: false, inicio: '', fim: '' },
+        sabado: { ativo: false, inicio: '', fim: '' },
+        domingo: { ativo: false, inicio: '', fim: '' }
+      },
+      observacoesExames: '',
+      observacoesGerais: '',
+      utilizarPercentual: false,
+      situacaoCredenciado: credenciado.situacao
+    });
+    setShowCadastroModal(true);
+    setErrors({});
+  };
+
+  const handleExcluirCredenciado = (credenciado: Credenciado) => {
+    setCredenciadoParaAcao(credenciado);
+    setShowConfirmacaoExclusao(true);
+  };
+
+  const handleInativarCredenciado = (credenciado: Credenciado) => {
+    setCredenciadoParaAcao(credenciado);
+    setShowConfirmacaoInativacao(true);
+  };
+
+  const confirmarExclusao = () => {
+    if (credenciadoParaAcao) {
+      // TODO: Implementar lógica de exclusão na API
+      console.log('Excluindo credenciado:', credenciadoParaAcao);
+      setShowConfirmacaoExclusao(false);
+      setCredenciadoParaAcao(null);
+    }
+  };
+
+  const confirmarInativacao = () => {
+    if (credenciadoParaAcao) {
+      // TODO: Implementar lógica de inativação na API
+      console.log('Inativando/Ativando credenciado:', credenciadoParaAcao);
+      setShowConfirmacaoInativacao(false);
+      setCredenciadoParaAcao(null);
+    }
+  };
+
+  const cancelarAcao = () => {
+    setShowConfirmacaoExclusao(false);
+    setShowConfirmacaoInativacao(false);
+    setCredenciadoParaAcao(null);
   };
 
   const gerarPaginacao = () => {
@@ -463,6 +637,7 @@ export default function CadastroCredenciados() {
                       onChange={(e) => setSituacao(e.target.value)}
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
+                      <option value="Todos">Todos</option>
                       <option value="Ativo">Ativo</option>
                       <option value="Inativo">Inativo</option>
                     </select>
@@ -470,14 +645,14 @@ export default function CadastroCredenciados() {
 
                   <button
                     onClick={handleProcurar}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer ml-2"
+                    className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer ml-2"
                   >
                     PROCURAR
                   </button>
                   
                   <button
                     onClick={handleNovoCredenciado}
-                    className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                    className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
                     NOVO CREDENCIADO
                   </button>
@@ -488,7 +663,9 @@ export default function CadastroCredenciados() {
               {showCadastroModal && (
                 <div className="p-6 bg-gray-50 border-b border-gray-200">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-[#1D3C44]">Novo Credenciado</h3>
+                    <h3 className="text-xl font-bold text-[#1D3C44]">
+                      {modoEdicao ? 'Editar Credenciado' : 'Novo Credenciado'}
+                    </h3>
                     <div className="text-sm text-gray-500">
                       <span className="text-red-500">*</span> Campos obrigatórios
                     </div>
@@ -745,20 +922,119 @@ export default function CadastroCredenciados() {
                     <div className="bg-white p-6 rounded-lg border border-gray-200">
                       <h4 className="text-lg font-semibold text-gray-700 mb-6 border-b border-gray-200 pb-3">Informações Complementares</h4>
                       <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Horário de Funcionamento
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.horario}
-                              onChange={(e) => handleInputChange('horario', e.target.value)}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent transition-all duration-200"
-                              placeholder="Ex: Segunda a Sexta, 8h às 18h"
-                            />
+                        {/* Horário de Funcionamento */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-4">
+                            Horário de Funcionamento
+                          </label>
+                          
+                          {/* Aplicação Rápida */}
+                          <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
+                            <h5 className="text-sm font-semibold text-blue-800 mb-3">⚡ Aplicação Rápida</h5>
+                            <div className="space-y-3">
+                              {/* Horário padrão */}
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <span className="text-sm text-gray-600 min-w-[60px]">Horário:</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-600">Das</span>
+                                  <input
+                                    type="time"
+                                    value={horarioRapido.inicio}
+                                    onChange={(e) => setHorarioRapido(prev => ({ ...prev, inicio: e.target.value }))}
+                                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm"
+                                  />
+                                  <span className="text-sm text-gray-600">às</span>
+                                  <input
+                                    type="time"
+                                    value={horarioRapido.fim}
+                                    onChange={(e) => setHorarioRapido(prev => ({ ...prev, fim: e.target.value }))}
+                                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm"
+                                  />
+                                </div>
+                              </div>
+                              
+                              {/* Botões de aplicação */}
+                              <div className="flex gap-2 flex-wrap">
+                                <button
+                                  type="button"
+                                  onClick={() => aplicarHorarioTodosDias(horarioRapido.inicio, horarioRapido.fim)}
+                                  className="px-3 py-2 bg-[#00A298] hover:bg-[#1D3C44] text-white text-xs rounded-lg transition-all duration-200 cursor-pointer"
+                                >
+                                  Todos os dias
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => aplicarHorarioSegundaSexta(horarioRapido.inicio, horarioRapido.fim)}
+                                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-all duration-200 cursor-pointer"
+                                >
+                                  Segunda a Sexta
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => aplicarHorarioFimSemana(horarioRapido.inicio, horarioRapido.fim)}
+                                  className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg transition-all duration-200 cursor-pointer"
+                                >
+                                  Fins de semana
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={limparTodosHorarios}
+                                  className="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded-lg transition-all duration-200 cursor-pointer"
+                                >
+                                  Limpar tudo
+                                </button>
+                              </div>
+                            </div>
                           </div>
 
+                          {/* Personalização Individual */}
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-700 mb-3">🔧 Personalização Individual</h5>
+                            <div className="space-y-2">
+                              {diasSemana.map((dia) => {
+                                const horarioDia = formData.horarioFuncionamento[dia.key as keyof typeof formData.horarioFuncionamento];
+                                return (
+                                  <div key={dia.key} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                                    <div className="flex items-center w-32">
+                                      <input
+                                        type="checkbox"
+                                        id={`${dia.key}-ativo`}
+                                        checked={horarioDia.ativo}
+                                        onChange={(e) => handleHorarioChange(dia.key, 'ativo', e.target.checked)}
+                                        className="h-4 w-4 text-[#00A298] focus:ring-[#00A298] border-gray-300 rounded mr-2"
+                                      />
+                                      <label htmlFor={`${dia.key}-ativo`} className="text-sm font-medium text-gray-700">
+                                        {dia.label}
+                                      </label>
+                                    </div>
+                                    
+                                    {horarioDia.ativo && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm text-gray-600">Das</span>
+                                        <input
+                                          type="time"
+                                          value={horarioDia.inicio}
+                                          onChange={(e) => handleHorarioChange(dia.key, 'inicio', e.target.value)}
+                                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm"
+                                        />
+                                        <span className="text-sm text-gray-600">às</span>
+                                        <input
+                                          type="time"
+                                          value={horarioDia.fim}
+                                          onChange={(e) => handleHorarioChange(dia.key, 'fim', e.target.value)}
+                                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Situação */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                               Situação
@@ -774,6 +1050,7 @@ export default function CadastroCredenciados() {
                           </div>
                         </div>
 
+                        {/* Observações */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Observações para Requisição de Exames
@@ -800,6 +1077,7 @@ export default function CadastroCredenciados() {
                           />
                         </div>
 
+                        {/* Checkbox de percentual */}
                         <div className="flex items-start">
                           <div className="flex items-center h-5">
                             <input
@@ -824,32 +1102,33 @@ export default function CadastroCredenciados() {
                   </div>
                   
                   {/* Botões de Ação */}
-                  <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+                  <div className="flex gap-2 pt-4 border-t border-gray-200">
                     <button
-                      onClick={handleFecharCadastro}
-                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200 text-sm cursor-pointer"
+                      onClick={handleSalvarCredenciado}
+                      disabled={isSubmitting}
+                      className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
                     >
-                      Cancelar
+                      {isSubmitting ? 'SALVANDO...' : (modoEdicao ? 'ATUALIZAR' : 'SALVAR')}
                     </button>
                     <button
                       onClick={handleLimparFormulario}
-                      className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all duration-200 text-sm cursor-pointer"
+                      className="px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all duration-200 text-sm cursor-pointer"
                     >
                       Limpar
                     </button>
                     <button
-                      onClick={handleSalvarCredenciado}
-                      disabled={isSubmitting}
-                      className="px-4 py-2 bg-[#00A298] hover:bg-[#1D3C44] text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
+                      onClick={handleFecharCadastro}
+                      className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200 text-sm cursor-pointer"
                     >
-                      {isSubmitting ? 'Salvando...' : 'Salvar'}
+                      Cancelar
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Tabela de Credenciados */}
-              <div className="overflow-hidden">
+              {/* Tabela de Credenciados - só mostra quando não está cadastrando */}
+              {!showCadastroModal && (
+                <div className="overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="min-w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
@@ -887,12 +1166,29 @@ export default function CadastroCredenciados() {
                             </td>
                             <td className="px-6 py-4 text-center">
                               <div className="flex justify-center gap-2">
-                                <button className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-150 cursor-pointer">
+                                <button 
+                                  onClick={() => handleEditarCredenciado(credenciado)}
+                                  className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-150 cursor-pointer"
+                                >
                                   Editar
                                 </button>
                                 <span className="text-gray-300">|</span>
-                                <button className="text-red-600 hover:text-red-800 font-medium text-sm transition-colors duration-150 cursor-pointer">
-                                  Inativar
+                                <button 
+                                  onClick={() => handleInativarCredenciado(credenciado)}
+                                  className={`font-medium text-sm transition-colors duration-150 cursor-pointer ${
+                                    credenciado.situacao === 'Ativo' 
+                                      ? 'text-red-600 hover:text-red-800' 
+                                      : 'text-green-600 hover:text-green-800'
+                                  }`}
+                                >
+                                  {credenciado.situacao === 'Ativo' ? 'Inativar' : 'Ativar'}
+                                </button>
+                                <span className="text-gray-300">|</span>
+                                <button 
+                                  onClick={() => handleExcluirCredenciado(credenciado)}
+                                  className="text-red-600 hover:text-red-800 font-medium text-sm transition-colors duration-150 cursor-pointer"
+                                >
+                                  Excluir
                                 </button>
                               </div>
                             </td>
@@ -920,14 +1216,14 @@ export default function CadastroCredenciados() {
                         <button
                           onClick={() => setPaginaAtual(Math.max(1, paginaAtual - 1))}
                           disabled={paginaAtual === 1}
-                          className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                          className="relative inline-flex items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           Anterior
                         </button>
                         <button
                           onClick={() => setPaginaAtual(Math.min(totalPaginas, paginaAtual + 1))}
                           disabled={paginaAtual === totalPaginas}
-                          className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                          className="ml-3 relative inline-flex items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           Próxima
                         </button>
@@ -946,7 +1242,7 @@ export default function CadastroCredenciados() {
                               <button
                                 onClick={() => setPaginaAtual(Math.max(1, paginaAtual - 1))}
                                 disabled={paginaAtual === 1}
-                                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                className="relative inline-flex items-center px-2.5 py-2.5 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                               >
                                 ←
                               </button>
@@ -956,7 +1252,7 @@ export default function CadastroCredenciados() {
                                 <button
                                   key={pagina}
                                   onClick={() => setPaginaAtual(pagina)}
-                                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium cursor-pointer ${
+                                  className={`relative inline-flex items-center px-3.5 py-2.5 border text-sm font-medium cursor-pointer ${
                                     pagina === paginaAtual
                                       ? 'z-10 bg-[#00A298] border-[#00A298] text-white'
                                       : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
@@ -970,7 +1266,7 @@ export default function CadastroCredenciados() {
                               <button
                                 onClick={() => setPaginaAtual(Math.min(totalPaginas, paginaAtual + 1))}
                                 disabled={paginaAtual === totalPaginas}
-                                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                className="relative inline-flex items-center px-2.5 py-2.5 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                               >
                                 →
                               </button>
@@ -986,10 +1282,99 @@ export default function CadastroCredenciados() {
                   </div>
                 )}
               </div>
+              )}
             </div>
           </div>
         </main>
       </div>
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showConfirmacaoExclusao && credenciadoParaAcao && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 rounded-full p-2 mr-3">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Confirmar Exclusão</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              Tem certeza de que deseja excluir o credenciado <strong>{credenciadoParaAcao.nome}</strong>?
+              <br />
+              <span className="text-sm text-red-600 mt-2 block">
+                ⚠️ Esta ação não pode ser desfeita.
+              </span>
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelarAcao}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarExclusao}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 cursor-pointer"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Inativação/Ativação */}
+      {showConfirmacaoInativacao && credenciadoParaAcao && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center mb-4">
+              <div className={`rounded-full p-2 mr-3 ${
+                credenciadoParaAcao.situacao === 'Ativo' 
+                  ? 'bg-red-100' 
+                  : 'bg-green-100'
+              }`}>
+                <svg className={`w-6 h-6 ${
+                  credenciadoParaAcao.situacao === 'Ativo' 
+                    ? 'text-red-600' 
+                    : 'text-green-600'
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Confirmar {credenciadoParaAcao.situacao === 'Ativo' ? 'Inativação' : 'Ativação'}
+              </h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              Tem certeza de que deseja {credenciadoParaAcao.situacao === 'Ativo' ? 'inativar' : 'ativar'} o credenciado <strong>{credenciadoParaAcao.nome}</strong>?
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelarAcao}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarInativacao}
+                className={`px-4 py-2 text-white rounded-lg transition-all duration-200 cursor-pointer ${
+                  credenciadoParaAcao.situacao === 'Ativo'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-green-600 hover:bg-green-700'
+                }`}
+              >
+                {credenciadoParaAcao.situacao === 'Ativo' ? 'Inativar' : 'Ativar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

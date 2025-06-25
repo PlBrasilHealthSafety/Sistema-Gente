@@ -16,7 +16,31 @@ interface Servico {
 
 // Mock de dados para demonstração
 const mockServicos: Servico[] = [
-  // Inicialmente vazio para mostrar "Não existem dados para mostrar"
+  {
+    id: '1',
+    nome: 'TREINAMENTO BÁSICO NR10 (40H)',
+    descricao: 'Treinamento básico de segurança em instalações e serviços em eletricidade',
+    categoria: 'Treinamento',
+    valor: 250.00,
+    situacao: 'Ativo'
+  },
+  {
+    id: '2',
+    nome: 'TREINAMENTO COMPLEMENTAR NR10 (40H)',
+    descricao: 'Treinamento complementar de segurança em instalações e serviços em eletricidade',
+    categoria: 'Treinamento',
+    valor: 280.00,
+    situacao: 'Ativo'
+  },
+  {
+    id: '3',
+    nome: 'TREINAMENTO DE CIPA / DESIGNADO DE SEGURANÇA (20H)',
+    descricao: 'Treinamento para membros da CIPA e designados de segurança',
+    categoria: 'Treinamento',
+    valor: 180.00,
+    situacao: 'Ativo'
+  },
+  
 ];
 
 export default function CadastroServicos() {
@@ -36,6 +60,13 @@ export default function CadastroServicos() {
 
   // Estados para formulário de cadastro
   const [showCadastroModal, setShowCadastroModal] = useState(false);
+  const [modoEdicao, setModoEdicao] = useState(false);
+  const [servicoEditando, setServicoEditando] = useState<string | null>(null);
+  
+  // Estados para modais de confirmação
+  const [showConfirmacaoExclusao, setShowConfirmacaoExclusao] = useState(false);
+  const [showConfirmacaoInativacao, setShowConfirmacaoInativacao] = useState(false);
+  const [servicoParaAcao, setServicoParaAcao] = useState<Servico | null>(null);
   
   // Estados dos campos do formulário
   const [formData, setFormData] = useState({
@@ -65,7 +96,7 @@ export default function CadastroServicos() {
   // Efeito para filtrar serviços
   useEffect(() => {
     let resultados = mockServicos.filter(servico => {
-      const matchSituacao = servico.situacao === situacao;
+      const matchSituacao = situacao === 'Todos' || servico.situacao === situacao;
       const matchBusca = termoBusca === '' || 
         servico.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
         servico.categoria.toLowerCase().includes(termoBusca.toLowerCase()) ||
@@ -103,6 +134,8 @@ export default function CadastroServicos() {
   };
 
   const handleNovoServico = () => {
+    setModoEdicao(false);
+    setServicoEditando(null);
     setShowCadastroModal(true);
     setFormData({
       nome: '',
@@ -113,6 +146,8 @@ export default function CadastroServicos() {
 
   const handleFecharCadastro = () => {
     setShowCadastroModal(false);
+    setModoEdicao(false);
+    setServicoEditando(null);
     setFormData({
       nome: '',
       situacaoServico: 'Ativo'
@@ -163,6 +198,52 @@ export default function CadastroServicos() {
       situacaoServico: 'Ativo'
     });
     setErrors({});
+  };
+
+  // Funções para ações da tabela
+  const handleEditarServico = (servico: Servico) => {
+    setModoEdicao(true);
+    setServicoEditando(servico.id);
+    setFormData({
+      nome: servico.nome,
+      situacaoServico: servico.situacao
+    });
+    setShowCadastroModal(true);
+    setErrors({});
+  };
+
+  const handleExcluirServico = (servico: Servico) => {
+    setServicoParaAcao(servico);
+    setShowConfirmacaoExclusao(true);
+  };
+
+  const handleInativarServico = (servico: Servico) => {
+    setServicoParaAcao(servico);
+    setShowConfirmacaoInativacao(true);
+  };
+
+  const confirmarExclusao = () => {
+    if (servicoParaAcao) {
+      // TODO: Implementar lógica de exclusão na API
+      console.log('Excluindo serviço:', servicoParaAcao);
+      setShowConfirmacaoExclusao(false);
+      setServicoParaAcao(null);
+    }
+  };
+
+  const confirmarInativacao = () => {
+    if (servicoParaAcao) {
+      // TODO: Implementar lógica de inativação na API
+      console.log('Inativando/Ativando serviço:', servicoParaAcao);
+      setShowConfirmacaoInativacao(false);
+      setServicoParaAcao(null);
+    }
+  };
+
+  const cancelarAcao = () => {
+    setShowConfirmacaoExclusao(false);
+    setShowConfirmacaoInativacao(false);
+    setServicoParaAcao(null);
   };
 
   const gerarPaginacao = () => {
@@ -348,6 +429,7 @@ export default function CadastroServicos() {
                     >
                       <option value="Ativo">Ativo</option>
                       <option value="Inativo">Inativo</option>
+                      <option value="Todos">Todos</option>
                     </select>
                   </div>
 
@@ -371,7 +453,9 @@ export default function CadastroServicos() {
               {showCadastroModal && (
                 <div className="p-6 bg-gray-50 border-b border-gray-200">
                   <div className="mb-6">
-                    <h3 className="text-xl font-bold text-[#1D3C44] mb-4">Cadastro de Serviços</h3>
+                    <h3 className="text-xl font-bold text-[#1D3C44] mb-4">
+                      {modoEdicao ? 'Editar Serviço' : 'Cadastro de Serviços'}
+                    </h3>
                     <hr className="border-gray-300" />
                   </div>
                   
@@ -418,7 +502,10 @@ export default function CadastroServicos() {
                         disabled={isSubmitting}
                         className="px-4 py-2 bg-[#00A298] hover:bg-[#1D3C44] text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
                       >
-                        {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
+                        {isSubmitting 
+                          ? (modoEdicao ? 'SALVANDO...' : 'INCLUINDO...') 
+                          : (modoEdicao ? 'SALVAR' : 'INCLUIR')
+                        }
                       </button>
                       <button
                         onClick={handleLimparFormulario}
@@ -472,16 +559,29 @@ export default function CadastroServicos() {
                             </td>
                             <td className="px-6 py-4 text-center">
                               <div className="flex justify-center gap-2">
-                                <button className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-150 cursor-pointer">
+                                <button 
+                                  onClick={() => handleEditarServico(servico)}
+                                  className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-150 cursor-pointer"
+                                >
                                   Editar
                                 </button>
                                 <span className="text-gray-300">|</span>
-                                <button className="text-red-600 hover:text-red-800 font-medium text-sm transition-colors duration-150 cursor-pointer">
+                                <button 
+                                  onClick={() => handleExcluirServico(servico)}
+                                  className="text-red-600 hover:text-red-800 font-medium text-sm transition-colors duration-150 cursor-pointer"
+                                >
                                   Excluir
                                 </button>
                                 <span className="text-gray-300">|</span>
-                                <button className="text-orange-600 hover:text-orange-800 font-medium text-sm transition-colors duration-150 cursor-pointer">
-                                  Inativar
+                                <button 
+                                  onClick={() => handleInativarServico(servico)}
+                                  className={`font-medium text-sm transition-colors duration-150 cursor-pointer ${
+                                    servico.situacao === 'Ativo' 
+                                      ? 'text-orange-600 hover:text-orange-800' 
+                                      : 'text-green-600 hover:text-green-800'
+                                  }`}
+                                >
+                                  {servico.situacao === 'Ativo' ? 'Inativar' : 'Ativar'}
                                 </button>
                               </div>
                             </td>
@@ -579,6 +679,97 @@ export default function CadastroServicos() {
           </div>
         </main>
       </div>
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showConfirmacaoExclusao && servicoParaAcao && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.98-.833-2.75 0L3.164 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
+                <p className="text-sm text-gray-500">Esta ação não pode ser desfeita.</p>
+              </div>
+            </div>
+            <div className="mb-6">
+              <p className="text-gray-700">
+                Tem certeza que deseja excluir o serviço <strong>"{servicoParaAcao.nome}"</strong>?
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelarAcao}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarExclusao}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 cursor-pointer"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Inativação/Ativação */}
+      {showConfirmacaoInativacao && servicoParaAcao && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                servicoParaAcao.situacao === 'Ativo' ? 'bg-orange-100' : 'bg-green-100'
+              }`}>
+                <svg className={`w-6 h-6 ${
+                  servicoParaAcao.situacao === 'Ativo' ? 'text-orange-600' : 'text-green-600'
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Confirmar {servicoParaAcao.situacao === 'Ativo' ? 'Inativação' : 'Ativação'}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {servicoParaAcao.situacao === 'Ativo' 
+                    ? 'O serviço ficará indisponível para uso.' 
+                    : 'O serviço ficará disponível para uso novamente.'
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="mb-6">
+              <p className="text-gray-700">
+                Tem certeza que deseja {servicoParaAcao.situacao === 'Ativo' ? 'inativar' : 'ativar'} o serviço <strong>"{servicoParaAcao.nome}"</strong>?
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelarAcao}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarInativacao}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer text-white ${
+                  servicoParaAcao.situacao === 'Ativo' 
+                    ? 'bg-orange-600 hover:bg-orange-700' 
+                    : 'bg-green-600 hover:bg-green-700'
+                }`}
+              >
+                {servicoParaAcao.situacao === 'Ativo' ? 'Inativar' : 'Ativar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
