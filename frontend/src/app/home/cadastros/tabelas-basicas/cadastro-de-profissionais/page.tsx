@@ -231,6 +231,14 @@ export default function CadastroProfissionaisPage() {
       }
     }
 
+    // Validar NIS (opcional, mas se preenchido deve ter 11 dígitos)
+    if (nis && nis.trim()) {
+      const nisNumeros = nis.replace(/\D/g, '');
+      if (nisNumeros.length !== 11) {
+        newErrors.nis = 'NIS deve ter exatamente 11 dígitos';
+      }
+    }
+
     // Validar categoria
     if (!categoria.trim()) {
       newErrors.categoria = 'Categoria é obrigatória';
@@ -295,6 +303,14 @@ export default function CadastroProfissionaisPage() {
       newErrors.email = 'E-mail deve ter um formato válido';
     }
 
+    // Validar telefone (opcional, mas se preenchido deve ter formato correto)
+    if (telefone && telefone.trim()) {
+      const telefoneNumeros = telefone.replace(/\D/g, '');
+      if (telefoneNumeros.length !== 10) {
+        newErrors.telefone = 'Telefone deve ter o formato (00) 0000-0000';
+      }
+    }
+
     // Validar DDD
     if (!ddd.trim()) {
       newErrors.ddd = 'DDD é obrigatório';
@@ -305,6 +321,11 @@ export default function CadastroProfissionaisPage() {
     // Validar celular
     if (!celular.trim()) {
       newErrors.celular = 'Celular é obrigatório';
+    } else {
+      const celularNumeros = celular.replace(/\D/g, '');
+      if (celularNumeros.length !== 11) {
+        newErrors.celular = 'Celular deve ter o formato (00) 90000-0000';
+      }
     }
 
     setErrors(newErrors);
@@ -624,7 +645,25 @@ export default function CadastroProfissionaisPage() {
     setClinica('');
     
     // Limpar erros de validação
-    setErrors({});
+    setErrors({
+      nomeProfissional: '',
+      nacionalidade: '',
+      cpf: '',
+      categoria: '',
+      siglaConselho: '',
+      regConselho: '',
+      ufConselho: '',
+      cep: '',
+      tipoLogradouro: '',
+      logradouro: '',
+      numero: '',
+      ufEndereco: '',
+      cidade: '',
+      bairro: '',
+      email: '',
+      ddd: '',
+      celular: ''
+    });
   };
 
   // Função para retornar (fechar modal)
@@ -1008,10 +1047,22 @@ export default function CadastroProfissionaisPage() {
                         <input
                           type="text"
                           value={nis}
-                          onChange={(e) => setNis(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                          placeholder="Digite o NIS"
+                          onChange={(e) => {
+                            const formattedNIS = e.target.value.replace(/\D/g, '').slice(0, 11);
+                            setNis(formattedNIS);
+                            if (formattedNIS && errors.nis) {
+                              setErrors({...errors, nis: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.nis ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="00000000000"
+                          maxLength={11}
                         />
+                        {errors.nis && (
+                          <p className="text-red-500 text-xs mt-1">{errors.nis}</p>
+                        )}
                       </div>
 
                       <div>
@@ -1413,10 +1464,33 @@ export default function CadastroProfissionaisPage() {
                         <input
                           type="text"
                           value={telefone}
-                          onChange={(e) => setTelefone(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          onChange={(e) => {
+                            const onlyNumbers = e.target.value.replace(/\D/g, '');
+                            const limitedNumbers = onlyNumbers.slice(0, 10);
+                            
+                            let formattedPhone = limitedNumbers;
+                            if (limitedNumbers.length <= 2) {
+                              formattedPhone = limitedNumbers;
+                            } else if (limitedNumbers.length <= 6) {
+                              formattedPhone = limitedNumbers.replace(/(\d{2})(\d+)/, '($1) $2');
+                            } else {
+                              formattedPhone = limitedNumbers.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+                            }
+                            
+                            setTelefone(formattedPhone);
+                            if (formattedPhone && errors.telefone) {
+                              setErrors({...errors, telefone: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.telefone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
                           placeholder="(00) 0000-0000"
+                          maxLength={14}
                         />
+                        {errors.telefone && (
+                          <p className="text-red-500 text-xs mt-1">{errors.telefone}</p>
+                        )}
                       </div>
 
                       <div>
@@ -1452,8 +1526,20 @@ export default function CadastroProfissionaisPage() {
                           type="text"
                           value={celular}
                           onChange={(e) => {
-                            setCelular(e.target.value);
-                            if (e.target.value.trim() && errors.celular) {
+                            const onlyNumbers = e.target.value.replace(/\D/g, '');
+                            const limitedNumbers = onlyNumbers.slice(0, 11);
+                            
+                            let formattedCelular = limitedNumbers;
+                            if (limitedNumbers.length <= 2) {
+                              formattedCelular = limitedNumbers;
+                            } else if (limitedNumbers.length <= 7) {
+                              formattedCelular = limitedNumbers.replace(/(\d{2})(\d+)/, '($1) $2');
+                            } else {
+                              formattedCelular = limitedNumbers.replace(/(\d{2})(\d{5})(\d+)/, '($1) $2-$3');
+                            }
+                            
+                            setCelular(formattedCelular);
+                            if (formattedCelular.trim() && errors.celular) {
                               setErrors({...errors, celular: ''});
                             }
                           }}
@@ -1461,6 +1547,7 @@ export default function CadastroProfissionaisPage() {
                             errors.celular ? 'border-red-300 bg-red-50' : 'border-gray-300'
                           }`}
                           placeholder="(00) 90000-0000"
+                          maxLength={15}
                         />
                         {errors.celular && (
                           <p className="text-red-500 text-xs mt-1">{errors.celular}</p>
