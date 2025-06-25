@@ -278,14 +278,7 @@ export default function CadastroCredenciados() {
     setFormData(prev => ({ ...prev, horarioFuncionamento: novoHorario }));
   };
 
-  const limparTodosHorarios = () => {
-    const novoHorario = { ...formData.horarioFuncionamento };
-    diasSemana.forEach(dia => {
-      novoHorario[dia.key as keyof typeof novoHorario] = { ativo: false, inicio: '', fim: '' };
-    });
-    setFormData(prev => ({ ...prev, horarioFuncionamento: novoHorario }));
-  };
-
+  // Definição dos dias da semana
   const diasSemana = [
     { key: 'segunda', label: 'Segunda-feira' },
     { key: 'terca', label: 'Terça-feira' },
@@ -295,6 +288,14 @@ export default function CadastroCredenciados() {
     { key: 'sabado', label: 'Sábado' },
     { key: 'domingo', label: 'Domingo' }
   ];
+
+  const limparTodosHorarios = () => {
+    const novoHorario = { ...formData.horarioFuncionamento };
+    diasSemana.forEach(dia => {
+      novoHorario[dia.key as keyof typeof novoHorario] = { ativo: false, inicio: '', fim: '' };
+    });
+    setFormData(prev => ({ ...prev, horarioFuncionamento: novoHorario }));
+  };
 
   const handleSalvarCredenciado = async () => {
     // Validar campos obrigatórios
@@ -557,10 +558,10 @@ export default function CadastroCredenciados() {
       </header>
 
       <div className="pt-16">
-        <main className="flex-1 p-4">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 p-6">
+          <div className="max-w-6xl mx-auto">
             {/* Breadcrumb e Navegação */}
-            <div className="mb-4">
+            <div className="mb-6">
               <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
                 <button 
                   onClick={() => router.push('/home')}
@@ -587,7 +588,7 @@ export default function CadastroCredenciados() {
               </div>
               
               <h1 className="text-3xl font-bold text-[#1D3C44] mb-2">
-                Credenciados
+                🏥 Consulta de Credenciados
               </h1>
               <p className="text-gray-600">
                 Cadastro e gerenciamento de profissionais e instituições credenciadas
@@ -1128,9 +1129,9 @@ export default function CadastroCredenciados() {
 
               {/* Tabela de Credenciados - só mostra quando não está cadastrando */}
               {!showCadastroModal && (
-                <div className="overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full">
+                <div className="p-6">
+                  <div className="border border-gray-200 rounded-lg">
+                    <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
@@ -1205,11 +1206,11 @@ export default function CadastroCredenciados() {
                         </tr>
                       )}
                     </tbody>
-                  </table>
-                </div>
+                    </table>
+                  </div>
 
-                {/* Paginação - sempre mostrar para manter consistência */}
-                {totalItens > 0 && (
+                  {/* Paginação - sempre mostrar para manter consistência */}
+                  {totalItens > 0 && (
                   <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="flex-1 flex justify-between sm:hidden">
@@ -1281,7 +1282,7 @@ export default function CadastroCredenciados() {
                     </div>
                   </div>
                 )}
-              </div>
+                </div>
               )}
             </div>
           </div>

@@ -128,11 +128,6 @@ export default function CadastroAgentesRisco() {
     setPaginaAtual(1); // Reset para primeira página quando filtrar
   }, [termoBusca, situacao]);
 
-  // Inicializar com todos os dados
-  useEffect(() => {
-    setAgentesRiscoFiltrados(mockAgentesRisco);
-  }, []);
-
   // Calcular dados da paginação
   const totalItens = agentesRiscoFiltrados.length;
   const totalPaginas = Math.ceil(totalItens / itensPorPagina);
@@ -412,10 +407,10 @@ export default function CadastroAgentesRisco() {
       </header>
 
       <div className="pt-16">
-        <main className="flex-1 p-4">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 p-6">
+          <div className="max-w-6xl mx-auto">
             {/* Breadcrumb e Navegação */}
-            <div className="mb-4">
+            <div className="mb-6">
               <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
                 <button 
                   onClick={() => router.push('/home')}
@@ -442,7 +437,7 @@ export default function CadastroAgentesRisco() {
               </div>
               
               <h1 className="text-3xl font-bold text-[#1D3C44] mb-2">
-                Consulta de Agentes de Risco
+                ⚠️ Consulta de Agentes de Risco
               </h1>
               <p className="text-gray-600">
                 Cadastro e gerenciamento de agentes de risco ocupacional
@@ -887,9 +882,9 @@ export default function CadastroAgentesRisco() {
 
               {/* Tabela de Agentes de Risco - só mostra quando não está cadastrando */}
               {!showCadastroModal && (
-                <div className="overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full">
+                <div className="p-6">
+                  <div className="border border-gray-200 rounded-lg">
+                    <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
@@ -974,11 +969,11 @@ export default function CadastroAgentesRisco() {
                         </tr>
                       )}
                     </tbody>
-                  </table>
-                </div>
+                    </table>
+                  </div>
 
-                {/* Paginação - sempre mostrar para manter consistência */}
-                {totalItens > 0 && (
+                  {/* Paginação - sempre mostrar para manter consistência */}
+                  {totalItens > 0 && (
                   <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="flex-1 flex justify-between sm:hidden">
@@ -1050,7 +1045,7 @@ export default function CadastroAgentesRisco() {
                     </div>
                   </div>
                 )}
-              </div>
+                </div>
               )}
             </div>
           </div>

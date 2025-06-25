@@ -1,18 +1,18 @@
 import { Empresa } from '../types/empresa.types';
 
-interface ConfirmarExclusaoModalProps {
+interface ConfirmarExclusaoDefinitivaModalProps {
   empresa: Empresa;
   isSubmitting: boolean;
   onConfirmar: () => void;
   onCancelar: () => void;
 }
 
-export default function ConfirmarExclusaoModal({
+export default function ConfirmarExclusaoDefinitivaModal({
   empresa,
   isSubmitting,
   onConfirmar,
   onCancelar
-}: ConfirmarExclusaoModalProps) {
+}: ConfirmarExclusaoDefinitivaModalProps) {
   return (
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
@@ -24,16 +24,16 @@ export default function ConfirmarExclusaoModal({
               </svg>
             </div>
             <div className="ml-4">
-              <h3 className="text-lg font-medium text-gray-900">Confirmar Inativação</h3>
+              <h3 className="text-lg font-medium text-gray-900">Confirmar Exclusão Definitiva</h3>
               <p className="text-sm text-gray-500 mt-1">
-                Tem certeza que deseja inativar a empresa "{empresa.nome_fantasia}"?
+                Tem certeza que deseja EXCLUIR DEFINITIVAMENTE a empresa "{empresa.nome_fantasia}"?
               </p>
             </div>
           </div>
           
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-yellow-800">
-              <strong>Atenção:</strong> A empresa será marcada como inativa e não aparecerá mais nos seletores ativos. Esta ação pode ser revertida alterando o status para ativo novamente.
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-red-800">
+              <strong>⚠️ ATENÇÃO:</strong> Esta ação NÃO pode ser desfeita! A empresa será removida permanentemente do sistema, incluindo todos os seus dados associados.
             </p>
           </div>
           
@@ -49,7 +49,7 @@ export default function ConfirmarExclusaoModal({
               disabled={isSubmitting}
               className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Inativando...' : 'Sim, Inativar'}
+              {isSubmitting ? 'Excluindo...' : 'Sim, Excluir Definitivamente'}
             </button>
           </div>
         </div>

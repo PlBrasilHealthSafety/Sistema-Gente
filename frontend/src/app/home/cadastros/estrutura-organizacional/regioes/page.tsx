@@ -1467,7 +1467,7 @@ export default function RegioesPage() {
                 </p>
               </div>
               
-              <div className="flex gap-3 justify-end">
+              <div className="flex gap-3 justify-center">
                 <button
                   onClick={handleCancelarExclusao}
                   className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
@@ -1512,7 +1512,7 @@ export default function RegioesPage() {
                 </p>
               </div>
               
-              <div className="flex gap-3 justify-end">
+              <div className="flex gap-3 justify-center">
                 <button
                   onClick={handleCancelarExclusaoDefinitiva}
                   className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"

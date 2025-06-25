@@ -29,6 +29,7 @@ interface NotificationMessage {
 import FormularioBusca from './components/FormularioBusca';
 import TabelaEmpresas from './components/TabelaEmpresas';
 import ConfirmarExclusaoModal from './components/ConfirmarExclusaoModal';
+import ConfirmarExclusaoDefinitivaModal from './components/ConfirmarExclusaoDefinitivaModal';
 import MultiplePontoFocalManager from '@/components/MultiplePontoFocalManager';
 import MultiplePontoFocalViewer from '@/components/MultiplePontoFocalViewer';
 
@@ -58,9 +59,11 @@ export default function EmpresasPage() {
   const [showNewCompanyModal, setShowNewCompanyModal] = useState(false);
   const [showEditCompanyModal, setShowEditCompanyModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showExclusaoDefinitivaModal, setShowExclusaoDefinitivaModal] = useState(false);
   const [showViewCompanyModal, setShowViewCompanyModal] = useState(false);
   const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null);
   const [empresaExcluindo, setEmpresaExcluindo] = useState<Empresa | null>(null);
+  const [empresaExcluindoDefinitivo, setEmpresaExcluindoDefinitivo] = useState<Empresa | null>(null);
   const [empresaVisualizando, setEmpresaVisualizando] = useState<Empresa | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -468,34 +471,48 @@ export default function EmpresasPage() {
   };
 
   // Handler para excluir definitivamente (apenas SUPER_ADMIN)
-  const handleExcluirDefinitivo = async (empresa: Empresa) => {
-    if (confirm(`Tem certeza que deseja EXCLUIR DEFINITIVAMENTE a empresa "${empresa.nome_fantasia}"? Esta ação NÃO pode ser desfeita!`)) {
-      setIsSubmitting(true);
-      try {
-        const token = localStorage.getItem('token');
-        
-        const response = await fetch(`http://localhost:3001/api/empresas/${empresa.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+  const handleExcluirDefinitivo = (empresa: Empresa) => {
+    setEmpresaExcluindoDefinitivo(empresa);
+    setShowExclusaoDefinitivaModal(true);
+  };
 
-        if (response.ok) {
-          showNotification('success', 'Empresa excluída definitivamente!');
-          await carregarEmpresas();
-        } else {
-          const error = await response.json();
-          showNotification('error', `Erro ao excluir empresa: ${error.message}`);
+  // Função para confirmar exclusão definitiva
+  const handleConfirmarExclusaoDefinitiva = async () => {
+    if (!empresaExcluindoDefinitivo) return;
+    
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:3001/api/empresas/${empresaExcluindoDefinitivo.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      } catch (error) {
-        console.error('Erro ao excluir empresa:', error);
-        showNotification('error', 'Erro ao excluir empresa. Tente novamente.');
-      } finally {
-        setIsSubmitting(false);
+      });
+
+      if (response.ok) {
+        showNotification('success', 'Empresa excluída definitivamente!');
+        await carregarEmpresas();
+        setShowExclusaoDefinitivaModal(false);
+        setEmpresaExcluindoDefinitivo(null);
+      } else {
+        const error = await response.json();
+        showNotification('error', `Erro ao excluir empresa: ${error.message}`);
       }
+    } catch (error) {
+      console.error('Erro ao excluir empresa:', error);
+      showNotification('error', 'Erro ao excluir empresa. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  // Função para cancelar exclusão definitiva
+  const handleCancelarExclusaoDefinitiva = () => {
+    setShowExclusaoDefinitivaModal(false);
+    setEmpresaExcluindoDefinitivo(null);
   };
 
   // Handler para reativar empresa
@@ -1984,6 +2001,16 @@ export default function EmpresasPage() {
           isSubmitting={isSubmitting}
           onConfirmar={handleConfirmarExclusao}
           onCancelar={handleCancelarExclusao}
+        />
+      )}
+
+      {/* Modal de Confirmação de Exclusão Definitiva */}
+      {showExclusaoDefinitivaModal && empresaExcluindoDefinitivo && (
+        <ConfirmarExclusaoDefinitivaModal
+          empresa={empresaExcluindoDefinitivo}
+          isSubmitting={isSubmitting}
+          onConfirmar={handleConfirmarExclusaoDefinitiva}
+          onCancelar={handleCancelarExclusaoDefinitiva}
         />
       )}
     </div>
