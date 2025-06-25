@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { formatTexto } from '@/utils/masks';
+import { formatTexto, formatCEP, isValidCEP } from '@/utils/masks';
 import { usePermissions } from '@/hooks/usePermissions';
 
 interface NotificationMessage {
@@ -37,6 +37,16 @@ interface Profissional {
   updated_at: string;
 }
 
+interface Grupo {
+  id: number;
+  nome: string;
+}
+
+interface Regiao {
+  id: number;
+  nome: string;
+}
+
 export default function CadastroProfissionaisPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -47,9 +57,41 @@ export default function CadastroProfissionaisPage() {
   
   // Estados para o formulário
   const [showNewProfissionalModal, setShowNewProfissionalModal] = useState(false);
+  
+  // Dados cadastrais
   const [nomeProfissional, setNomeProfissional] = useState('');
+  const [nacionalidade, setNacionalidade] = useState('Brasileiro');
+  const [cpf, setCpf] = useState('');
+  const [nis, setNis] = useState('');
   const [categoria, setCategoria] = useState('');
   const [siglaConselho, setSiglaConselho] = useState('');
+  const [regConselho, setRegConselho] = useState('');
+  const [ufConselho, setUfConselho] = useState('');
+  const [regMte, setRegMte] = useState('');
+  
+  // Informações de contato
+  const [cep, setCep] = useState('');
+  const [tipoLogradouro, setTipoLogradouro] = useState('');
+  const [logradouro, setLogradouro] = useState('');
+  const [numero, setNumero] = useState('');
+  const [complemento, setComplemento] = useState('');
+  const [ufEndereco, setUfEndereco] = useState('');
+  const [cidade, setCidade] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [email, setEmail] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [ddd, setDdd] = useState('');
+  const [celular, setCelular] = useState('');
+  
+  // Informações adicionais
+  const [observacao, setObservacao] = useState('');
+  const [agendamentoHorario, setAgendamentoHorario] = useState(false);
+  const [profissionalExterno, setProfissionalExterno] = useState(false);
+  const [assinaturaDigital, setAssinaturaDigital] = useState('');
+  const [certificadoDigital, setCertificadoDigital] = useState('');
+  const [situacao, setSituacao] = useState('Ativo');
+  
+  // Campos antigos mantidos para compatibilidade
   const [numeroConselho, setNumeroConselho] = useState('');
   const [externo, setExterno] = useState(false);
   const [ofensor, setOfensor] = useState('');
@@ -76,12 +118,197 @@ export default function CadastroProfissionaisPage() {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [autocompleteResults, setAutocompleteResults] = useState<Profissional[]>([]);
 
+  // Estados para CEP e endereço
+  const [, setGrupos] = useState<Grupo[]>([]);
+  const [, setRegioes] = useState<Regiao[]>([]);
+  const [gruposAtivos, setGruposAtivos] = useState<Grupo[]>([]);
+  const [regioesAtivas, setRegioesAtivas] = useState<Regiao[]>([]);
+  const [regioesFiltroFiltradas, setRegioesFiltroFiltradas] = useState<Regiao[]>([]);
+
+  // Estados para CEP e endereço
+  const [loadingCep, setLoadingCep] = useState(false);
+  const [cepError, setCepError] = useState('');
+
+  // Estados para validação de campos obrigatórios
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   // Função para exibir notificação
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message, show: true });
     setTimeout(() => {
       setNotification(prev => ({ ...prev, show: false }));
     }, 5000);
+  };
+
+  // Função para buscar CEP
+  const buscarCep = async (cepValue: string) => {
+    const cepLimpo = cepValue.replace(/\D/g, '');
+    
+    if (cepLimpo.length === 8) {
+      setLoadingCep(true);
+      setCepError('');
+      
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+        const data = await response.json();
+        
+        if (!data.erro) {
+          setLogradouro(data.logradouro || '');
+          setBairro(data.bairro || '');
+          setCidade(data.localidade || '');
+          setUfEndereco(data.uf || '');
+          setTipoLogradouro(data.logradouro ? data.logradouro.split(' ')[0] : '');
+          setCepError('');
+        } else {
+          setCepError('CEP não encontrado. Verifique o número digitado.');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar CEP:', error);
+        setCepError('Erro ao buscar CEP. Verifique sua conexão e tente novamente.');
+      } finally {
+        setLoadingCep(false);
+      }
+    }
+  };
+
+  // Handler para mudança no CEP
+  const handleCepChange = (value: string) => {
+    const formattedCep = formatCEP(value);
+    setCep(formattedCep);
+    
+    if (cepError) {
+      setCepError('');
+    }
+    
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length === 8) {
+      buscarCep(numbers);
+    }
+  };
+
+  // Função para formatar CPF
+  const formatCPF = (value: string) => {
+    // Remove tudo que não é dígito
+    const onlyNumbers = value.replace(/\D/g, '');
+    
+    // Limita a 11 dígitos
+    const limitedNumbers = onlyNumbers.slice(0, 11);
+    
+    // Aplica a formatação
+    if (limitedNumbers.length <= 3) {
+      return limitedNumbers;
+    } else if (limitedNumbers.length <= 6) {
+      return limitedNumbers.replace(/(\d{3})(\d+)/, '$1.$2');
+    } else if (limitedNumbers.length <= 9) {
+      return limitedNumbers.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+    } else {
+      return limitedNumbers.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, '$1.$2.$3-$4');
+    }
+  };
+
+  // Função para validar campos obrigatórios
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validar nome
+    if (!nomeProfissional.trim()) {
+      newErrors.nomeProfissional = 'Nome é obrigatório';
+    }
+
+    // Validar nacionalidade
+    if (!nacionalidade.trim()) {
+      newErrors.nacionalidade = 'Nacionalidade é obrigatória';
+    }
+
+    // Validar CPF
+    if (!cpf.trim()) {
+      newErrors.cpf = 'CPF é obrigatório';
+    } else {
+      // Remover pontos e traços para validar apenas números
+      const cpfNumeros = cpf.replace(/[.-]/g, '');
+      if (cpfNumeros.length !== 11 || !/^\d{11}$/.test(cpfNumeros)) {
+        newErrors.cpf = 'CPF deve conter exatamente 11 números';
+      }
+    }
+
+    // Validar categoria
+    if (!categoria.trim()) {
+      newErrors.categoria = 'Categoria é obrigatória';
+    }
+
+    // Validar sigla do conselho
+    if (!siglaConselho.trim()) {
+      newErrors.siglaConselho = 'Sigla do conselho é obrigatória';
+    }
+
+    // Validar registro do conselho
+    if (!regConselho.trim()) {
+      newErrors.regConselho = 'Registro do conselho é obrigatório';
+    }
+
+    // Validar UF do conselho
+    if (!ufConselho.trim()) {
+      newErrors.ufConselho = 'UF do conselho é obrigatória';
+    }
+
+    // Validar CEP
+    if (!cep.trim()) {
+      newErrors.cep = 'CEP é obrigatório';
+    } else if (!isValidCEP(cep)) {
+      newErrors.cep = 'CEP deve ter 8 dígitos';
+    }
+
+    // Validar tipo de logradouro
+    if (!tipoLogradouro.trim()) {
+      newErrors.tipoLogradouro = 'Tipo de logradouro é obrigatório';
+    }
+
+    // Validar logradouro
+    if (!logradouro.trim()) {
+      newErrors.logradouro = 'Logradouro é obrigatório';
+    }
+
+    // Validar número
+    if (!numero.trim()) {
+      newErrors.numero = 'Número é obrigatório';
+    }
+
+    // Validar UF do endereço
+    if (!ufEndereco.trim()) {
+      newErrors.ufEndereco = 'UF é obrigatória';
+    }
+
+    // Validar cidade
+    if (!cidade.trim()) {
+      newErrors.cidade = 'Cidade é obrigatória';
+    }
+
+    // Validar bairro
+    if (!bairro.trim()) {
+      newErrors.bairro = 'Bairro é obrigatório';
+    }
+
+    // Validar e-mail
+    if (!email.trim()) {
+      newErrors.email = 'E-mail é obrigatório';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'E-mail deve ter um formato válido';
+    }
+
+    // Validar DDD
+    if (!ddd.trim()) {
+      newErrors.ddd = 'DDD é obrigatório';
+    } else if (!/^\d{2}$/.test(ddd)) {
+      newErrors.ddd = 'DDD deve ter 2 dígitos';
+    }
+
+    // Validar celular
+    if (!celular.trim()) {
+      newErrors.celular = 'Celular é obrigatório';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   // Função para destacar texto pesquisado
@@ -106,6 +333,8 @@ export default function CadastroProfissionaisPage() {
         return 'Digite o nome do profissional...';
       case 'categoria':
         return 'Digite a categoria (ex: Médico, Enfermeiro)...';
+      case 'numero_conselho':
+        return 'Digite o número do conselho...';
       default:
         return 'Digite para pesquisar...';
     }
@@ -128,6 +357,8 @@ export default function CadastroProfissionaisPage() {
             return profissional.nome.toLowerCase().includes(busca.toLowerCase());
           case 'categoria':
             return profissional.categoria.toLowerCase().includes(busca.toLowerCase());
+          case 'numero_conselho':
+            return profissional.numero_conselho.toLowerCase().includes(busca.toLowerCase());
           default:
             return profissional.nome.toLowerCase().includes(busca.toLowerCase());
         }
@@ -180,6 +411,8 @@ export default function CadastroProfissionaisPage() {
           return profissional.nome.toLowerCase().includes(value.toLowerCase());
         case 'categoria':
           return profissional.categoria.toLowerCase().includes(value.toLowerCase());
+        case 'numero_conselho':
+          return profissional.numero_conselho.toLowerCase().includes(value.toLowerCase());
         default:
           return profissional.nome.toLowerCase().includes(value.toLowerCase());
       }
@@ -195,7 +428,17 @@ export default function CadastroProfissionaisPage() {
   // Função para selecionar item do autocomplete
   const handleSelectAutocomplete = (profissional: Profissional) => {
     // Definir o valor do campo baseado no tipo de pesquisa
-    const valorSelecionado = tipoPesquisa === 'categoria' ? profissional.categoria : profissional.nome;
+    let valorSelecionado;
+    switch (tipoPesquisa) {
+      case 'categoria':
+        valorSelecionado = profissional.categoria;
+        break;
+      case 'numero_conselho':
+        valorSelecionado = profissional.numero_conselho;
+        break;
+      default:
+        valorSelecionado = profissional.nome;
+    }
     setNomeBusca(valorSelecionado);
     setShowAutocomplete(false);
     aplicarFiltrosAutomaticos(valorSelecionado, situacaoBusca, tipoPesquisa);
@@ -284,6 +527,8 @@ export default function CadastroProfissionaisPage() {
             return profissional.nome.toLowerCase().includes(nomeBusca.toLowerCase());
           case 'categoria':
             return profissional.categoria.toLowerCase().includes(nomeBusca.toLowerCase());
+          case 'numero_conselho':
+            return profissional.numero_conselho.toLowerCase().includes(nomeBusca.toLowerCase());
           default:
             return profissional.nome.toLowerCase().includes(nomeBusca.toLowerCase());
         }
@@ -298,7 +543,17 @@ export default function CadastroProfissionaisPage() {
     setFilteredProfissionais(filtered);
     
     if (filtered.length === 0) {
-      const tipoTexto = tipoPesquisa === 'categoria' ? 'categoria' : 'nome';
+      let tipoTexto;
+      switch (tipoPesquisa) {
+        case 'categoria':
+          tipoTexto = 'categoria';
+          break;
+        case 'numero_conselho':
+          tipoTexto = 'número do conselho';
+          break;
+        default:
+          tipoTexto = 'nome';
+      }
       showNotification('error', `Nenhum profissional encontrado com o ${tipoTexto} pesquisado`);
     } else {
       showNotification('success', `${filtered.length} profissional(is) encontrado(s)`);
@@ -307,13 +562,8 @@ export default function CadastroProfissionaisPage() {
 
   // Função para incluir novo profissional
   const handleIncluir = async () => {
-    if (!nomeProfissional.trim()) {
-      showNotification('error', 'Por favor, informe o nome do profissional.');
-      return;
-    }
-
-    if (!categoria.trim()) {
-      showNotification('error', 'Por favor, informe a categoria.');
+    if (!validateForm()) {
+      showNotification('error', 'Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -334,13 +584,47 @@ export default function CadastroProfissionaisPage() {
 
   // Função para limpar formulário
   const handleLimpar = () => {
+    // Limpar dados cadastrais
     setNomeProfissional('');
+    setNacionalidade('');  // Agora é obrigatório, então fica vazio
+    setCpf('');
+    setNis('');
     setCategoria('');
     setSiglaConselho('');
+    setRegConselho('');
+    setUfConselho('');
+    setRegMte('');
+    
+    // Limpar informações de contato
+    setCep('');
+    setTipoLogradouro('');
+    setLogradouro('');
+    setNumero('');
+    setComplemento('');
+    setUfEndereco('');
+    setCidade('');
+    setBairro('');
+    setEmail('');
+    setTelefone('');
+    setDdd('');
+    setCelular('');
+    
+    // Limpar informações adicionais
+    setObservacao('');
+    setAgendamentoHorario(false);
+    setProfissionalExterno(false);
+    setAssinaturaDigital('');
+    setCertificadoDigital('');
+    setSituacao('Ativo');
+    
+    // Limpar campos antigos para compatibilidade
     setNumeroConselho('');
     setExterno(false);
     setOfensor('');
     setClinica('');
+    
+    // Limpar erros de validação
+    setErrors({});
   };
 
   // Função para retornar (fechar modal)
@@ -540,6 +824,7 @@ export default function CadastroProfissionaisPage() {
                     >
                       <option value="nome">Nome</option>
                       <option value="categoria">Categoria</option>
+                      <option value="numero_conselho">Número Conselho</option>
                     </select>
                   </div>
                   
@@ -548,7 +833,7 @@ export default function CadastroProfissionaisPage() {
                       type="text"
                       value={nomeBusca}
                       onChange={(e) => {
-                        const value = formatTexto(e.target.value);
+                        const value = tipoPesquisa === 'numero_conselho' ? e.target.value : formatTexto(e.target.value);
                         setNomeBusca(value);
                         handleAutocompleteSearch(value);
                       }}
@@ -625,106 +910,675 @@ export default function CadastroProfissionaisPage() {
               {/* Container de Novo Cadastro */}
               {showNewProfissionalModal && (
                 <div className="p-6 bg-gray-50 border-b border-gray-200">
-                  <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Consulta de Profissional</h3>
+                  <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Cadastro de Profissional</h3>
                   
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                  {/* Legenda de campos obrigatórios */}
+                  <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center text-sm text-blue-800">
+                      <span className="text-red-500 mr-2 font-bold">*</span>
+                      <span className="font-medium">Campos obrigatórios</span>
+                      <span className="mx-2">•</span>
+                      <span className="text-blue-600">Preencha todos os campos marcados com asterisco para continuar</span>
+                    </div>
+                  </div>
+                  
+                  {/* Dados Cadastrais */}
+                  <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Nome
+                        <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                          Nome <span className="text-red-500">*</span>
+                          <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
                         </label>
                         <input
                           type="text"
                           value={nomeProfissional}
-                          onChange={(e) => setNomeProfissional(formatTexto(e.target.value))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          onChange={(e) => {
+                            setNomeProfissional(formatTexto(e.target.value));
+                            if (e.target.value.trim() && errors.nomeProfissional) {
+                              setErrors({...errors, nomeProfissional: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.nomeProfissional ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
                           placeholder="Digite o nome do profissional"
                         />
+                        {errors.nomeProfissional && (
+                          <p className="text-red-500 text-xs mt-1">{errors.nomeProfissional}</p>
+                        )}
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Categoria
-                        </label>
-                        <input
-                          type="text"
-                          value={categoria}
-                          onChange={(e) => setCategoria(formatTexto(e.target.value))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                          placeholder="Ex: Médico, Enfermeiro"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Sigla Conselho
-                        </label>
-                        <input
-                          type="text"
-                          value={siglaConselho}
-                          onChange={(e) => setSiglaConselho(e.target.value.toUpperCase())}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                          placeholder="Ex: CRM, COREN"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Número Conselho
-                        </label>
-                        <input
-                          type="text"
-                          value={numeroConselho}
-                          onChange={(e) => setNumeroConselho(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                          placeholder="Digite o número do conselho"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Externo
+                          Nacionalidade <span className="text-red-500">*</span>
                         </label>
                         <select
-                          value={externo ? 'true' : 'false'}
-                          onChange={(e) => setExterno(e.target.value === 'true')}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          value={nacionalidade}
+                          onChange={(e) => {
+                            setNacionalidade(e.target.value);
+                            if (e.target.value && errors.nacionalidade) {
+                              setErrors({...errors, nacionalidade: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.nacionalidade ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
                         >
-                          <option value="false">Não</option>
-                          <option value="true">Sim</option>
+                          <option value="">Selecione a nacionalidade</option>
+                          <option value="Brasileiro">Brasileiro</option>
+                          <option value="Estrangeiro">Estrangeiro</option>
                         </select>
+                        {errors.nacionalidade && (
+                          <p className="text-red-500 text-xs mt-1">{errors.nacionalidade}</p>
+                        )}
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Ofensor
+                          CPF <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          value={ofensor}
-                          onChange={(e) => setOfensor(e.target.value)}
+                          value={cpf}
+                          onChange={(e) => {
+                            const formattedCPF = formatCPF(e.target.value);
+                            setCpf(formattedCPF);
+                            if (formattedCPF.trim() && errors.cpf) {
+                              setErrors({...errors, cpf: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.cpf ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="000.000.000-00"
+                          maxLength={14}
+                        />
+                        {errors.cpf && (
+                          <p className="text-red-500 text-xs mt-1">{errors.cpf}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          NIS
+                        </label>
+                        <input
+                          type="text"
+                          value={nis}
+                          onChange={(e) => setNis(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                          placeholder="Digite o ofensor"
+                          placeholder="Digite o NIS"
                         />
                       </div>
 
-                      <div className="md:col-span-2 lg:col-span-3">
+                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Clínica
+                          Categoria <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={categoria}
+                          onChange={(e) => {
+                            setCategoria(e.target.value);
+                            if (e.target.value && errors.categoria) {
+                              setErrors({...errors, categoria: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.categoria ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">Selecione uma categoria</option>
+                          <option value="Médico">Médico</option>
+                          <option value="Enfermeiro">Enfermeiro</option>
+                          <option value="Técnico de Enfermagem">Técnico de Enfermagem</option>
+                          <option value="Auxiliar de Enfermagem">Auxiliar de Enfermagem</option>
+                          <option value="Fisioterapeuta">Fisioterapeuta</option>
+                          <option value="Psicólogo">Psicólogo</option>
+                          <option value="Nutricionista">Nutricionista</option>
+                          <option value="Fonoaudiólogo">Fonoaudiólogo</option>
+                        </select>
+                        {errors.categoria && (
+                          <p className="text-red-500 text-xs mt-1">{errors.categoria}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                          Sigla <span className="text-red-500">*</span>
+                          <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
+                        </label>
+                        <select
+                          value={siglaConselho}
+                          onChange={(e) => {
+                            setSiglaConselho(e.target.value);
+                            if (e.target.value && errors.siglaConselho) {
+                              setErrors({...errors, siglaConselho: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.siglaConselho ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">Selecione a sigla</option>
+                          <option value="CRM">CRM</option>
+                          <option value="COREN">COREN</option>
+                          <option value="CREFITO">CREFITO</option>
+                          <option value="CRP">CRP</option>
+                          <option value="CRN">CRN</option>
+                          <option value="CRFa">CRFa</option>
+                        </select>
+                        {errors.siglaConselho && (
+                          <p className="text-red-500 text-xs mt-1">{errors.siglaConselho}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                          Reg. Conselho <span className="text-red-500">*</span>
+                          <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
                         </label>
                         <input
                           type="text"
-                          value={clinica}
-                          onChange={(e) => setClinica(e.target.value)}
+                          value={regConselho}
+                          onChange={(e) => {
+                            setRegConselho(e.target.value);
+                            if (e.target.value.trim() && errors.regConselho) {
+                              setErrors({...errors, regConselho: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.regConselho ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="Digite o número do conselho"
+                        />
+                        {errors.regConselho && (
+                          <p className="text-red-500 text-xs mt-1">{errors.regConselho}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                          UF <span className="text-red-500">*</span>
+                          <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
+                        </label>
+                        <select
+                          value={ufConselho}
+                          onChange={(e) => {
+                            setUfConselho(e.target.value);
+                            if (e.target.value && errors.ufConselho) {
+                              setErrors({...errors, ufConselho: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.ufConselho ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">Selecione o estado</option>
+                          <option value="AC">AC</option>
+                          <option value="AL">AL</option>
+                          <option value="AP">AP</option>
+                          <option value="AM">AM</option>
+                          <option value="BA">BA</option>
+                          <option value="CE">CE</option>
+                          <option value="DF">DF</option>
+                          <option value="ES">ES</option>
+                          <option value="GO">GO</option>
+                          <option value="MA">MA</option>
+                          <option value="MT">MT</option>
+                          <option value="MS">MS</option>
+                          <option value="MG">MG</option>
+                          <option value="PA">PA</option>
+                          <option value="PB">PB</option>
+                          <option value="PR">PR</option>
+                          <option value="PE">PE</option>
+                          <option value="PI">PI</option>
+                          <option value="RJ">RJ</option>
+                          <option value="RN">RN</option>
+                          <option value="RS">RS</option>
+                          <option value="RO">RO</option>
+                          <option value="RR">RR</option>
+                          <option value="SC">SC</option>
+                          <option value="SP">SP</option>
+                          <option value="SE">SE</option>
+                          <option value="TO">TO</option>
+                        </select>
+                        {errors.ufConselho && (
+                          <p className="text-red-500 text-xs mt-1">{errors.ufConselho}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Reg. MTE
+                        </label>
+                        <input
+                          type="text"
+                          value={regMte}
+                          onChange={(e) => setRegMte(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                          placeholder="Digite o nome da clínica"
+                          placeholder="Digite o registro no MTE"
                         />
                       </div>
                     </div>
+                  </div>
 
-                    <div className="flex gap-3 mt-6">
+                  {/* Informações de Contato */}
+                  <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">Informações de contato</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          CEP <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={cep}
+                          onChange={(e) => {
+                            handleCepChange(e.target.value);
+                            if (e.target.value.trim() && errors.cep) {
+                              setErrors({...errors, cep: ''});
+                            }
+                          }}
+                          maxLength={9}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            cepError || errors.cep ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="00000-000"
+                        />
+                        {loadingCep && <p className="text-xs text-blue-500 mt-1 flex items-center">
+                          <svg className="animate-spin h-3 w-3 mr-1" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Buscando CEP...
+                        </p>}
+                        {cepError && <p className="text-xs text-red-500 mt-1">{cepError}</p>}
+                        {errors.cep && <p className="text-red-500 text-xs mt-1">{errors.cep}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Tipo de logradouro <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={tipoLogradouro}
+                          onChange={(e) => {
+                            setTipoLogradouro(e.target.value);
+                            if (e.target.value && errors.tipoLogradouro) {
+                              setErrors({...errors, tipoLogradouro: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.tipoLogradouro ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">Selecione o tipo</option>
+                          <option value="Rua">Rua</option>
+                          <option value="Avenida">Avenida</option>
+                          <option value="Praça">Praça</option>
+                          <option value="Travessa">Travessa</option>
+                          <option value="Alameda">Alameda</option>
+                        </select>
+                        {errors.tipoLogradouro && (
+                          <p className="text-red-500 text-xs mt-1">{errors.tipoLogradouro}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Logradouro <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={logradouro}
+                          onChange={(e) => {
+                            setLogradouro(e.target.value);
+                            if (e.target.value.trim() && errors.logradouro) {
+                              setErrors({...errors, logradouro: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.logradouro ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="Digite o nome da rua"
+                        />
+                        {errors.logradouro && (
+                          <p className="text-red-500 text-xs mt-1">{errors.logradouro}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Número <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={numero}
+                          onChange={(e) => {
+                            setNumero(e.target.value);
+                            if (e.target.value.trim() && errors.numero) {
+                              setErrors({...errors, numero: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.numero ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="Digite o número"
+                        />
+                        {errors.numero && (
+                          <p className="text-red-500 text-xs mt-1">{errors.numero}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Complemento
+                        </label>
+                        <input
+                          type="text"
+                          value={complemento}
+                          onChange={(e) => setComplemento(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          placeholder="Apto, bloco, etc."
+                        />
+                    </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          UF <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={ufEndereco}
+                          onChange={(e) => {
+                            setUfEndereco(e.target.value);
+                            if (e.target.value && errors.ufEndereco) {
+                              setErrors({...errors, ufEndereco: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.ufEndereco ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">Selecione o estado</option>
+                          <option value="AC">AC</option>
+                          <option value="AL">AL</option>
+                          <option value="AP">AP</option>
+                          <option value="AM">AM</option>
+                          <option value="BA">BA</option>
+                          <option value="CE">CE</option>
+                          <option value="DF">DF</option>
+                          <option value="ES">ES</option>
+                          <option value="GO">GO</option>
+                          <option value="MA">MA</option>
+                          <option value="MT">MT</option>
+                          <option value="MS">MS</option>
+                          <option value="MG">MG</option>
+                          <option value="PA">PA</option>
+                          <option value="PB">PB</option>
+                          <option value="PR">PR</option>
+                          <option value="PE">PE</option>
+                          <option value="PI">PI</option>
+                          <option value="RJ">RJ</option>
+                          <option value="RN">RN</option>
+                          <option value="RS">RS</option>
+                          <option value="RO">RO</option>
+                          <option value="RR">RR</option>
+                          <option value="SC">SC</option>
+                          <option value="SP">SP</option>
+                          <option value="SE">SE</option>
+                          <option value="TO">TO</option>
+                        </select>
+                        {errors.ufEndereco && (
+                          <p className="text-red-500 text-xs mt-1">{errors.ufEndereco}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Cidade <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={cidade}
+                          onChange={(e) => {
+                            setCidade(e.target.value);
+                            if (e.target.value.trim() && errors.cidade) {
+                              setErrors({...errors, cidade: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.cidade ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="Digite a cidade"
+                        />
+                        {errors.cidade && (
+                          <p className="text-red-500 text-xs mt-1">{errors.cidade}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Bairro <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={bairro}
+                          onChange={(e) => {
+                            setBairro(e.target.value);
+                            if (e.target.value.trim() && errors.bairro) {
+                              setErrors({...errors, bairro: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.bairro ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="Digite o bairro"
+                        />
+                        {errors.bairro && (
+                          <p className="text-red-500 text-xs mt-1">{errors.bairro}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          E-mail <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (e.target.value.trim() && errors.email) {
+                              setErrors({...errors, email: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="Digite o e-mail"
+                        />
+                        {errors.email && (
+                          <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Telefone
+                        </label>
+                        <input
+                          type="text"
+                          value={telefone}
+                          onChange={(e) => setTelefone(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          placeholder="(00) 0000-0000"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          DDD <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={ddd}
+                          onChange={(e) => {
+                            const onlyNumbers = e.target.value.replace(/\D/g, '').slice(0, 2);
+                            setDdd(onlyNumbers);
+                            if (onlyNumbers && errors.ddd) {
+                              setErrors({...errors, ddd: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.ddd ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="00"
+                          maxLength={2}
+                        />
+                        {errors.ddd && (
+                          <p className="text-red-500 text-xs mt-1">{errors.ddd}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Celular <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={celular}
+                          onChange={(e) => {
+                            setCelular(e.target.value);
+                            if (e.target.value.trim() && errors.celular) {
+                              setErrors({...errors, celular: ''});
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
+                            errors.celular ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                          placeholder="(00) 90000-0000"
+                        />
+                        {errors.celular && (
+                          <p className="text-red-500 text-xs mt-1">{errors.celular}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Informações Adicionais */}
+                  <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">Informações adicionais</h4>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Observação
+                        </label>
+                        <textarea
+                          value={observacao}
+                          onChange={(e) => setObservacao(e.target.value)}
+                          rows={4}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          placeholder="Digite observações adicionais"
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap gap-6 mb-4">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="agendamentoHorario"
+                            checked={agendamentoHorario}
+                            onChange={(e) => setAgendamentoHorario(e.target.checked)}
+                            className="mr-2 w-4 h-4 text-[#00A298] focus:ring-[#00A298] border-gray-300 rounded"
+                          />
+                          <label htmlFor="agendamentoHorario" className="text-sm text-gray-700">
+                            Agendamentos para este profissional apenas com horário marcado
+                          </label>
+                        </div>
+
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="profissionalExterno"
+                            checked={profissionalExterno}
+                            onChange={(e) => setProfissionalExterno(e.target.checked)}
+                            className="mr-2 w-4 h-4 text-[#00A298] focus:ring-[#00A298] border-gray-300 rounded"
+                          />
+                          <label htmlFor="profissionalExterno" className="text-sm text-gray-700">
+                            Profissional externo
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Assinatura Digitalizada
+                          </label>
+                          <div className="space-y-2">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm"
+                            />
+                            <p className="text-xs text-gray-500">A imagem deve ter tamanho de 8,5cm x 3cm</p>
+                            <div className="flex gap-2">
+                              <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs transition-all duration-200">
+                                INCLUIR ASSINATURA
+                              </button>
+                              <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs transition-all duration-200">
+                                EXCLUIR ASSINATURA
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Certificado Digital
+                          </label>
+                          <div className="space-y-2">
+                            <input
+                              type="file"
+                              accept=".pfx"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent text-sm"
+                            />
+                            <p className="text-xs text-gray-500">Selecione um arquivo .pfx</p>
+                            <div className="flex gap-2">
+                              <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs transition-all duration-200">
+                                INCLUIR CERTIFICADO DIGITAL
+                              </button>
+                              <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs transition-all duration-200">
+                                EXCLUIR CERTIFICADO DIGITAL
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Situação
+                        </label>
+                        <select
+                          value={situacao}
+                          onChange={(e) => setSituacao(e.target.value)}
+                          className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        >
+                          <option value="Ativo">Ativo</option>
+                          <option value="Inativo">Inativo</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botões de Ação */}
+                  <div className="flex gap-3">
                       <button 
                         onClick={handleIncluir}
                         disabled={isSubmitting}
@@ -744,7 +1598,6 @@ export default function CadastroProfissionaisPage() {
                       >
                         RETORNAR
                       </button>
-                    </div>
                   </div>
                 </div>
               )}
