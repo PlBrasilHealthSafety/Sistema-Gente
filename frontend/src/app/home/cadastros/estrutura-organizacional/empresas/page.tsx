@@ -1512,7 +1512,7 @@ export default function EmpresasPage() {
                       </div>
 
                       {/* Botões de ação */}
-                      <div className="flex gap-3 pt-4 border-t border-gray-200">
+                      <div className="flex gap-3 mt-6">
                         {permissions.empresas.canCreate && (
                           <button 
                             onClick={handleIncluir}
@@ -1532,7 +1532,7 @@ export default function EmpresasPage() {
                           onClick={handleRetornar}
                           className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                         >
-                          RETORNAR
+                          VOLTAR
                         </button>
                       </div>
                     </div>
@@ -1985,7 +1985,7 @@ export default function EmpresasPage() {
                     onClick={handleFecharEdicao}
                     className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
-                    RETORNAR
+                    VOLTAR
                   </button>
                 </div>
               </div>

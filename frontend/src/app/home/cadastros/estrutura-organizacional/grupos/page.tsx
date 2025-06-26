@@ -1032,7 +1032,7 @@ export default function GruposPage() {
                       onClick={carregarGrupos}
                       className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                     >
-                      RECARREGAR
+                      ATUALIZAR
                     </button>
                 </div>
               </div>
@@ -1105,112 +1105,114 @@ export default function GruposPage() {
                         onClick={handleRetornar}
                         className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                       >
-                        RETORNAR
+                        VOLTAR
                       </button>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Tabela de resultados */}
-              <div className="p-6">
-                <div className="border border-gray-200 rounded-lg">
-                  <table className="w-full">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-1/2">Nome</th>
-                        {permissions.canViewSensitive && (
-                          <th className="px-11 py-3 text-center text-sm font-medium text-gray-700 w-100">Ponto Focal</th>
-                        )}
-                        <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-32">Situação</th>
-                        <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-48">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredGrupos && Array.isArray(filteredGrupos) && filteredGrupos.length > 0 ? (
-                        filteredGrupos.map((grupo) => (
-                          <tr key={grupo.id} className="border-b border-gray-200 hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm">
-                              <div>
-                                <div className="font-medium text-gray-900">{destacarTexto(grupo.nome, nomeBusca)}</div>
-                                {grupo.descricao && (
-                                  <div className="text-gray-500 text-xs mt-1">{destacarTexto(grupo.descricao, nomeBusca)}</div>
-                                )}
-
-                              </div>
-                            </td>
-                            {permissions.canViewSensitive && (
-                              <td className="px-12 py-3 text-center">
-                                <PontoFocalTooltip data={grupo} />
-                              </td>
-                            )}
-                            <td className="px-12 py-3 text-sm text-center">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                grupo.status === 'ativo' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {grupo.status}
-                              </span>
-                            </td>
-                            <td className="px-12 py-3 text-sm">
-              <div className="flex space-x-2 justify-center">
-                <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarGrupo(grupo)}>
-                  Visualizar
-                </button>
-                {permissions.grupos.canEdit && (
-                  <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarGrupo(grupo)}>
-                    Editar
-                  </button>
-                )}
-                {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando o grupo está inativo */}
-                {(user?.role === 'admin' || user?.role === 'super_admin') && grupo.status === 'inativo' && (
-                  <button 
-                    className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
-                    onClick={() => handleReativarGrupo(grupo)}
-                  >
-                    Reativar
-                  </button>
-                )}
-                {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando o grupo está ativo */}
-                {(user?.role === 'admin' || user?.role === 'super_admin') && grupo.status === 'ativo' && (
-                  <button 
-                    className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
-                    onClick={() => handleInativarGrupo(grupo)}
-                  >
-                    Inativar
-                  </button>
-                )}
-                {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
-                {user?.role === 'super_admin' && (
-                  <button 
-                    className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
-                    onClick={() => handleExcluirDefinitivo(grupo)}
-                  >
-                    Excluir
-                  </button>
-                )}
-              </div>
-            </td>
-                          </tr>
-                        ))
-                      ) : (
+              {/* Tabela de resultados - só mostra quando não está no modo de cadastro */}
+              {!showNewGroupModal && (
+                <div className="p-6">
+                  <div className="border border-gray-200 rounded-lg">
+                    <table className="w-full">
+                      <thead className="bg-gray-100">
                         <tr>
-                          <td 
-                            colSpan={
-                              3 + 
-                              (permissions.canViewSensitive ? 1 : 0)
-                            } 
-                            className="px-4 py-8 text-center text-gray-500"
-                          >
-                            {nomeBusca ? 'Nenhum grupo encontrado com o nome pesquisado' : 'Não existem dados para mostrar'}
-                          </td>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-1/2">Nome</th>
+                          {permissions.canViewSensitive && (
+                            <th className="px-11 py-3 text-center text-sm font-medium text-gray-700 w-100">Ponto Focal</th>
+                          )}
+                          <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-32">Situação</th>
+                          <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-48">Ações</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {filteredGrupos && Array.isArray(filteredGrupos) && filteredGrupos.length > 0 ? (
+                          filteredGrupos.map((grupo) => (
+                            <tr key={grupo.id} className="border-b border-gray-200 hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm">
+                                <div>
+                                  <div className="font-medium text-gray-900">{destacarTexto(grupo.nome, nomeBusca)}</div>
+                                  {grupo.descricao && (
+                                    <div className="text-gray-500 text-xs mt-1">{destacarTexto(grupo.descricao, nomeBusca)}</div>
+                                  )}
+
+                                </div>
+                              </td>
+                              {permissions.canViewSensitive && (
+                                <td className="px-12 py-3 text-center">
+                                  <PontoFocalTooltip data={grupo} />
+                                </td>
+                              )}
+                              <td className="px-12 py-3 text-sm text-center">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  grupo.status === 'ativo' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {grupo.status}
+                                </span>
+                              </td>
+                              <td className="px-12 py-3 text-sm">
+                <div className="flex space-x-2 justify-center">
+                  <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarGrupo(grupo)}>
+                    Visualizar
+                  </button>
+                  {permissions.grupos.canEdit && (
+                    <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarGrupo(grupo)}>
+                      Editar
+                    </button>
+                  )}
+                  {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando o grupo está inativo */}
+                  {(user?.role === 'admin' || user?.role === 'super_admin') && grupo.status === 'inativo' && (
+                    <button 
+                      className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
+                      onClick={() => handleReativarGrupo(grupo)}
+                    >
+                      Reativar
+                    </button>
+                  )}
+                  {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando o grupo está ativo */}
+                  {(user?.role === 'admin' || user?.role === 'super_admin') && grupo.status === 'ativo' && (
+                    <button 
+                      className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
+                      onClick={() => handleInativarGrupo(grupo)}
+                    >
+                      Inativar
+                    </button>
+                  )}
+                  {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
+                  {user?.role === 'super_admin' && (
+                    <button 
+                      className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
+                      onClick={() => handleExcluirDefinitivo(grupo)}
+                    >
+                      Excluir
+                    </button>
+                  )}
                 </div>
-              </div>
+              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td 
+                              colSpan={
+                                3 + 
+                                (permissions.canViewSensitive ? 1 : 0)
+                              } 
+                              className="px-4 py-8 text-center text-gray-500"
+                            >
+                              {nomeBusca ? 'Nenhum grupo encontrado com o nome pesquisado' : 'Não existem dados para mostrar'}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </main>
