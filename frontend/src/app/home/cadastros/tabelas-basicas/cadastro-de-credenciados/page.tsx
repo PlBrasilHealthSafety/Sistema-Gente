@@ -669,7 +669,7 @@ export default function CadastroCredenciados() {
                     onClick={carregarCredenciados}
                     className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
-                    RECARREGAR
+                    ATUALIZAR
                   </button>
                 </div>
               </div>
@@ -1117,25 +1117,25 @@ export default function CadastroCredenciados() {
                   </div>
                   
                   {/* Botões de Ação */}
-                  <div className="flex gap-2 pt-4 border-t border-gray-200">
+                  <div className="flex gap-3 pt-4">
                     <button
                       onClick={handleSalvarCredenciado}
                       disabled={isSubmitting}
-                      className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
+                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isSubmitting ? 'SALVANDO...' : (modoEdicao ? 'ATUALIZAR' : 'SALVAR')}
+                      {isSubmitting ? 'INCLUINDO...' : (modoEdicao ? 'ATUALIZAR' : 'INCLUIR')}
                     </button>
                     <button
                       onClick={handleLimparFormulario}
-                      className="px-5 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all duration-200 text-sm cursor-pointer"
+                      className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                     >
-                      Limpar
+                      LIMPAR
                     </button>
                     <button
                       onClick={handleFecharCadastro}
-                      className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200 text-sm cursor-pointer"
+                      className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                     >
-                      Cancelar
+                      VOLTAR
                     </button>
                   </div>
                 </div>
@@ -1158,6 +1158,9 @@ export default function CadastroCredenciados() {
                           Localização
                         </th>
                         <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">
+                          Situação
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">
                           Ações
                         </th>
                       </tr>
@@ -1170,7 +1173,7 @@ export default function CadastroCredenciados() {
                               <div className="font-medium text-gray-900">{credenciado.nome}</div>
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-900">
-                              <div className="font-mono">
+                              <div>
                                 {formatarCNPJ(credenciado.cnpj)}
                               </div>
                             </td>
@@ -1178,6 +1181,15 @@ export default function CadastroCredenciados() {
                               <div>
                                 {credenciado.cidade}, {credenciado.estado}
                               </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-center">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                credenciado.situacao === 'Ativo' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {credenciado.situacao}
+                              </span>
                             </td>
                             <td className="px-4 py-3 text-sm">
                               <div className="flex space-x-2 justify-center">
@@ -1215,7 +1227,7 @@ export default function CadastroCredenciados() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-4 py-12 text-center">
+                          <td colSpan={5} className="px-4 py-12 text-center">
                             <div className="text-gray-500">
                               <div className="mb-2">Nenhum credenciado encontrado</div>
                               <div className="text-sm">Ajuste os filtros ou cadastre um novo credenciado</div>
@@ -1227,79 +1239,7 @@ export default function CadastroCredenciados() {
                     </table>
                   </div>
 
-                  {/* Paginação - sempre mostrar para manter consistência */}
-                  {totalItens > 0 && (
-                  <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 flex justify-between sm:hidden">
-                        <button
-                          onClick={() => setPaginaAtual(Math.max(1, paginaAtual - 1))}
-                          disabled={paginaAtual === 1}
-                          className="relative inline-flex items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                          Anterior
-                        </button>
-                        <button
-                          onClick={() => setPaginaAtual(Math.min(totalPaginas, paginaAtual + 1))}
-                          disabled={paginaAtual === totalPaginas}
-                          className="ml-3 relative inline-flex items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                          Próxima
-                        </button>
-                      </div>
-                      <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-sm text-gray-700">
-                            Página <span className="font-medium">{paginaAtual}</span> de{' '}
-                            <span className="font-medium">{Math.max(1, totalPaginas)}</span> ({totalItens} {totalItens === 1 ? 'item' : 'itens'})
-                          </p>
-                        </div>
-                        <div>
-                          {totalPaginas > 1 ? (
-                            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                              {/* Botão Anterior */}
-                              <button
-                                onClick={() => setPaginaAtual(Math.max(1, paginaAtual - 1))}
-                                disabled={paginaAtual === 1}
-                                className="relative inline-flex items-center px-2.5 py-2.5 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                              >
-                                ←
-                              </button>
 
-                              {/* Páginas */}
-                              {gerarPaginacao().map((pagina) => (
-                                <button
-                                  key={pagina}
-                                  onClick={() => setPaginaAtual(pagina)}
-                                  className={`relative inline-flex items-center px-3.5 py-2.5 border text-sm font-medium cursor-pointer ${
-                                    pagina === paginaAtual
-                                      ? 'z-10 bg-[#00A298] border-[#00A298] text-white'
-                                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                  }`}
-                                >
-                                  {pagina}
-                                </button>
-                              ))}
-
-                              {/* Botão Próxima */}
-                              <button
-                                onClick={() => setPaginaAtual(Math.min(totalPaginas, paginaAtual + 1))}
-                                disabled={paginaAtual === totalPaginas}
-                                className="relative inline-flex items-center px-2.5 py-2.5 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                              >
-                                →
-                              </button>
-                            </nav>
-                          ) : (
-                            <div className="text-sm text-gray-500">
-                              {totalItens > 0 ? 'Todos os dados em uma página' : 'Nenhum item encontrado'}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
                 </div>
               )}
             </div>
