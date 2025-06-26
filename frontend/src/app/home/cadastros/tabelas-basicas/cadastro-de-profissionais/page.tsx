@@ -687,7 +687,7 @@ export default function CadastroProfissionaisPage() {
                     onClick={handleRecarregar}
                     className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
-                    RECARREGAR
+                    ATUALIZAR
                   </button>
                 </div>
               </div>
@@ -1429,7 +1429,7 @@ export default function CadastroProfissionaisPage() {
                       onClick={handleRetornar}
                         className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                     >
-                      RETORNAR
+                      VOLTAR
                     </button>
                   </div>
                 </div>
@@ -1446,8 +1446,6 @@ export default function CadastroProfissionaisPage() {
                         <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Sigla Conselho</th>
                         <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Número Conselho</th>
                         <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Externo</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ofensor</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Clínica</th>
                         <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Situação</th>
                         <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ações</th>
                       </tr>
@@ -1471,8 +1469,6 @@ export default function CadastroProfissionaisPage() {
                               {profissional.externo ? 'Sim' : 'Não'}
                             </span>
                           </td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{profissional.ofensor}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{profissional.clinica}</td>
                           <td className="px-4 py-3 text-sm text-center">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 (profissional.situacao || profissional.status) === 'ativo' 
@@ -1525,7 +1521,7 @@ export default function CadastroProfissionaisPage() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                          <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                             Não existem dados para mostrar
                           </td>
                         </tr>
