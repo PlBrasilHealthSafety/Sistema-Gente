@@ -326,6 +326,17 @@ export default function CadastroAgentesRisco() {
     setAgenteParaAcao(null);
   };
 
+  const getPlaceholderBusca = () => {
+    switch (pesquisarPor) {
+      case 'Agente':
+        return 'Digite o agente para busca...';
+      case 'FatorRisco':
+        return 'Digite o fator de risco para busca...';
+      default:
+        return 'Digite o termo para busca...';
+    }
+  };
+
   const gerarPaginacao = () => {
     const paginas = [];
     const maxPaginasVisiveis = 5;
@@ -437,20 +448,6 @@ export default function CadastroAgentesRisco() {
                   onClick={() => router.push('/home')}
                   className="hover:text-[#00A298] cursor-pointer"
                 >
-                  Home
-                </button>
-                <span>/</span>
-                <button 
-                  onClick={() => router.push('/home/cadastros')}
-                  className="hover:text-[#00A298] cursor-pointer"
-                >
-                  Cadastros
-                </button>
-                <span>/</span>
-                <button 
-                  onClick={() => router.push('/home/cadastros/tabelas-basicas')}
-                  className="hover:text-[#00A298] cursor-pointer"
-                >
                   Tabelas Básicas
                 </button>
                 <span>/</span>
@@ -492,7 +489,7 @@ export default function CadastroAgentesRisco() {
                       type="text"
                       value={termoBusca}
                       onChange={(e) => setTermoBusca(e.target.value)}
-                      placeholder="Digite o termo para busca..."
+                      placeholder={getPlaceholderBusca()}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     />
                   </div>

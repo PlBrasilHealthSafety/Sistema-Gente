@@ -18,7 +18,7 @@ interface Servico {
 const mockServicos: Servico[] = [
   {
     id: '1',
-    nome: 'TREINAMENTO BÁSICO NR10 (40H)',
+    nome: 'treinamento básico (40H)',
     descricao: 'Treinamento básico de segurança em instalações e serviços em eletricidade',
     categoria: 'Treinamento',
     valor: 250.00,
@@ -267,6 +267,19 @@ export default function CadastroServicos() {
     setServicoParaAcao(null);
   };
 
+  const getPlaceholderBusca = () => {
+    switch (pesquisarPor) {
+      case 'Nome':
+        return 'Digite o nome para busca...';
+      case 'Categoria':
+        return 'Digite a categoria para busca...';
+      case 'Descricao':
+        return 'Digite a descrição para busca...';
+      default:
+        return 'Digite o termo para busca...';
+    }
+  };
+
   const gerarPaginacao = () => {
     const paginas = [];
     const maxPaginasVisiveis = 5;
@@ -378,20 +391,6 @@ export default function CadastroServicos() {
                   onClick={() => router.push('/home')}
                   className="hover:text-[#00A298] cursor-pointer"
                 >
-                  Home
-                </button>
-                <span>/</span>
-                <button 
-                  onClick={() => router.push('/home/cadastros')}
-                  className="hover:text-[#00A298] cursor-pointer"
-                >
-                  Cadastros
-                </button>
-                <span>/</span>
-                <button 
-                  onClick={() => router.push('/home/cadastros/tabelas-basicas')}
-                  className="hover:text-[#00A298] cursor-pointer"
-                >
                   Tabelas Básicas
                 </button>
                 <span>/</span>
@@ -434,7 +433,7 @@ export default function CadastroServicos() {
                       type="text"
                       value={termoBusca}
                       onChange={(e) => setTermoBusca(e.target.value)}
-                      placeholder="Digite o termo para busca..."
+                      placeholder={getPlaceholderBusca()}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     />
                   </div>
@@ -556,28 +555,28 @@ export default function CadastroServicos() {
               <div className="p-6">
                 <div className="border border-gray-200 rounded-lg">
                   <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-gray-100">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                           Nome
                         </th>
-                        <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">
                           Situação
                         </th>
-                        <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">
                           Ações
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
+                    <tbody>
                       {servicosExibidos.length > 0 ? (
                         servicosExibidos.map((servico) => (
-                          <tr key={servico.id} className="hover:bg-gray-50 transition-colors duration-150">
-                            <td className="px-6 py-4">
-                              <div className="font-medium text-gray-700">{servico.nome}</div>
+                          <tr key={servico.id} className="border-b border-gray-200 hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm">
+                              <div className="font-medium text-gray-900">{servico.nome}</div>
                             </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            <td className="px-4 py-3 text-sm text-center">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 servico.situacao === 'Ativo' 
                                   ? 'bg-green-100 text-green-800' 
                                   : 'bg-red-100 text-red-800'
@@ -585,7 +584,7 @@ export default function CadastroServicos() {
                                 {servico.situacao}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-center">
+                            <td className="px-4 py-3 text-sm">
                               <div className="flex space-x-2 justify-center">
                                 <button 
                                   onClick={() => handleVisualizarServico(servico)}
@@ -621,11 +620,8 @@ export default function CadastroServicos() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={3} className="px-6 py-12 text-center">
-                            <div className="text-gray-500">
-                              <div className="mb-2">Não existem dados para mostrar</div>
-                              <div className="text-sm">Ajuste os filtros ou cadastre um novo serviço</div>
-                            </div>
+                          <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
+                            Não existem dados para mostrar
                           </td>
                         </tr>
                       )}

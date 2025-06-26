@@ -588,20 +588,6 @@ export default function CadastroCredenciados() {
                   onClick={() => router.push('/home')}
                   className="hover:text-[#00A298] cursor-pointer"
                 >
-                  Home
-                </button>
-                <span>/</span>
-                <button 
-                  onClick={() => router.push('/home/cadastros')}
-                  className="hover:text-[#00A298] cursor-pointer"
-                >
-                  Cadastros
-                </button>
-                <span>/</span>
-                <button 
-                  onClick={() => router.push('/home/cadastros/tabelas-basicas')}
-                  className="hover:text-[#00A298] cursor-pointer"
-                >
                   Tabelas Básicas
                 </button>
                 <span>/</span>

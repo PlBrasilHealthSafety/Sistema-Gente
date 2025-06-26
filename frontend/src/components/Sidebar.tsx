@@ -31,7 +31,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const [user, setUser] = useState<User | null>(null);
   const [expandedMenus, setExpandedMenus] = useState<{[key: string]: boolean}>({
     cadastros: true,
-    'tabelas-basicas': false
+    'tabelas-basicas': true
   });
 
   useEffect(() => {
