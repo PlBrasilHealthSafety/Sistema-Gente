@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste API Profissionais</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #00A298;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #008b7d;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Teste API Profissionais</h1>
+        
+        <div>
+            <h2>1. Login</h2>
+            <button onclick="fazerLogin()">Fazer Login</button>
+            <div id="loginResult"></div>
+        </div>
+
+        <div>
+            <h2>2. Listar Profissionais</h2>
+            <button onclick="listarProfissionais()">Listar Profissionais</button>
+            <div id="listResult"></div>
+        </div>
+
+        <div>
+            <h2>3. Criar Profissional</h2>
+            <button onclick="criarProfissional()">Criar Profissional de Teste</button>
+            <div id="createResult"></div>
+        </div>
+
+        <div>
+            <h2>4. Atualizar Profissional</h2>
+            <input type="number" id="updateId" placeholder="ID do profissional">
+            <button onclick="atualizarProfissional()">Atualizar Profissional</button>
+            <div id="updateResult"></div>
+        </div>
+
+        <div>
+            <h2>5. Excluir Profissional</h2>
+            <input type="number" id="deleteId" placeholder="ID do profissional">
+            <button onclick="excluirProfissional()">Excluir Profissional</button>
+            <div id="deleteResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let token = '';
+
+        async function fazerLogin() {
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'super@sistema.com',
+                        password: 'super123'
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    token = data.token;
+                    document.getElementById('loginResult').innerHTML = 
+                        '<pre class="success">Login realizado com sucesso!\nToken: ' + token.substring(0, 20) + '...</pre>';
+                } else {
+                    document.getElementById('loginResult').innerHTML = 
+                        '<pre class="error">Erro no login: ' + JSON.stringify(data, null, 2) + '</pre>';
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = 
+                    '<pre class="error">Erro: ' + error.message + '</pre>';
+            }
+        }
+
+        async function listarProfissionais() {
+            try {
+                const response = await fetch('http://localhost:3001/api/profissionais', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('listResult').innerHTML = 
+                        '<pre class="success">' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    document.getElementById('listResult').innerHTML = 
+                        '<pre class="error">Erro: ' + JSON.stringify(data, null, 2) + '</pre>';
+                }
+            } catch (error) {
+                document.getElementById('listResult').innerHTML = 
+                    '<pre class="error">Erro: ' + error.message + '</pre>';
+            }
+        }
+
+        async function criarProfissional() {
+            const novoProfissional = {
+                nome: 'Dr. Teste ' + new Date().getTime(),
+                cpf: '123.456.789-00',
+                rg: '12.345.678-9',
+                data_nascimento: '1990-01-01',
+                nis: '12345678901',
+                categoria: 'Médico',
+                sigla_conselho: 'CRM',
+                numero_conselho: '12345',
+                telefone: '(11) 3333-3333',
+                celular: '(11) 99999-9999',
+                email: 'teste@exemplo.com',
+                observacoes: 'Profissional de teste',
+                externo: false,
+                ofensor: '',
+                clinica: 'Clínica Teste'
+            };
+
+            try {
+                const response = await fetch('http://localhost:3001/api/profissionais', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(novoProfissional)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('createResult').innerHTML = 
+                        '<pre class="success">Profissional criado com sucesso!\n' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    document.getElementById('createResult').innerHTML = 
+                        '<pre class="error">Erro: ' + JSON.stringify(data, null, 2) + '</pre>';
+                }
+            } catch (error) {
+                document.getElementById('createResult').innerHTML = 
+                    '<pre class="error">Erro: ' + error.message + '</pre>';
+            }
+        }
+
+        async function atualizarProfissional() {
+            const id = document.getElementById('updateId').value;
+            if (!id) {
+                alert('Por favor, informe o ID do profissional');
+                return;
+            }
+
+            const dadosAtualizados = {
+                nome: 'Dr. Atualizado ' + new Date().getTime(),
+                categoria: 'Enfermeiro',
+                status: 'ativo'
+            };
+
+            try {
+                const response = await fetch(`http://localhost:3001/api/profissionais/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dadosAtualizados)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('updateResult').innerHTML = 
+                        '<pre class="success">Profissional atualizado com sucesso!\n' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    document.getElementById('updateResult').innerHTML = 
+                        '<pre class="error">Erro: ' + JSON.stringify(data, null, 2) + '</pre>';
+                }
+            } catch (error) {
+                document.getElementById('updateResult').innerHTML = 
+                    '<pre class="error">Erro: ' + error.message + '</pre>';
+            }
+        }
+
+        async function excluirProfissional() {
+            const id = document.getElementById('deleteId').value;
+            if (!id) {
+                alert('Por favor, informe o ID do profissional');
+                return;
+            }
+
+            if (!confirm('Tem certeza que deseja excluir este profissional?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3001/api/profissionais/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('deleteResult').innerHTML = 
+                        '<pre class="success">Profissional excluído com sucesso!\n' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    document.getElementById('deleteResult').innerHTML = 
+                        '<pre class="error">Erro: ' + JSON.stringify(data, null, 2) + '</pre>';
+                }
+            } catch (error) {
+                document.getElementById('deleteResult').innerHTML = 
+                    '<pre class="error">Erro: ' + error.message + '</pre>';
+            }
+        }
+
+        // Fazer login automaticamente ao carregar a página
+        window.onload = () => {
+            fazerLogin();
+        };
+    </script>
+</body>
+</html> 
