@@ -63,6 +63,7 @@ export default function CadastroProfissionaisPage() {
     handleNomeBuscaChange,
     handleSituacaoBuscaChange,
     handleSelectAutocomplete,
+    handleAutocompleteResults,
     getPlaceholder
   } = useFiltros(profissionais);
   
@@ -189,8 +190,8 @@ export default function CadastroProfissionaisPage() {
   const handleAutocompleteSearch = (value: string) => {
     if (!value.trim()) {
       setShowAutocomplete(false);
-          return;
-        }
+      return;
+    }
 
     if (!Array.isArray(profissionais)) {
       setShowAutocomplete(false);
@@ -200,25 +201,20 @@ export default function CadastroProfissionaisPage() {
     const filtered = profissionais.filter(profissional => {
       switch (tipoPesquisa) {
         case 'nome':
-          return profissional.nome.toLowerCase().includes(value.toLowerCase());
+          return profissional.nome?.toLowerCase().includes(value.toLowerCase());
         case 'categoria':
-          return profissional.categoria.toLowerCase().includes(value.toLowerCase());
+          return profissional.categoria?.toLowerCase().includes(value.toLowerCase());
         case 'numero_conselho':
-          return profissional.numero_conselho.toLowerCase().includes(value.toLowerCase());
+          return profissional.numero_conselho?.toLowerCase().includes(value.toLowerCase());
         default:
-          return profissional.nome.toLowerCase().includes(value.toLowerCase());
+          return profissional.nome?.toLowerCase().includes(value.toLowerCase());
       }
     }).slice(0, 5);
 
     handleAutocompleteResults(filtered);
   };
 
-  // Função para atualizar resultados do autocomplete
-  const handleAutocompleteResults = (results: Profissional[]) => {
-    if (results.length > 0) {
-      setShowAutocomplete(true);
-    }
-  };
+
 
   // Handler customizado para mudança de busca
   const handleCustomNomeBuscaChange = (value: string) => {
