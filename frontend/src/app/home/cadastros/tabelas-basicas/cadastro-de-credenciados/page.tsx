@@ -66,6 +66,10 @@ export default function CadastroCredenciados() {
   const [showConfirmacaoInativacao, setShowConfirmacaoInativacao] = useState(false);
   const [credenciadoParaAcao, setCredenciadoParaAcao] = useState<Credenciado | null>(null);
   
+  // Estados para visualização
+  const [showViewCredenciadoModal, setShowViewCredenciadoModal] = useState(false);
+  const [credenciadoVisualizando, setCredenciadoVisualizando] = useState<Credenciado | null>(null);
+  
   // Estados dos campos do formulário
   const [formData, setFormData] = useState({
     nome: '',
@@ -157,6 +161,13 @@ export default function CadastroCredenciados() {
   const handleProcurar = () => {
     // A busca já é feita automaticamente via useEffect
     // Este método pode ser usado para ações adicionais se necessário
+  };
+
+  const carregarCredenciados = () => {
+    setTermoBusca('');
+    setSituacao('Todos');
+    setCredenciadosFiltrados(mockCredenciados);
+    setPaginaAtual(1);
   };
 
   const handleNovoCredenciado = () => {
@@ -387,6 +398,16 @@ export default function CadastroCredenciados() {
   };
 
   // Funções para ações da tabela
+  const handleVisualizarCredenciado = (credenciado: Credenciado) => {
+    setCredenciadoVisualizando(credenciado);
+    setShowViewCredenciadoModal(true);
+  };
+
+  const handleFecharVisualizacao = () => {
+    setShowViewCredenciadoModal(false);
+    setCredenciadoVisualizando(null);
+  };
+
   const handleEditarCredenciado = (credenciado: Credenciado) => {
     setModoEdicao(true);
     setCredenciadoEditando(credenciado.id);
@@ -644,18 +665,25 @@ export default function CadastroCredenciados() {
                     </select>
                   </div>
 
-                  <button
+                  <button 
                     onClick={handleProcurar}
-                    className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer ml-2"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer ml-2"
                   >
-                    PROCURAR
+                    PROCURAR  
                   </button>
                   
-                  <button
+                  <button 
                     onClick={handleNovoCredenciado}
-                    className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                    className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
                     NOVO CREDENCIADO
+                  </button>
+                  
+                  <button 
+                    onClick={carregarCredenciados}
+                    className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    RECARREGAR
                   </button>
                 </div>
               </div>
@@ -1166,28 +1194,32 @@ export default function CadastroCredenciados() {
                               </div>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <div className="flex justify-center gap-2">
+                              <div className="flex space-x-2 justify-center">
+                                <button 
+                                  onClick={() => handleVisualizarCredenciado(credenciado)}
+                                  className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer"
+                                >
+                                  Visualizar
+                                </button>
                                 <button 
                                   onClick={() => handleEditarCredenciado(credenciado)}
-                                  className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-150 cursor-pointer"
+                                  className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer"
                                 >
                                   Editar
                                 </button>
-                                <span className="text-gray-300">|</span>
                                 <button 
                                   onClick={() => handleInativarCredenciado(credenciado)}
-                                  className={`font-medium text-sm transition-colors duration-150 cursor-pointer ${
+                                  className={`text-xs font-medium cursor-pointer ${
                                     credenciado.situacao === 'Ativo' 
-                                      ? 'text-red-600 hover:text-red-800' 
+                                      ? 'text-orange-600 hover:text-orange-800' 
                                       : 'text-green-600 hover:text-green-800'
                                   }`}
                                 >
                                   {credenciado.situacao === 'Ativo' ? 'Inativar' : 'Ativar'}
                                 </button>
-                                <span className="text-gray-300">|</span>
                                 <button 
                                   onClick={() => handleExcluirCredenciado(credenciado)}
-                                  className="text-red-600 hover:text-red-800 font-medium text-sm transition-colors duration-150 cursor-pointer"
+                                  className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer"
                                 >
                                   Excluir
                                 </button>
@@ -1289,9 +1321,216 @@ export default function CadastroCredenciados() {
         </main>
       </div>
 
+      {/* Modal de Visualização */}
+      {showViewCredenciadoModal && credenciadoVisualizando && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-[#1D3C44] mb-6">Visualizar Credenciado</h3>
+              
+              <div className="space-y-8">
+                {/* Informações Básicas */}
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-700 mb-6 border-b border-gray-200 pb-3">Informações Básicas</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nome do Credenciado
+                      </label>
+                      <input
+                        type="text"
+                        value={credenciadoVisualizando.nome}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        CNPJ
+                      </label>
+                      <input
+                        type="text"
+                        value={formatarCNPJ(credenciadoVisualizando.cnpj)}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Telefone
+                      </label>
+                      <input
+                        type="text"
+                        value="(16) 99999-9999"
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        placeholder="Não informado"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        E-mail
+                      </label>
+                      <input
+                        type="email"
+                        value="contato@exemplo.com"
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        placeholder="Não informado"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Website
+                      </label>
+                      <input
+                        type="url"
+                        value="https://www.exemplo.com"
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        placeholder="Não informado"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Endereço */}
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-700 mb-6 border-b border-gray-200 pb-3">Endereço</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        CEP
+                      </label>
+                      <input
+                        type="text"
+                        value="14000-000"
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        placeholder="Não informado"
+                      />
+                    </div>
+
+                    <div className="lg:col-span-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Logradouro
+                      </label>
+                      <input
+                        type="text"
+                        value="Rua das Flores"
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        placeholder="Não informado"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Número
+                      </label>
+                      <input
+                        type="text"
+                        value="123"
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        placeholder="Não informado"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Complemento
+                      </label>
+                      <input
+                        type="text"
+                        value="Sala 101"
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        placeholder="Não informado"
+                      />
+                    </div>
+
+                    <div className="lg:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Cidade
+                      </label>
+                      <input
+                        type="text"
+                        value={credenciadoVisualizando.cidade}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        UF
+                      </label>
+                      <input
+                        type="text"
+                        value={credenciadoVisualizando.estado}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div className="lg:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Bairro
+                      </label>
+                      <input
+                        type="text"
+                        value="Centro"
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        placeholder="Não informado"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Situação */}
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-700 mb-6 border-b border-gray-200 pb-3">Status</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Situação
+                      </label>
+                      <div className="flex items-center">
+                        <span className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${
+                          credenciadoVisualizando.situacao === 'Ativo' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {credenciadoVisualizando.situacao}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleFecharVisualizacao}
+                  className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                >
+                  FECHAR
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Confirmação de Exclusão */}
       {showConfirmacaoExclusao && credenciadoParaAcao && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center mb-4">
               <div className="bg-red-100 rounded-full p-2 mr-3">
@@ -1330,7 +1569,7 @@ export default function CadastroCredenciados() {
 
       {/* Modal de Confirmação de Inativação/Ativação */}
       {showConfirmacaoInativacao && credenciadoParaAcao && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center mb-4">
               <div className={`rounded-full p-2 mr-3 ${
