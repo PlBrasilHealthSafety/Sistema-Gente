@@ -173,9 +173,15 @@ export default function FormularioBusca({
                   <div className="font-medium text-gray-900">
                     {(destacarTexto || defaultDestacarTexto)(profissional.nome, nomeBusca)}
                   </div>
-                  <div className="text-sm text-gray-500">{profissional.categoria}</div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    Situação: {profissional.situacao || profissional.status || 'ativo'}
+                  <div className="text-sm text-gray-500 mt-1">
+                    <span className="text-blue-600">👨‍⚕️ {profissional.categoria}</span>
+                    <span className="ml-2 text-green-600">🆔 {profissional.sigla_conselho} {profissional.numero_conselho}</span>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {profissional.email && <span className="text-purple-600">📧 {profissional.email}</span>}
+                    <span className={`ml-2 ${(profissional.situacao || profissional.status) === 'ativo' ? 'text-green-600' : 'text-red-600'}`}>
+                      {(profissional.situacao || profissional.status) === 'ativo' ? '✅ Ativo' : '❌ Inativo'}
+                    </span>
                   </div>
                 </div>
               ))}

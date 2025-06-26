@@ -43,10 +43,30 @@ class ProfissionaisService {
 
   async criarProfissional(profissionalData: Partial<Profissional>): Promise<Profissional> {
     try {
+      // Mapear campos para garantir compatibilidade com o backend
+      const dadosMapeados = {
+        ...profissionalData,
+        // Garantir que numero_conselho seja enviado
+        numero_conselho: profissionalData.numero_conselho || profissionalData.reg_conselho,
+        // Converter status/situacao para minúsculas (sempre usar 'status', nunca 'situacao')
+        status: profissionalData.situacao?.toLowerCase() || profissionalData.status || 'ativo',
+        // Garantir campos booleanos
+        externo: profissionalData.externo || profissionalData.profissional_externo || false,
+        agendamento_horario: profissionalData.agendamento_horario || false,
+        profissional_externo: profissionalData.profissional_externo || false,
+      };
+
+      // Remover campos undefined, null e o campo 'situacao' (que é uma coluna gerada)
+      const dadosLimpos = Object.fromEntries(
+        Object.entries(dadosMapeados).filter(([key, value]) => {
+          return value != null && key !== 'situacao' && key !== 'id';
+        })
+      );
+
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify(profissionalData)
+        body: JSON.stringify(dadosLimpos)
       });
 
       if (!response.ok) {
@@ -64,10 +84,30 @@ class ProfissionaisService {
 
   async atualizarProfissional(id: number, profissionalData: Partial<Profissional>): Promise<Profissional> {
     try {
+      // Mapear campos para garantir compatibilidade com o backend
+      const dadosMapeados = {
+        ...profissionalData,
+        // Garantir que numero_conselho seja enviado
+        numero_conselho: profissionalData.numero_conselho || profissionalData.reg_conselho,
+        // Converter status/situacao para minúsculas (sempre usar 'status', nunca 'situacao')
+        status: profissionalData.situacao?.toLowerCase() || profissionalData.status || 'ativo',
+        // Garantir campos booleanos
+        externo: profissionalData.externo || profissionalData.profissional_externo || false,
+        agendamento_horario: profissionalData.agendamento_horario || false,
+        profissional_externo: profissionalData.profissional_externo || false,
+      };
+
+      // Remover campos undefined, null e o campo 'situacao' (que é uma coluna gerada)
+      const dadosLimpos = Object.fromEntries(
+        Object.entries(dadosMapeados).filter(([key, value]) => {
+          return value != null && key !== 'situacao' && key !== 'id' && key !== 'created_at' && key !== 'created_by';
+        })
+      );
+
       const response = await fetch(`${this.baseUrl}/${id}`, {
         method: 'PUT',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify(profissionalData)
+        body: JSON.stringify(dadosLimpos)
       });
 
       if (!response.ok) {

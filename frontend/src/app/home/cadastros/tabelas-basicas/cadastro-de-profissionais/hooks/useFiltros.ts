@@ -85,8 +85,9 @@ export const useFiltros = (profissionais: Profissional[] = []) => {
     setAutocompleteResults([]);
   };
 
-  const getPlaceholder = (type: string) => {
-    switch (type) {
+  const getPlaceholder = (type?: string) => {
+    const searchType = type || tipoPesquisa;
+    switch (searchType) {
       case 'nome':
         return 'Digite o nome do profissional...';
       case 'categoria':

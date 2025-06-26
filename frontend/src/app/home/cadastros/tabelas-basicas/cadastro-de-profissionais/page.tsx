@@ -3,39 +3,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { formatTexto, formatCEP, isValidCEP } from '@/utils/masks';
+import { formatTexto } from '@/utils/masks';
 import { usePermissions } from '@/hooks/usePermissions';
 
-interface NotificationMessage {
-  type: 'success' | 'error';
-  message: string;
-  show: boolean;
-}
+// Hooks customizados
+import { useProfissionais } from './hooks/useProfissionais';
+import { useFiltros } from './hooks/useFiltros';
+import { useFormularioProfissional } from './hooks/useFormularioProfissional';
+import { useNotification } from './hooks/useNotification';
 
-interface User {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: string;
-  is_active: boolean;
-}
+// Tipos
+import { User, Profissional, FormErrors } from './types/profissional.types';
 
-interface Profissional {
-  id: number;
-  nome: string;
-  categoria: string;
-  sigla_conselho: string;
-  numero_conselho: string;
-  externo: boolean;
-  ofensor: string;
-  clinica: string;
-  situacao: 'ativo' | 'inativo';
-  created_by: number;
-  updated_by: number;
-  created_at: string;
-  updated_at: string;
-}
+// Utils
+import { formatCPF } from './utils/formatters';
 
 interface Grupo {
   id: number;
@@ -55,69 +36,114 @@ export default function CadastroProfissionaisPage() {
   // Hook de permissões
   const permissions = usePermissions(user);
   
-  // Estados para o formulário
+  // Hook de notificação
+  const { notification, showNotification, hideNotification } = useNotification();
+  
+  // Hook de profissionais
+  const {
+    profissionais,
+    loading: loadingProfissionais,
+    carregarProfissionais,
+    criarProfissional,
+    atualizarProfissional,
+    excluirProfissional
+  } = useProfissionais();
+  
+  // Hook de filtros
+  const {
+    tipoPesquisa,
+    nomeBusca,
+    situacaoBusca,
+    showAutocomplete,
+    autocompleteResults,
+    profissionaisFiltrados,
+    setNomeBusca,
+    setShowAutocomplete,
+    handleTipoPesquisaChange,
+    handleNomeBuscaChange,
+    handleSituacaoBuscaChange,
+    handleSelectAutocomplete,
+    getPlaceholder
+  } = useFiltros(profissionais);
+  
+  // Hook de formulário
+  const {
+    // Estados do formulário
+    nomeProfissional,
+    nacionalidade,
+    cpf,
+    nis,
+    categoria,
+    siglaConselho,
+    regConselho,
+    ufConselho,
+    regMte,
+    cep,
+    endereco,
+    loadingCep,
+    cepError,
+    email,
+    telefone,
+    ddd,
+    celular,
+    observacao,
+    agendamentoHorario,
+    profissionalExterno,
+    assinaturaDigital,
+    certificadoDigital,
+    situacao,
+    errors,
+    setErrors,
+    isSubmitting,
+    
+    // Estados adicionais para compatibilidade
+    numeroConselho,
+    externo,
+    ofensor,
+    clinica,
+    
+    // Setters
+    setNomeProfissional,
+    setNacionalidade,
+    setCpf,
+    setNis,
+    setCategoria,
+    setSiglaConselho,
+    setRegConselho,
+    setUfConselho,
+    setRegMte,
+    setCep,
+    setEndereco,
+    setEmail,
+    setTelefone,
+    setDdd,
+    setCelular,
+    setObservacao,
+    setAgendamentoHorario,
+    setProfissionalExterno,
+    setAssinaturaDigital,
+    setCertificadoDigital,
+    setSituacao,
+    setIsSubmitting,
+    setNumeroConselho,
+    setExterno,
+    setOfensor,
+    setClinica,
+    
+    // Handlers
+    handleCepChange,
+    handleCpfChange,
+    
+    // Funções
+    validateForm,
+    limparFormulario,
+    carregarProfissional,
+    getFormData
+  } = useFormularioProfissional();
+  
+  // Estados para o modal
   const [showNewProfissionalModal, setShowNewProfissionalModal] = useState(false);
   
-  // Dados cadastrais
-  const [nomeProfissional, setNomeProfissional] = useState('');
-  const [nacionalidade, setNacionalidade] = useState('Brasileiro');
-  const [cpf, setCpf] = useState('');
-  const [nis, setNis] = useState('');
-  const [categoria, setCategoria] = useState('');
-  const [siglaConselho, setSiglaConselho] = useState('');
-  const [regConselho, setRegConselho] = useState('');
-  const [ufConselho, setUfConselho] = useState('');
-  const [regMte, setRegMte] = useState('');
-  
-  // Informações de contato
-  const [cep, setCep] = useState('');
-  const [tipoLogradouro, setTipoLogradouro] = useState('');
-  const [logradouro, setLogradouro] = useState('');
-  const [numero, setNumero] = useState('');
-  const [complemento, setComplemento] = useState('');
-  const [ufEndereco, setUfEndereco] = useState('');
-  const [cidade, setCidade] = useState('');
-  const [bairro, setBairro] = useState('');
-  const [email, setEmail] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [ddd, setDdd] = useState('');
-  const [celular, setCelular] = useState('');
-  
-  // Informações adicionais
-  const [observacao, setObservacao] = useState('');
-  const [agendamentoHorario, setAgendamentoHorario] = useState(false);
-  const [profissionalExterno, setProfissionalExterno] = useState(false);
-  const [assinaturaDigital, setAssinaturaDigital] = useState('');
-  const [certificadoDigital, setCertificadoDigital] = useState('');
-  const [situacao, setSituacao] = useState('Ativo');
-  
-  // Campos antigos mantidos para compatibilidade
-  const [numeroConselho, setNumeroConselho] = useState('');
-  const [externo, setExterno] = useState(false);
-  const [ofensor, setOfensor] = useState('');
-  const [clinica, setClinica] = useState('');
-  
-  // Estados para busca
-  const [nomeBusca, setNomeBusca] = useState('');
-  const [situacaoBusca, setSituacaoBusca] = useState('ativo');
-  const [tipoPesquisa, setTipoPesquisa] = useState('nome');
-  
-  // Estados para dados
-  const [profissionais, setProfissionais] = useState<Profissional[]>([]);
-  const [filteredProfissionais, setFilteredProfissionais] = useState<Profissional[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Estados para notificação
-  const [notification, setNotification] = useState<NotificationMessage>({
-    type: 'success',
-    message: '',
-    show: false
-  });
-
-  // Estados para o autocomplete
-  const [showAutocomplete, setShowAutocomplete] = useState(false);
-  const [autocompleteResults, setAutocompleteResults] = useState<Profissional[]>([]);
-
   // Estados para modais
   const [showViewProfissionalModal, setShowViewProfissionalModal] = useState(false);
   const [showEditProfissionalModal, setShowEditProfissionalModal] = useState(false);
@@ -128,219 +154,21 @@ export default function CadastroProfissionaisPage() {
   const [profissionalExcluindo, setProfissionalExcluindo] = useState<Profissional | null>(null);
   const [profissionalExcluindoDefinitivo, setProfissionalExcluindoDefinitivo] = useState<Profissional | null>(null);
 
-  // Estados para CEP e endereço
+  // Estados para grupos e regiões (compatibilidade)
   const [, setGrupos] = useState<Grupo[]>([]);
   const [, setRegioes] = useState<Regiao[]>([]);
   const [gruposAtivos, setGruposAtivos] = useState<Grupo[]>([]);
   const [regioesAtivas, setRegioesAtivas] = useState<Regiao[]>([]);
   const [regioesFiltroFiltradas, setRegioesFiltroFiltradas] = useState<Regiao[]>([]);
 
-  // Estados para CEP e endereço
-  const [loadingCep, setLoadingCep] = useState(false);
-  const [cepError, setCepError] = useState('');
-
-  // Estados para validação de campos obrigatórios
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Função para exibir notificação
-  const showNotification = (type: 'success' | 'error', message: string) => {
-    setNotification({ type, message, show: true });
-    setTimeout(() => {
-      setNotification(prev => ({ ...prev, show: false }));
-    }, 5000);
-  };
-
-  // Função para buscar CEP
-  const buscarCep = async (cepValue: string) => {
-    const cepLimpo = cepValue.replace(/\D/g, '');
-    
-    if (cepLimpo.length === 8) {
-      setLoadingCep(true);
-      setCepError('');
-      
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-        const data = await response.json();
-        
-        if (!data.erro) {
-          setLogradouro(data.logradouro || '');
-          setBairro(data.bairro || '');
-          setCidade(data.localidade || '');
-          setUfEndereco(data.uf || '');
-          setTipoLogradouro(data.logradouro ? data.logradouro.split(' ')[0] : '');
-          setCepError('');
-        } else {
-          setCepError('CEP não encontrado. Verifique o número digitado.');
-        }
-      } catch (error) {
-        console.error('Erro ao buscar CEP:', error);
-        setCepError('Erro ao buscar CEP. Verifique sua conexão e tente novamente.');
-      } finally {
-        setLoadingCep(false);
-      }
-    }
-  };
-
-  // Handler para mudança no CEP
-  const handleCepChange = (value: string) => {
-    const formattedCep = formatCEP(value);
-    setCep(formattedCep);
-    
-    if (cepError) {
-      setCepError('');
-    }
-    
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length === 8) {
-      buscarCep(numbers);
-    }
-  };
-
-  // Função para formatar CPF
-  const formatCPF = (value: string) => {
-    // Remove tudo que não é dígito
-    const onlyNumbers = value.replace(/\D/g, '');
-    
-    // Limita a 11 dígitos
-    const limitedNumbers = onlyNumbers.slice(0, 11);
-    
-    // Aplica a formatação
-    if (limitedNumbers.length <= 3) {
-      return limitedNumbers;
-    } else if (limitedNumbers.length <= 6) {
-      return limitedNumbers.replace(/(\d{3})(\d+)/, '$1.$2');
-    } else if (limitedNumbers.length <= 9) {
-      return limitedNumbers.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
-    } else {
-      return limitedNumbers.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, '$1.$2.$3-$4');
-    }
-  };
-
-  // Função para validar campos obrigatórios
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    // Validar nome
-    if (!nomeProfissional.trim()) {
-      newErrors.nomeProfissional = 'Nome é obrigatório';
-    }
-
-    // Validar nacionalidade
-    if (!nacionalidade.trim()) {
-      newErrors.nacionalidade = 'Nacionalidade é obrigatória';
-    }
-
-    // Validar CPF
-    if (!cpf.trim()) {
-      newErrors.cpf = 'CPF é obrigatório';
-    } else {
-      // Remover pontos e traços para validar apenas números
-      const cpfNumeros = cpf.replace(/[.-]/g, '');
-      if (cpfNumeros.length !== 11 || !/^\d{11}$/.test(cpfNumeros)) {
-        newErrors.cpf = 'CPF deve conter exatamente 11 números';
-      }
-    }
-
-    // Validar NIS (opcional, mas se preenchido deve ter 11 dígitos)
-    if (nis && nis.trim()) {
-      const nisNumeros = nis.replace(/\D/g, '');
-      if (nisNumeros.length !== 11) {
-        newErrors.nis = 'NIS deve ter exatamente 11 dígitos';
-      }
-    }
-
-    // Validar categoria
-    if (!categoria.trim()) {
-      newErrors.categoria = 'Categoria é obrigatória';
-    }
-
-    // Validar sigla do conselho
-    if (!siglaConselho.trim()) {
-      newErrors.siglaConselho = 'Sigla do conselho é obrigatória';
-    }
-
-    // Validar registro do conselho
-    if (!regConselho.trim()) {
-      newErrors.regConselho = 'Registro do conselho é obrigatório';
-    }
-
-    // Validar UF do conselho
-    if (!ufConselho.trim()) {
-      newErrors.ufConselho = 'UF do conselho é obrigatória';
-    }
-
-    // Validar CEP
-    if (!cep.trim()) {
-      newErrors.cep = 'CEP é obrigatório';
-    } else if (!isValidCEP(cep)) {
-      newErrors.cep = 'CEP deve ter 8 dígitos';
-    }
-
-    // Validar tipo de logradouro
-    if (!tipoLogradouro.trim()) {
-      newErrors.tipoLogradouro = 'Tipo de logradouro é obrigatório';
-    }
-
-    // Validar logradouro
-    if (!logradouro.trim()) {
-      newErrors.logradouro = 'Logradouro é obrigatório';
-    }
-
-    // Validar número
-    if (!numero.trim()) {
-      newErrors.numero = 'Número é obrigatório';
-    }
-
-    // Validar UF do endereço
-    if (!ufEndereco.trim()) {
-      newErrors.ufEndereco = 'UF é obrigatória';
-    }
-
-    // Validar cidade
-    if (!cidade.trim()) {
-      newErrors.cidade = 'Cidade é obrigatória';
-    }
-
-    // Validar bairro
-    if (!bairro.trim()) {
-      newErrors.bairro = 'Bairro é obrigatório';
-    }
-
-    // Validar e-mail
-    if (!email.trim()) {
-      newErrors.email = 'E-mail é obrigatório';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'E-mail deve ter um formato válido';
-    }
-
-    // Validar telefone (opcional, mas se preenchido deve ter formato correto)
-    if (telefone && telefone.trim()) {
-      const telefoneNumeros = telefone.replace(/\D/g, '');
-      if (telefoneNumeros.length !== 10) {
-        newErrors.telefone = 'Telefone deve ter o formato (00) 0000-0000';
-      }
-    }
-
-    // Validar DDD
-    if (!ddd.trim()) {
-      newErrors.ddd = 'DDD é obrigatório';
-    } else if (!/^\d{2}$/.test(ddd)) {
-      newErrors.ddd = 'DDD deve ter 2 dígitos';
-    }
-
-    // Validar celular
-    if (!celular.trim()) {
-      newErrors.celular = 'Celular é obrigatório';
-    } else {
-      const celularNumeros = celular.replace(/\D/g, '');
-      if (celularNumeros.length !== 11) {
-        newErrors.celular = 'Celular deve ter o formato (00) 90000-0000';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Variáveis derivadas para compatibilidade
+  const tipoLogradouro = endereco.tipoLogradouro;
+  const logradouro = endereco.logradouro;
+  const numero = endereco.numero;
+  const complemento = endereco.complemento;
+  const ufEndereco = endereco.uf;
+  const cidade = endereco.cidade;
+  const bairro = endereco.bairro;
 
   // Função para destacar texto pesquisado
   const destacarTexto = (texto: string, busca: string) => {
@@ -357,82 +185,15 @@ export default function CadastroProfissionaisPage() {
     });
   };
 
-  // Função para obter o placeholder dinamicamente
-  const getPlaceholder = () => {
-    switch (tipoPesquisa) {
-      case 'nome':
-        return 'Digite o nome do profissional...';
-      case 'categoria':
-        return 'Digite a categoria (ex: Médico, Enfermeiro)...';
-      case 'numero_conselho':
-        return 'Digite o número do conselho...';
-      default:
-        return 'Digite para pesquisar...';
-    }
-  };
-
-  // Função para aplicar filtros automaticamente
-  const aplicarFiltrosAutomaticos = useCallback((busca: string = nomeBusca, situacao: string = situacaoBusca, tipo: string = tipoPesquisa) => {
-    if (!Array.isArray(profissionais) || profissionais.length === 0) {
-      setFilteredProfissionais([]);
-      return;
-    }
-
-    let filtered = profissionais;
-
-    // Filtrar baseado no tipo de pesquisa e termo de busca
-    if (busca.trim()) {
-      filtered = filtered.filter(profissional => {
-        switch (tipo) {
-          case 'nome':
-            return profissional.nome.toLowerCase().includes(busca.toLowerCase());
-          case 'categoria':
-            return profissional.categoria.toLowerCase().includes(busca.toLowerCase());
-          case 'numero_conselho':
-            return profissional.numero_conselho.toLowerCase().includes(busca.toLowerCase());
-          default:
-            return profissional.nome.toLowerCase().includes(busca.toLowerCase());
-        }
-      });
-    }
-
-    // Filtrar por situação se não for "todos"
-    if (situacao && situacao !== 'todos') {
-      const status = situacao === 'ativo' ? 'ativo' : 'inativo';
-      filtered = filtered.filter(profissional => profissional.situacao === status);
-    }
-
-    setFilteredProfissionais(filtered);
-    
-    // Mostrar notificação apenas se houver filtros aplicados
-    if (busca.trim() || (situacao && situacao !== 'todos')) {
-      if (filtered.length === 0) {
-        showNotification('error', 'Nenhum profissional encontrado com os critérios aplicados');
-      } else {
-        showNotification('success', `${filtered.length} profissional(is) encontrado(s)`);
-      }
-    }
-  }, [profissionais, nomeBusca, situacaoBusca, tipoPesquisa]);
-
-  // useEffect para aplicar filtros automaticamente quando situação muda
-  useEffect(() => {
-    if (profissionais.length > 0) {
-      aplicarFiltrosAutomaticos(nomeBusca, situacaoBusca, tipoPesquisa);
-    }
-  }, [situacaoBusca, tipoPesquisa, profissionais, aplicarFiltrosAutomaticos, nomeBusca]);
-
   // Função para filtrar profissionais em tempo real (autocomplete)
   const handleAutocompleteSearch = (value: string) => {
     if (!value.trim()) {
       setShowAutocomplete(false);
-      setAutocompleteResults([]);
-      aplicarFiltrosAutomaticos('', situacaoBusca, tipoPesquisa);
-      return;
-    }
+          return;
+        }
 
     if (!Array.isArray(profissionais)) {
       setShowAutocomplete(false);
-      setAutocompleteResults([]);
       return;
     }
 
@@ -447,148 +208,31 @@ export default function CadastroProfissionaisPage() {
         default:
           return profissional.nome.toLowerCase().includes(value.toLowerCase());
       }
-    }).slice(0, 5); // Limitar a 5 resultados
+    }).slice(0, 5);
 
-    setAutocompleteResults(filtered);
-    setShowAutocomplete(filtered.length > 0);
-    
-    // Aplicar filtros em tempo real
-    aplicarFiltrosAutomaticos(value, situacaoBusca, tipoPesquisa);
+    handleAutocompleteResults(filtered);
   };
 
-  // Função para selecionar item do autocomplete
-  const handleSelectAutocomplete = (profissional: Profissional) => {
-    // Definir o valor do campo baseado no tipo de pesquisa
-    let valorSelecionado;
-    switch (tipoPesquisa) {
-      case 'categoria':
-        valorSelecionado = profissional.categoria;
-        break;
-      case 'numero_conselho':
-        valorSelecionado = profissional.numero_conselho;
-        break;
-      default:
-        valorSelecionado = profissional.nome;
+  // Função para atualizar resultados do autocomplete
+  const handleAutocompleteResults = (results: Profissional[]) => {
+    if (results.length > 0) {
+      setShowAutocomplete(true);
     }
-    setNomeBusca(valorSelecionado);
-    setShowAutocomplete(false);
-    aplicarFiltrosAutomaticos(valorSelecionado, situacaoBusca, tipoPesquisa);
   };
 
-  // Função para carregar profissionais
-  const carregarProfissionais = useCallback(async () => {
-    console.log('=== CARREGANDO PROFISSIONAIS ===');
-    
-    setNomeBusca('');
-    setSituacaoBusca('ativo');
-    setShowAutocomplete(false);
-    setAutocompleteResults([]);
-    
-    try {
-      // Simulando dados até implementar API
-      const mockData: Profissional[] = [
-        {
-          id: 1,
-          nome: 'Dr. João Silva',
-          categoria: 'Médico',
-          sigla_conselho: 'CRM',
-          numero_conselho: '12345',
-          externo: false,
-          ofensor: 'Clínica A',
-          clinica: 'Clínica Central',
-          situacao: 'ativo',
-          created_by: 1,
-          updated_by: 1,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: 2,
-          nome: 'Dra. Maria Santos',
-          categoria: 'Enfermeiro',
-          sigla_conselho: 'COREN',
-          numero_conselho: '54321',
-          externo: true,
-          ofensor: 'Clínica B',
-          clinica: 'Clínica Norte',
-          situacao: 'ativo',
-          created_by: 1,
-          updated_by: 1,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: 3,
-          nome: 'Dr. Carlos Oliveira',
-          categoria: 'Fisioterapeuta',
-          sigla_conselho: 'CREFITO',
-          numero_conselho: '98765',
-          externo: false,
-          ofensor: 'Clínica C',
-          clinica: 'Clínica Sul',
-          situacao: 'inativo',
-          created_by: 1,
-          updated_by: 1,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
-      
-      setProfissionais(mockData);
-      setFilteredProfissionais(mockData);
-      
-      if (mockData.length > 0) {
-        showNotification('success', `${mockData.length} profissional(is) carregado(s)`);
-      } else {
-        showNotification('error', 'Nenhum profissional encontrado no banco de dados');
-      }
-    } catch (error) {
-      console.error('Erro ao carregar profissionais:', error);
-      showNotification('error', 'Erro de conexão ao carregar profissionais');
-      setProfissionais([]);
-      setFilteredProfissionais([]);
-    }
-  }, []);
+  // Handler customizado para mudança de busca
+  const handleCustomNomeBuscaChange = (value: string) => {
+    handleNomeBuscaChange(value);
+    handleAutocompleteSearch(value);
+  };
 
-  // Função para procurar profissionais (botão Procurar)
+  // Função para procurar profissionais
   const handleProcurar = () => {
     setShowAutocomplete(false);
+    // A filtragem já é feita automaticamente pelo hook useFiltros
+    const totalFiltrados = profissionaisFiltrados.length;
     
-    if (!nomeBusca.trim() && situacaoBusca === 'todos') {
-      setFilteredProfissionais(profissionais || []);
-      return;
-    }
-
-    if (!Array.isArray(profissionais)) {
-      setFilteredProfissionais([]);
-      return;
-    }
-
-    let filtered = profissionais;
-
-    if (nomeBusca.trim()) {
-      filtered = filtered.filter(profissional => {
-        switch (tipoPesquisa) {
-          case 'nome':
-            return profissional.nome.toLowerCase().includes(nomeBusca.toLowerCase());
-          case 'categoria':
-            return profissional.categoria.toLowerCase().includes(nomeBusca.toLowerCase());
-          case 'numero_conselho':
-            return profissional.numero_conselho.toLowerCase().includes(nomeBusca.toLowerCase());
-          default:
-            return profissional.nome.toLowerCase().includes(nomeBusca.toLowerCase());
-        }
-      });
-    }
-
-    if (situacaoBusca !== 'todos') {
-      const status = situacaoBusca === 'ativo' ? 'ativo' : 'inativo';
-      filtered = filtered.filter(profissional => profissional.situacao === status);
-    }
-    
-    setFilteredProfissionais(filtered);
-    
-    if (filtered.length === 0) {
+    if (totalFiltrados === 0) {
       let tipoTexto;
       switch (tipoPesquisa) {
         case 'categoria':
@@ -602,7 +246,7 @@ export default function CadastroProfissionaisPage() {
       }
       showNotification('error', `Nenhum profissional encontrado com o ${tipoTexto} pesquisado`);
     } else {
-      showNotification('success', `${filtered.length} profissional(is) encontrado(s)`);
+      showNotification('success', `${totalFiltrados} profissional(is) encontrado(s)`);
     }
   };
 
@@ -615,14 +259,14 @@ export default function CadastroProfissionaisPage() {
 
     setIsSubmitting(true);
     try {
-      // Simulando inclusão até implementar API
-      showNotification('success', 'Profissional cadastrado com sucesso!');
-      handleLimpar();
-      await carregarProfissionais();
+      const dadosProfissional = getFormData();
+      const result = await criarProfissional(dadosProfissional);
+      
+      if (result.success) {
+        limparFormulario();
+        await carregarProfissionais();
       setShowNewProfissionalModal(false);
-    } catch (error) {
-      console.error('Erro ao cadastrar profissional:', error);
-      showNotification('error', 'Erro ao cadastrar profissional. Tente novamente.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -630,73 +274,149 @@ export default function CadastroProfissionaisPage() {
 
   // Função para limpar formulário
   const handleLimpar = () => {
-    // Limpar dados cadastrais
-    setNomeProfissional('');
-    setNacionalidade('');  // Agora é obrigatório, então fica vazio
-    setCpf('');
-    setNis('');
-    setCategoria('');
-    setSiglaConselho('');
-    setRegConselho('');
-    setUfConselho('');
-    setRegMte('');
-    
-    // Limpar informações de contato
-    setCep('');
-    setTipoLogradouro('');
-    setLogradouro('');
-    setNumero('');
-    setComplemento('');
-    setUfEndereco('');
-    setCidade('');
-    setBairro('');
-    setEmail('');
-    setTelefone('');
-    setDdd('');
-    setCelular('');
-    
-    // Limpar informações adicionais
-    setObservacao('');
-    setAgendamentoHorario(false);
-    setProfissionalExterno(false);
-    setAssinaturaDigital('');
-    setCertificadoDigital('');
-    setSituacao('Ativo');
-    
-    // Limpar campos antigos para compatibilidade
-    setNumeroConselho('');
-    setExterno(false);
-    setOfensor('');
-    setClinica('');
-    
-    // Limpar erros de validação
-    setErrors({
-      nomeProfissional: '',
-      nacionalidade: '',
-      cpf: '',
-      categoria: '',
-      siglaConselho: '',
-      regConselho: '',
-      ufConselho: '',
-      cep: '',
-      tipoLogradouro: '',
-      logradouro: '',
-      numero: '',
-      ufEndereco: '',
-      cidade: '',
-      bairro: '',
-      email: '',
-      ddd: '',
-      celular: ''
-    });
+    limparFormulario();
   };
 
   // Função para retornar (fechar modal)
   const handleRetornar = () => {
-    handleLimpar();
+    limparFormulario();
     setShowNewProfissionalModal(false);
   };
 
+  // Função para recarregar profissionais
+  const handleRecarregar = async () => {
+    try {
+      setNomeBusca('');
+      const data = await carregarProfissionais();
+      
+      if (data && data.length > 0) {
+        showNotification('success', `${data.length} profissional(is) carregado(s)`);
+      } else {
+        showNotification('error', 'Nenhum profissional encontrado no banco de dados');
+      }
+    } catch (error) {
+      showNotification('error', 'Erro de conexão ao carregar profissionais');
+    }
+  };
+
+  // Handlers para modais
+  const handleVisualizarProfissional = (profissional: Profissional) => {
+    setProfissionalVisualizando(profissional);
+    setShowViewProfissionalModal(true);
+  };
+
+  const handleFecharVisualizacao = () => {
+    setShowViewProfissionalModal(false);
+    setProfissionalVisualizando(null);
+  };
+
+  const handleEditarProfissional = (profissional: Profissional) => {
+    setProfissionalEditando(profissional);
+    carregarProfissional(profissional);
+    setShowEditProfissionalModal(true);
+  };
+
+  const handleSalvarEdicao = async () => {
+    if (!validateForm()) {
+      showNotification('error', 'Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+    
+    if (!profissionalEditando) return;
+
+    setIsSubmitting(true);
+    try {
+      const dadosProfissional = getFormData();
+      const result = await atualizarProfissional(profissionalEditando.id, dadosProfissional);
+      
+      if (result.success) {
+        limparFormulario();
+        await carregarProfissionais();
+      setShowEditProfissionalModal(false);
+      setProfissionalEditando(null);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFecharEdicao = () => {
+    limparFormulario();
+    setShowEditProfissionalModal(false);
+    setProfissionalEditando(null);
+  };
+
+  const handleInativarProfissional = (profissional: Profissional) => {
+    setProfissionalExcluindo(profissional);
+    setShowDeleteModal(true);
+  };
+
+  const handleExcluirDefinitivo = (profissional: Profissional) => {
+    setProfissionalExcluindoDefinitivo(profissional);
+    setShowDeleteDefinitivoModal(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!profissionalExcluindo) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await atualizarProfissional(profissionalExcluindo.id, { status: 'inativo' });
+      
+      if (result.success) {
+      showNotification('success', 'Profissional inativado com sucesso!');
+        await carregarProfissionais();
+      setShowDeleteModal(false);
+      setProfissionalExcluindo(null);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelarExclusao = () => {
+    setShowDeleteModal(false);
+    setProfissionalExcluindo(null);
+  };
+
+  const handleConfirmarExclusaoDefinitiva = async () => {
+    if (!profissionalExcluindoDefinitivo) return;
+    
+    setIsSubmitting(true);
+    try {
+      const result = await excluirProfissional(profissionalExcluindoDefinitivo.id);
+      
+      if (result.success) {
+        showNotification('success', 'Profissional excluído definitivamente!');
+        await carregarProfissionais();
+      }
+    } finally {
+      setIsSubmitting(false);
+      setShowDeleteDefinitivoModal(false);
+      setProfissionalExcluindoDefinitivo(null);
+    }
+  };
+
+  const handleCancelarExclusaoDefinitiva = () => {
+    setShowDeleteDefinitivoModal(false);
+    setProfissionalExcluindoDefinitivo(null);
+  };
+
+  const handleReativarProfissional = async (profissional: Profissional) => {
+    setIsSubmitting(true);
+    try {
+      const result = await atualizarProfissional(profissional.id, { status: 'ativo' });
+      
+      if (result.success) {
+      showNotification('success', 'Profissional reativado com sucesso!');
+        await carregarProfissionais();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Efeitos
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -718,6 +438,7 @@ export default function CadastroProfissionaisPage() {
     }
   }, [router, carregarProfissionais]);
 
+  // Funções auxiliares
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -750,144 +471,6 @@ export default function CadastroProfissionaisPage() {
     }
   };
 
-  // Função para abrir modal de visualização
-  const handleVisualizarProfissional = (profissional: Profissional) => {
-    setProfissionalVisualizando(profissional);
-    setShowViewProfissionalModal(true);
-  };
-
-  // Função para fechar modal de visualização
-  const handleFecharVisualizacao = () => {
-    setShowViewProfissionalModal(false);
-    setProfissionalVisualizando(null);
-  };
-
-  // Função para abrir modal de edição
-  const handleEditarProfissional = (profissional: Profissional) => {
-    setProfissionalEditando(profissional);
-    setNomeProfissional(profissional.nome);
-    setCategoria(profissional.categoria);
-    setSiglaConselho(profissional.sigla_conselho);
-    setNumeroConselho(profissional.numero_conselho);
-    setExterno(profissional.externo);
-    setOfensor(profissional.ofensor);
-    setClinica(profissional.clinica);
-    setSituacao(profissional.situacao === 'ativo' ? 'Ativo' : 'Inativo');
-    
-    setShowEditProfissionalModal(true);
-  };
-
-  // Função para salvar edição
-  const handleSalvarEdicao = async () => {
-    if (!nomeProfissional.trim()) {
-      showNotification('error', 'Por favor, informe o nome do profissional.');
-      return;
-    }
-    if (!categoria.trim()) {
-      showNotification('error', 'Por favor, informe a categoria.');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    try {
-      // Simulando edição até implementar API
-      showNotification('success', 'Profissional atualizado com sucesso!');
-      handleLimpar();
-      await carregarProfissionais();
-      setShowEditProfissionalModal(false);
-      setProfissionalEditando(null);
-    } catch (error) {
-      console.error('Erro ao atualizar profissional:', error);
-      showNotification('error', 'Erro ao atualizar profissional. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Função para fechar modal de edição
-  const handleFecharEdicao = () => {
-    handleLimpar();
-    setShowEditProfissionalModal(false);
-    setProfissionalEditando(null);
-  };
-
-  // Função para abrir modal de inativação (soft delete)
-  const handleInativarProfissional = (profissional: Profissional) => {
-    setProfissionalExcluindo(profissional);
-    setShowDeleteModal(true);
-  };
-
-  // Função para abrir modal de exclusão definitiva (apenas SUPER_ADMIN)
-  const handleExcluirDefinitivo = (profissional: Profissional) => {
-    setProfissionalExcluindoDefinitivo(profissional);
-    setShowDeleteDefinitivoModal(true);
-  };
-
-  // Função para confirmar inativação (soft delete - marcar como inativo)
-  const handleConfirmarExclusao = async () => {
-    if (!profissionalExcluindo) return;
-    
-    setIsSubmitting(true);
-    try {
-      // Simulando inativação até implementar API
-      showNotification('success', 'Profissional inativado com sucesso!');
-      await carregarProfissionais();
-      setShowDeleteModal(false);
-      setProfissionalExcluindo(null);
-    } catch (error) {
-      console.error('Erro ao inativar profissional:', error);
-      showNotification('error', 'Erro ao inativar profissional. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Função para cancelar inativação
-  const handleCancelarExclusao = () => {
-    setShowDeleteModal(false);
-    setProfissionalExcluindo(null);
-  };
-
-  // Função para confirmar exclusão definitiva
-  const handleConfirmarExclusaoDefinitiva = async () => {
-    if (!profissionalExcluindoDefinitivo) return;
-    
-    setIsSubmitting(true);
-    try {
-      // Simulando exclusão até implementar API
-      showNotification('success', 'Profissional excluído definitivamente!');
-      await carregarProfissionais();
-    } catch (error) {
-      console.error('Erro ao excluir profissional:', error);
-      showNotification('error', 'Erro ao excluir profissional. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
-      setShowDeleteDefinitivoModal(false);
-      setProfissionalExcluindoDefinitivo(null);
-    }
-  };
-
-  // Função para cancelar exclusão definitiva
-  const handleCancelarExclusaoDefinitiva = () => {
-    setShowDeleteDefinitivoModal(false);
-    setProfissionalExcluindoDefinitivo(null);
-  };
-
-  // Função para reativar profissional
-  const handleReativarProfissional = async (profissional: Profissional) => {
-    setIsSubmitting(true);
-    try {
-      // Simulando reativação até implementar API
-      showNotification('success', 'Profissional reativado com sucesso!');
-      await carregarProfissionais();
-    } catch (error) {
-      console.error('Erro ao reativar profissional:', error);
-      showNotification('error', 'Erro ao reativar profissional. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-[#00A298]/15 flex items-center justify-center">
@@ -900,7 +483,7 @@ export default function CadastroProfissionaisPage() {
     return null;
   }
 
-  return (
+    return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-[#00A298]/15">
       {/* Notificação Toast */}
       {notification.show && (
@@ -921,15 +504,15 @@ export default function CadastroProfissionaisPage() {
             )}
             <span className="font-medium">{notification.message}</span>
             <button
-              onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+              onClick={() => hideNotification()}
               className="ml-4 text-gray-400 hover:text-gray-600"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </button>
-          </div>
         </div>
+      </div>
       )}
 
       {/* Header Superior */}
@@ -1018,7 +601,7 @@ export default function CadastroProfissionaisPage() {
                     <select 
                       value={tipoPesquisa}
                       onChange={(e) => {
-                        setTipoPesquisa(e.target.value);
+                        handleTipoPesquisaChange(e.target.value);
                         setNomeBusca(''); // Limpar campo ao trocar tipo
                         setShowAutocomplete(false);
                       }}
@@ -1035,9 +618,7 @@ export default function CadastroProfissionaisPage() {
                       type="text"
                       value={nomeBusca}
                       onChange={(e) => {
-                        const value = tipoPesquisa === 'numero_conselho' ? e.target.value : formatTexto(e.target.value);
-                        setNomeBusca(value);
-                        handleAutocompleteSearch(value);
+                        handleCustomNomeBuscaChange(e.target.value);
                       }}
                       onFocus={() => {
                         if (nomeBusca.trim()) {
@@ -1061,9 +642,15 @@ export default function CadastroProfissionaisPage() {
                             className="px-4 py-3 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
                           >
                             <div className="font-medium text-gray-900">{destacarTexto(profissional.nome, nomeBusca)}</div>
-                            <div className="text-sm text-gray-500">{profissional.categoria}</div>
-                            <div className="text-xs text-blue-600 mt-1">
-                              Situação: {profissional.situacao}
+                            <div className="text-sm text-gray-500 mt-1">
+                              <span className="text-blue-600">👨‍⚕️ {profissional.categoria}</span>
+                              <span className="ml-2 text-green-600">🆔 {profissional.sigla_conselho} {profissional.numero_conselho}</span>
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              {profissional.email && <span className="text-purple-600">📧 {profissional.email}</span>}
+                              <span className={`ml-2 ${(profissional.situacao || profissional.status) === 'ativo' ? 'text-green-600' : 'text-red-600'}`}>
+                                {(profissional.situacao || profissional.status) === 'ativo' ? '✅ Ativo' : '❌ Inativo'}
+                              </span>
                             </div>
                           </div>
                         ))}
@@ -1077,7 +664,7 @@ export default function CadastroProfissionaisPage() {
                     </label>
                     <select 
                       value={situacaoBusca}
-                      onChange={(e) => setSituacaoBusca(e.target.value)}
+                      onChange={(e) => handleSituacaoBuscaChange(e.target.value)}
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
                       <option value="ativo">Ativo</option>
@@ -1101,7 +688,7 @@ export default function CadastroProfissionaisPage() {
                   </button>
                   
                   <button 
-                    onClick={carregarProfissionais}
+                    onClick={handleRecarregar}
                     className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
                     RECARREGAR
@@ -1123,24 +710,24 @@ export default function CadastroProfissionaisPage() {
                       <span className="text-blue-600">Preencha todos os campos marcados com asterisco para continuar</span>
                     </div>
                   </div>
-                  
+
                   {/* Dados Cadastrais */}
                   <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div>
+                    <div>
                         <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                           Nome <span className="text-red-500">*</span>
                           <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
-                        </label>
-                        <input
-                          type="text"
-                          value={nomeProfissional}
+                      </label>
+                      <input
+                        type="text"
+                        value={nomeProfissional}
                           onChange={(e) => {
                             setNomeProfissional(formatTexto(e.target.value));
                             if (e.target.value.trim() && errors.nomeProfissional) {
-                              setErrors({...errors, nomeProfissional: ''});
+                              setErrors((prev: FormErrors) => ({...prev, nomeProfissional: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1151,7 +738,7 @@ export default function CadastroProfissionaisPage() {
                         {errors.nomeProfissional && (
                           <p className="text-red-500 text-xs mt-1">{errors.nomeProfissional}</p>
                         )}
-                      </div>
+                    </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1162,7 +749,7 @@ export default function CadastroProfissionaisPage() {
                           onChange={(e) => {
                             setNacionalidade(e.target.value);
                             if (e.target.value && errors.nacionalidade) {
-                              setErrors({...errors, nacionalidade: ''});
+                              setErrors((prev: FormErrors) => ({...prev, nacionalidade: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1189,7 +776,7 @@ export default function CadastroProfissionaisPage() {
                             const formattedCPF = formatCPF(e.target.value);
                             setCpf(formattedCPF);
                             if (formattedCPF.trim() && errors.cpf) {
-                              setErrors({...errors, cpf: ''});
+                              setErrors((prev: FormErrors) => ({...prev, cpf: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1214,7 +801,7 @@ export default function CadastroProfissionaisPage() {
                             const formattedNIS = e.target.value.replace(/\D/g, '').slice(0, 11);
                             setNis(formattedNIS);
                             if (formattedNIS && errors.nis) {
-                              setErrors({...errors, nis: ''});
+                              setErrors((prev: FormErrors) => ({...prev, nis: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1228,16 +815,16 @@ export default function CadastroProfissionaisPage() {
                         )}
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Categoria <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={categoria}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Categoria <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={categoria}
                           onChange={(e) => {
                             setCategoria(e.target.value);
                             if (e.target.value && errors.categoria) {
-                              setErrors({...errors, categoria: ''});
+                              setErrors((prev: FormErrors) => ({...prev, categoria: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1245,31 +832,31 @@ export default function CadastroProfissionaisPage() {
                           }`}
                         >
                           <option value="">Selecione uma categoria</option>
-                          <option value="Médico">Médico</option>
-                          <option value="Enfermeiro">Enfermeiro</option>
-                          <option value="Técnico de Enfermagem">Técnico de Enfermagem</option>
+                        <option value="Médico">Médico</option>
+                        <option value="Enfermeiro">Enfermeiro</option>
+                        <option value="Técnico de Enfermagem">Técnico de Enfermagem</option>
                           <option value="Auxiliar de Enfermagem">Auxiliar de Enfermagem</option>
-                          <option value="Fisioterapeuta">Fisioterapeuta</option>
-                          <option value="Psicólogo">Psicólogo</option>
-                          <option value="Nutricionista">Nutricionista</option>
-                          <option value="Fonoaudiólogo">Fonoaudiólogo</option>
-                        </select>
+                        <option value="Fisioterapeuta">Fisioterapeuta</option>
+                        <option value="Psicólogo">Psicólogo</option>
+                        <option value="Nutricionista">Nutricionista</option>
+                        <option value="Fonoaudiólogo">Fonoaudiólogo</option>
+                      </select>
                         {errors.categoria && (
                           <p className="text-red-500 text-xs mt-1">{errors.categoria}</p>
                         )}
-                      </div>
+                    </div>
 
-                      <div>
+                    <div>
                         <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                           Sigla <span className="text-red-500">*</span>
                           <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
-                        </label>
-                        <select
-                          value={siglaConselho}
+                      </label>
+                      <select
+                        value={siglaConselho}
                           onChange={(e) => {
                             setSiglaConselho(e.target.value);
                             if (e.target.value && errors.siglaConselho) {
-                              setErrors({...errors, siglaConselho: ''});
+                              setErrors((prev: FormErrors) => ({...prev, siglaConselho: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1283,30 +870,30 @@ export default function CadastroProfissionaisPage() {
                           <option value="CRP">CRP</option>
                           <option value="CRN">CRN</option>
                           <option value="CRFa">CRFa</option>
-                        </select>
+                      </select>
                         {errors.siglaConselho && (
                           <p className="text-red-500 text-xs mt-1">{errors.siglaConselho}</p>
                         )}
-                      </div>
+                    </div>
 
-                      <div>
+                    <div>
                         <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                           Reg. Conselho <span className="text-red-500">*</span>
                           <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
-                        </label>
-                        <input
-                          type="text"
+                      </label>
+                      <input
+                        type="text"
                           value={regConselho}
                           onChange={(e) => {
                             setRegConselho(e.target.value);
                             if (e.target.value.trim() && errors.regConselho) {
-                              setErrors({...errors, regConselho: ''});
+                              setErrors((prev: FormErrors) => ({...prev, regConselho: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
                             errors.regConselho ? 'border-red-300 bg-red-50' : 'border-gray-300'
                           }`}
-                          placeholder="Digite o número do conselho"
+                        placeholder="Digite o número do conselho"
                         />
                         {errors.regConselho && (
                           <p className="text-red-500 text-xs mt-1">{errors.regConselho}</p>
@@ -1323,7 +910,7 @@ export default function CadastroProfissionaisPage() {
                           onChange={(e) => {
                             setUfConselho(e.target.value);
                             if (e.target.value && errors.ufConselho) {
-                              setErrors({...errors, ufConselho: ''});
+                              setErrors((prev: FormErrors) => ({...prev, ufConselho: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1372,20 +959,20 @@ export default function CadastroProfissionaisPage() {
                           type="text"
                           value={regMte}
                           onChange={(e) => setRegMte(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                           placeholder="Digite o registro no MTE"
-                        />
+                      />
                       </div>
                     </div>
-                  </div>
+                    </div>
 
                   {/* Informações de Contato */}
                   <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Informações de contato</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                           CEP <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -1394,7 +981,7 @@ export default function CadastroProfissionaisPage() {
                           onChange={(e) => {
                             handleCepChange(e.target.value);
                             if (e.target.value.trim() && errors.cep) {
-                              setErrors({...errors, cep: ''});
+                              setErrors((prev: FormErrors) => ({...prev, cep: ''}));
                             }
                           }}
                           maxLength={9}
@@ -1417,13 +1004,13 @@ export default function CadastroProfissionaisPage() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Tipo de logradouro <span className="text-red-500">*</span>
-                        </label>
-                        <select
+                      </label>
+                      <select
                           value={tipoLogradouro}
                           onChange={(e) => {
-                            setTipoLogradouro(e.target.value);
+                            setEndereco({ ...endereco, tipoLogradouro: e.target.value });
                             if (e.target.value && errors.tipoLogradouro) {
-                              setErrors({...errors, tipoLogradouro: ''});
+                              setErrors((prev: FormErrors) => ({...prev, tipoLogradouro: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1436,23 +1023,23 @@ export default function CadastroProfissionaisPage() {
                           <option value="Praça">Praça</option>
                           <option value="Travessa">Travessa</option>
                           <option value="Alameda">Alameda</option>
-                        </select>
+                      </select>
                         {errors.tipoLogradouro && (
                           <p className="text-red-500 text-xs mt-1">{errors.tipoLogradouro}</p>
                         )}
-                      </div>
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                           Logradouro <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
+                      </label>
+                      <input
+                        type="text"
                           value={logradouro}
                           onChange={(e) => {
-                            setLogradouro(e.target.value);
+                            setEndereco({ ...endereco, logradouro: e.target.value });
                             if (e.target.value.trim() && errors.logradouro) {
-                              setErrors({...errors, logradouro: ''});
+                              setErrors((prev: FormErrors) => ({...prev, logradouro: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1473,9 +1060,9 @@ export default function CadastroProfissionaisPage() {
                           type="text"
                           value={numero}
                           onChange={(e) => {
-                            setNumero(e.target.value);
+                            setEndereco({ ...endereco, numero: e.target.value });
                             if (e.target.value.trim() && errors.numero) {
-                              setErrors({...errors, numero: ''});
+                              setErrors((prev: FormErrors) => ({...prev, numero: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1495,22 +1082,22 @@ export default function CadastroProfissionaisPage() {
                         <input
                           type="text"
                           value={complemento}
-                          onChange={(e) => setComplemento(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                          onChange={(e) => setEndereco({ ...endereco, complemento: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                           placeholder="Apto, bloco, etc."
-                        />
+                      />
                     </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                           UF <span className="text-red-500">*</span>
                         </label>
                         <select
                           value={ufEndereco}
                           onChange={(e) => {
-                            setUfEndereco(e.target.value);
+                            setEndereco({ ...endereco, uf: e.target.value });
                             if (e.target.value && errors.ufEndereco) {
-                              setErrors({...errors, ufEndereco: ''});
+                              setErrors((prev: FormErrors) => ({...prev, ufEndereco: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1554,14 +1141,14 @@ export default function CadastroProfissionaisPage() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Cidade <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
+                      </label>
+                      <input
+                        type="text"
                           value={cidade}
                           onChange={(e) => {
-                            setCidade(e.target.value);
+                            setEndereco({ ...endereco, cidade: e.target.value });
                             if (e.target.value.trim() && errors.cidade) {
-                              setErrors({...errors, cidade: ''});
+                              setErrors((prev: FormErrors) => ({...prev, cidade: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1582,9 +1169,9 @@ export default function CadastroProfissionaisPage() {
                           type="text"
                           value={bairro}
                           onChange={(e) => {
-                            setBairro(e.target.value);
+                            setEndereco({ ...endereco, bairro: e.target.value });
                             if (e.target.value.trim() && errors.bairro) {
-                              setErrors({...errors, bairro: ''});
+                              setErrors((prev: FormErrors) => ({...prev, bairro: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1607,7 +1194,7 @@ export default function CadastroProfissionaisPage() {
                           onChange={(e) => {
                             setEmail(e.target.value);
                             if (e.target.value.trim() && errors.email) {
-                              setErrors({...errors, email: ''});
+                              setErrors((prev: FormErrors) => ({...prev, email: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1642,7 +1229,7 @@ export default function CadastroProfissionaisPage() {
                             
                             setTelefone(formattedPhone);
                             if (formattedPhone && errors.telefone) {
-                              setErrors({...errors, telefone: ''});
+                              setErrors((prev: FormErrors) => ({...prev, telefone: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1667,7 +1254,7 @@ export default function CadastroProfissionaisPage() {
                             const onlyNumbers = e.target.value.replace(/\D/g, '').slice(0, 2);
                             setDdd(onlyNumbers);
                             if (onlyNumbers && errors.ddd) {
-                              setErrors({...errors, ddd: ''});
+                              setErrors((prev: FormErrors) => ({...prev, ddd: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1703,7 +1290,7 @@ export default function CadastroProfissionaisPage() {
                             
                             setCelular(formattedCelular);
                             if (formattedCelular.trim() && errors.celular) {
-                              setErrors({...errors, celular: ''});
+                              setErrors((prev: FormErrors) => ({...prev, celular: ''}));
                             }
                           }}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent ${
@@ -1732,10 +1319,10 @@ export default function CadastroProfissionaisPage() {
                           value={observacao}
                           onChange={(e) => setObservacao(e.target.value)}
                           rows={4}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                           placeholder="Digite observações adicionais"
-                        />
-                      </div>
+                      />
+                    </div>
 
                       <div className="flex flex-wrap gap-6 mb-4">
                         <div className="flex items-center">
@@ -1811,18 +1398,18 @@ export default function CadastroProfissionaisPage() {
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Situação
-                        </label>
-                        <select
-                          value={situacao}
-                          onChange={(e) => setSituacao(e.target.value)}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Situação
+                      </label>
+                      <select
+                        value={situacao}
+                        onChange={(e) => setSituacao(e.target.value)}
                           className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                        >
-                          <option value="Ativo">Ativo</option>
-                          <option value="Inativo">Inativo</option>
-                        </select>
+                      >
+                          <option value="ativo">Ativo</option>
+                          <option value="inativo">Inativo</option>
+                      </select>
                       </div>
                     </div>
                   </div>
@@ -1836,18 +1423,18 @@ export default function CadastroProfissionaisPage() {
                       >
                         {isSubmitting ? 'INCLUINDO...' : 'INCLUIR'}
                       </button>
-                      <button 
-                        onClick={handleLimpar}
+                    <button
+                      onClick={handleLimpar}
                         className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                      >
-                        LIMPAR
-                      </button>
-                      <button
-                        onClick={handleRetornar}
+                    >
+                      LIMPAR
+                    </button>
+                    <button
+                      onClick={handleRetornar}
                         className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                      >
-                        RETORNAR
-                      </button>
+                    >
+                      RETORNAR
+                    </button>
                   </div>
                 </div>
               )}
@@ -1870,75 +1457,75 @@ export default function CadastroProfissionaisPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredProfissionais && Array.isArray(filteredProfissionais) && filteredProfissionais.length > 0 ? (
-                        filteredProfissionais.map((profissional) => (
-                          <tr key={profissional.id} className="border-b border-gray-200 hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm">
+                      {profissionaisFiltrados && Array.isArray(profissionaisFiltrados) && profissionaisFiltrados.length > 0 ? (
+                        profissionaisFiltrados.map((profissional) => (
+                        <tr key={profissional.id} className="border-b border-gray-200 hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm">
                               <div className="font-medium text-gray-900">{destacarTexto(profissional.nome, nomeBusca)}</div>
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{profissional.categoria}</td>
-                            <td className="px-4 py-3 text-sm text-center text-gray-900">{profissional.sigla_conselho}</td>
-                            <td className="px-4 py-3 text-sm text-center text-gray-900">{profissional.numero_conselho}</td>
-                            <td className="px-4 py-3 text-sm text-center">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                profissional.externo 
-                                  ? 'bg-yellow-100 text-yellow-800' 
-                                  : 'bg-blue-100 text-blue-800'
-                              }`}>
-                                {profissional.externo ? 'Sim' : 'Não'}
-                              </span>
-                            </td>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">{profissional.categoria}</td>
+                          <td className="px-4 py-3 text-sm text-center text-gray-900">{profissional.sigla_conselho}</td>
+                          <td className="px-4 py-3 text-sm text-center text-gray-900">{profissional.numero_conselho}</td>
+                          <td className="px-4 py-3 text-sm text-center">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              profissional.externo 
+                                ? 'bg-yellow-100 text-yellow-800' 
+                                : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {profissional.externo ? 'Sim' : 'Não'}
+                            </span>
+                          </td>
                             <td className="px-4 py-3 text-sm text-gray-900">{profissional.ofensor}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{profissional.clinica}</td>
-                            <td className="px-4 py-3 text-sm text-center">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                profissional.situacao === 'ativo' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {profissional.situacao}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex space-x-2 justify-center">
+                          <td className="px-4 py-3 text-sm text-center">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                (profissional.situacao || profissional.status) === 'ativo' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                                {(profissional.situacao || profissional.status) === 'ativo' ? 'Ativo' : 'Inativo'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <div className="flex space-x-2 justify-center">
                                 <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarProfissional(profissional)}>
-                                  Visualizar
-                                </button>
+                                Visualizar
+                              </button>
                                 {permissions.profissionais?.canEdit && (
                                   <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarProfissional(profissional)}>
                                     Editar
                                   </button>
                                 )}
                                 {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando o profissional está inativo */}
-                                {(user?.role === 'admin' || user?.role === 'super_admin') && profissional.situacao === 'inativo' && (
-                                  <button 
+                                {(user?.role === 'admin' || user?.role === 'super_admin') && (profissional.situacao || profissional.status) === 'inativo' && (
+                                <button 
                                     className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
                                     onClick={() => handleReativarProfissional(profissional)}
-                                  >
+                                >
                                     Reativar
-                                  </button>
-                                )}
+                                </button>
+                              )}
                                 {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando o profissional está ativo */}
-                                {(user?.role === 'admin' || user?.role === 'super_admin') && profissional.situacao === 'ativo' && (
-                                  <button 
-                                    className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
+                                {(user?.role === 'admin' || user?.role === 'super_admin') && (profissional.situacao || profissional.status) === 'ativo' && (
+                                    <button 
+                                      className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer"
                                     onClick={() => handleInativarProfissional(profissional)}
-                                  >
-                                    Inativar
-                                  </button>
+                                    >
+                                      Inativar
+                                    </button>
                                 )}
                                 {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
                                 {user?.role === 'super_admin' && (
-                                  <button 
-                                    className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
+                                <button 
+                                  className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer"
                                     onClick={() => handleExcluirDefinitivo(profissional)}
-                                  >
-                                    Excluir
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
+                                >
+                                  Excluir
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                         ))
                       ) : (
                         <tr>
@@ -2199,14 +1786,14 @@ export default function CadastroProfissionaisPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Situação
                     </label>
-                    <select
-                      value={situacao}
-                      onChange={(e) => setSituacao(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                    >
-                      <option value="Ativo">Ativo</option>
-                      <option value="Inativo">Inativo</option>
-                    </select>
+                                            <select
+                          value={situacao}
+                          onChange={(e) => setSituacao(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                        >
+                          <option value="ativo">Ativo</option>
+                          <option value="inativo">Inativo</option>
+                        </select>
                   </div>
                 </div>
                 

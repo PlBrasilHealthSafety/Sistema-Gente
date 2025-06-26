@@ -21,6 +21,7 @@ export interface User {
 export interface Profissional {
   id: number;
   nome: string;
+  nacionalidade?: string;
   cpf?: string;
   rg?: string;
   data_nascimento?: Date | string;
@@ -28,13 +29,39 @@ export interface Profissional {
   categoria: string;
   sigla_conselho: string;
   numero_conselho: string;
+  reg_conselho?: string;
+  uf_conselho?: string;
+  reg_mte?: string;
+  
+  // Endereço
+  cep?: string;
+  tipo_logradouro?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf_endereco?: string;
+  
+  // Contato
   telefone?: string;
   celular?: string;
+  ddd?: string;
   email?: string;
+  
+  // Informações adicionais
+  observacao?: string;
   observacoes?: string;
+  agendamento_horario?: boolean;
+  profissional_externo?: boolean;
+  assinatura_digital?: string;
+  certificado_digital?: string;
+  
+  // Campos antigos para compatibilidade
   externo: boolean;
   ofensor?: string;
   clinica?: string;
+  
   situacao: 'ativo' | 'inativo'; // Mantendo compatibilidade com page.tsx
   status?: 'ativo' | 'inativo'; // Para compatibilidade com hooks
   created_by?: number;
@@ -84,18 +111,47 @@ export interface FormErrors {
 
 export interface ProfissionalFormData {
   nome: string;
+  nacionalidade?: string;
   cpf: string;
   rg?: string;
   dataNascimento?: string;
   nis?: string;
   categoria: string;
-  siglaConselho?: string;
-  numeroConselho?: string;
+  sigla_conselho?: string;
+  reg_conselho?: string;
+  uf_conselho?: string;
+  reg_mte?: string;
+  
+  // Endereço
+  cep?: string;
+  tipo_logradouro?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  uf_endereco?: string;
+  cidade?: string;
+  bairro?: string;
+  
+  // Contato
   telefone?: string;
   celular?: string;
+  ddd?: string;
   email?: string;
+  
+  // Informações adicionais
+  observacao?: string;
+  agendamento_horario?: boolean;
+  profissional_externo?: boolean;
+  assinatura_digital?: string;
+  certificado_digital?: string;
+  situacao?: 'ativo' | 'inativo';
+  status?: 'ativo' | 'inativo';
+  
+  // Compatibilidade
+  siglaConselho?: string;
+  numeroConselho?: string;
   observacoes?: string;
-  externo: boolean;
+  externo?: boolean;
   ofensor?: string;
   clinica?: string;
 } 

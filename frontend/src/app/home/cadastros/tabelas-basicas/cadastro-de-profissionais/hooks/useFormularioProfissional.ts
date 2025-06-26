@@ -37,6 +37,7 @@ export const useFormularioProfissional = () => {
   // Estados do endereço
   const [cep, setCep] = useState('');
   const [endereco, setEndereco] = useState<Endereco>({
+    cep: '',
     tipoLogradouro: '',
     logradouro: '',
     numero: '',
@@ -60,7 +61,7 @@ export const useFormularioProfissional = () => {
   const [profissionalExterno, setProfissionalExterno] = useState(false);
   const [assinaturaDigital, setAssinaturaDigital] = useState('');
   const [certificadoDigital, setCertificadoDigital] = useState('');
-  const [situacao, setSituacao] = useState('Ativo');
+  const [situacao, setSituacao] = useState('ativo');
 
   // Estados de validação
   const [errors, setErrors] = useState<FormErrors>({
@@ -160,6 +161,7 @@ export const useFormularioProfissional = () => {
   const handleCepChange = (value: string) => {
     const formattedCep = formatCEP(value);
     setCep(formattedCep);
+    setEndereco(prev => ({ ...prev, cep: formattedCep }));
     
     if (cepError) {
       setCepError('');
@@ -239,6 +241,7 @@ export const useFormularioProfissional = () => {
     // Endereço
     setCep('');
     setEndereco({
+      cep: '',
       tipoLogradouro: '',
       logradouro: '',
       numero: '',
@@ -260,7 +263,7 @@ export const useFormularioProfissional = () => {
     setProfissionalExterno(false);
     setAssinaturaDigital('');
     setCertificadoDigital('');
-    setSituacao('Ativo');
+    setSituacao('ativo');
     
     // Compatibilidade
     setRg('');
@@ -355,6 +358,7 @@ export const useFormularioProfissional = () => {
     // Endereço
     setCep(profissional.cep || '');
     setEndereco({
+      cep: profissional.cep || '',
       tipoLogradouro: profissional.tipo_logradouro || '',
       logradouro: profissional.logradouro || '',
       numero: profissional.numero || '',
@@ -376,7 +380,7 @@ export const useFormularioProfissional = () => {
     setProfissionalExterno(profissional.profissional_externo || false);
     setAssinaturaDigital(profissional.assinatura_digital || '');
     setCertificadoDigital(profissional.certificado_digital || '');
-    setSituacao(profissional.situacao === 'ativo' ? 'Ativo' : 'Inativo');
+    setSituacao((profissional.situacao || profissional.status) === 'ativo' ? 'ativo' : 'inativo');
   };
 
   // Obter dados do formulário para envio
@@ -414,7 +418,7 @@ export const useFormularioProfissional = () => {
       profissional_externo: profissionalExterno,
       assinatura_digital: assinaturaDigital,
       certificado_digital: certificadoDigital,
-      situacao: situacao.toLowerCase() as 'ativo' | 'inativo'
+      status: situacao as 'ativo' | 'inativo'
     };
   };
 
@@ -453,6 +457,7 @@ export const useFormularioProfissional = () => {
     certificadoDigital,
     situacao,
     errors,
+    setErrors,
 
     // Estados adicionais
     rg,
@@ -485,8 +490,13 @@ export const useFormularioProfissional = () => {
     setAssinaturaDigital,
     setCertificadoDigital,
     setSituacao,
-    setErrors,
     setIsSubmitting,
+    
+    // Setters adicionais para compatibilidade
+    setNumeroConselho,
+    setExterno,
+    setOfensor,
+    setClinica,
 
     // Handlers
     handleCepChange,

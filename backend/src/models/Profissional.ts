@@ -3,6 +3,7 @@ import { pool } from '../config/database';
 export interface Profissional {
   id: number;
   nome: string;
+  nacionalidade?: string;
   cpf: string;
   rg?: string;
   data_nascimento?: Date;
@@ -10,14 +11,41 @@ export interface Profissional {
   categoria: string;
   sigla_conselho?: string;
   numero_conselho?: string;
+  reg_conselho?: string;
+  uf_conselho?: string;
+  reg_mte?: string;
+  
+  // Endereço
+  cep?: string;
+  tipo_logradouro?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf_endereco?: string;
+  
+  // Contato
   telefone?: string;
+  ddd?: string;
   celular?: string;
   email?: string;
-  observacoes?: string;
+  
+  // Informações adicionais
+  observacao?: string;
+  observacoes?: string; // Para compatibilidade
+  agendamento_horario?: boolean;
+  profissional_externo?: boolean;
+  assinatura_digital?: string;
+  certificado_digital?: string;
+  
+  // Campos antigos mantidos para compatibilidade
   externo: boolean;
   ofensor?: string;
   clinica?: string;
+  
   status: 'ativo' | 'inativo';
+  situacao?: 'ativo' | 'inativo'; // Para compatibilidade
   created_by?: number;
   updated_by?: number;
   created_at?: Date;
@@ -84,9 +112,9 @@ export class ProfissionalModel {
       }
     }
 
-    // Adicionar todos os campos fornecidos
+    // Adicionar todos os campos fornecidos, exceto id e situacao (coluna gerada)
     for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined && key !== 'id') {
+      if (value !== undefined && key !== 'id' && key !== 'situacao') {
         fields.push(key);
         values.push(value);
         placeholders.push(`$${paramCount}`);
@@ -109,9 +137,9 @@ export class ProfissionalModel {
     const values = [];
     let paramCount = 1;
 
-    // Adicionar todos os campos fornecidos exceto id
+    // Adicionar todos os campos fornecidos exceto id, situacao (coluna gerada), created_at e created_by
     for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined && key !== 'id' && key !== 'created_at' && key !== 'created_by') {
+      if (value !== undefined && key !== 'id' && key !== 'situacao' && key !== 'created_at' && key !== 'created_by') {
         fields.push(`${key} = $${paramCount}`);
         values.push(value);
         paramCount++;
