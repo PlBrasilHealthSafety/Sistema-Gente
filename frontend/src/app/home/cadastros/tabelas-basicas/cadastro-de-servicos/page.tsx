@@ -68,6 +68,10 @@ export default function CadastroServicos() {
   const [showConfirmacaoInativacao, setShowConfirmacaoInativacao] = useState(false);
   const [servicoParaAcao, setServicoParaAcao] = useState<Servico | null>(null);
   
+  // Estados para visualização
+  const [showViewServicoModal, setShowViewServicoModal] = useState(false);
+  const [servicoVisualizando, setServicoVisualizando] = useState<Servico | null>(null);
+  
   // Estados dos campos do formulário
   const [formData, setFormData] = useState({
     nome: '',
@@ -131,6 +135,13 @@ export default function CadastroServicos() {
   const handleProcurar = () => {
     // A busca já é feita automaticamente via useEffect
     // Este método pode ser usado para ações adicionais se necessário
+  };
+
+  const carregarServicos = () => {
+    setTermoBusca('');
+    setSituacao('Ativo');
+    setServicosFiltrados(mockServicos);
+    setPaginaAtual(1);
   };
 
   const handleNovoServico = () => {
@@ -201,6 +212,16 @@ export default function CadastroServicos() {
   };
 
   // Funções para ações da tabela
+  const handleVisualizarServico = (servico: Servico) => {
+    setServicoVisualizando(servico);
+    setShowViewServicoModal(true);
+  };
+
+  const handleFecharVisualizacao = () => {
+    setShowViewServicoModal(false);
+    setServicoVisualizando(null);
+  };
+
   const handleEditarServico = (servico: Servico) => {
     setModoEdicao(true);
     setServicoEditando(servico.id);
@@ -446,6 +467,13 @@ export default function CadastroServicos() {
                   >
                     NOVO SERVIÇO
                   </button>
+                  
+                  <button 
+                    onClick={carregarServicos}
+                    className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    RECARREGAR
+                  </button>
                 </div>
               </div>
 
@@ -525,9 +553,9 @@ export default function CadastroServicos() {
               )}
 
               {/* Tabela de Serviços */}
-              <div className="overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full">
+              <div className="p-6">
+                <div className="border border-gray-200 rounded-lg">
+                  <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
@@ -558,30 +586,34 @@ export default function CadastroServicos() {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <div className="flex justify-center gap-2">
+                              <div className="flex space-x-2 justify-center">
+                                <button 
+                                  onClick={() => handleVisualizarServico(servico)}
+                                  className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer"
+                                >
+                                  Visualizar
+                                </button>
                                 <button 
                                   onClick={() => handleEditarServico(servico)}
-                                  className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-150 cursor-pointer"
+                                  className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer"
                                 >
                                   Editar
                                 </button>
-                                <span className="text-gray-300">|</span>
-                                <button 
-                                  onClick={() => handleExcluirServico(servico)}
-                                  className="text-red-600 hover:text-red-800 font-medium text-sm transition-colors duration-150 cursor-pointer"
-                                >
-                                  Excluir
-                                </button>
-                                <span className="text-gray-300">|</span>
                                 <button 
                                   onClick={() => handleInativarServico(servico)}
-                                  className={`font-medium text-sm transition-colors duration-150 cursor-pointer ${
+                                  className={`text-xs font-medium cursor-pointer ${
                                     servico.situacao === 'Ativo' 
                                       ? 'text-orange-600 hover:text-orange-800' 
                                       : 'text-green-600 hover:text-green-800'
                                   }`}
                                 >
                                   {servico.situacao === 'Ativo' ? 'Inativar' : 'Ativar'}
+                                </button>
+                                <button 
+                                  onClick={() => handleExcluirServico(servico)}
+                                  className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer"
+                                >
+                                  Excluir
                                 </button>
                               </div>
                             </td>
@@ -598,7 +630,7 @@ export default function CadastroServicos() {
                         </tr>
                       )}
                     </tbody>
-                  </table>
+                                    </table>
                 </div>
 
                 {/* Paginação - sempre mostrar para manter consistência */}
@@ -609,14 +641,14 @@ export default function CadastroServicos() {
                         <button
                           onClick={() => setPaginaAtual(Math.max(1, paginaAtual - 1))}
                           disabled={paginaAtual === 1}
-                          className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                          className="relative inline-flex items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           Anterior
                         </button>
                         <button
                           onClick={() => setPaginaAtual(Math.min(totalPaginas, paginaAtual + 1))}
                           disabled={paginaAtual === totalPaginas}
-                          className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                          className="ml-3 relative inline-flex items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           Próxima
                         </button>
@@ -635,7 +667,7 @@ export default function CadastroServicos() {
                               <button
                                 onClick={() => setPaginaAtual(Math.max(1, paginaAtual - 1))}
                                 disabled={paginaAtual === 1}
-                                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                className="relative inline-flex items-center px-2.5 py-2.5 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                               >
                                 ←
                               </button>
@@ -645,7 +677,7 @@ export default function CadastroServicos() {
                                 <button
                                   key={pagina}
                                   onClick={() => setPaginaAtual(pagina)}
-                                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium cursor-pointer ${
+                                  className={`relative inline-flex items-center px-3.5 py-2.5 border text-sm font-medium cursor-pointer ${
                                     pagina === paginaAtual
                                       ? 'z-10 bg-[#00A298] border-[#00A298] text-white'
                                       : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
@@ -659,7 +691,7 @@ export default function CadastroServicos() {
                               <button
                                 onClick={() => setPaginaAtual(Math.min(totalPaginas, paginaAtual + 1))}
                                 disabled={paginaAtual === totalPaginas}
-                                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                className="relative inline-flex items-center px-2.5 py-2.5 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                               >
                                 →
                               </button>
@@ -680,9 +712,100 @@ export default function CadastroServicos() {
         </main>
       </div>
 
+      {/* Modal de Visualização */}
+      {showViewServicoModal && servicoVisualizando && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-[#1D3C44] mb-6">Visualizar Serviço</h3>
+              
+              <div className="space-y-6">
+                {/* Informações Básicas */}
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-3">Informações do Serviço</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nome do Serviço
+                      </label>
+                      <input
+                        type="text"
+                        value={servicoVisualizando.nome}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Categoria
+                      </label>
+                      <input
+                        type="text"
+                        value={servicoVisualizando.categoria}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Valor
+                      </label>
+                      <input
+                        type="text"
+                        value={formatarValor(servicoVisualizando.valor)}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Situação
+                      </label>
+                      <div className="flex items-center">
+                        <span className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${
+                          servicoVisualizando.situacao === 'Ativo' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {servicoVisualizando.situacao}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Descrição
+                    </label>
+                    <textarea
+                      value={servicoVisualizando.descricao}
+                      readOnly
+                      rows={3}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleFecharVisualizacao}
+                  className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                >
+                  FECHAR
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Confirmação de Exclusão */}
       {showConfirmacaoExclusao && servicoParaAcao && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -720,7 +843,7 @@ export default function CadastroServicos() {
 
       {/* Modal de Confirmação de Inativação/Ativação */}
       {showConfirmacaoInativacao && servicoParaAcao && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
               <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${

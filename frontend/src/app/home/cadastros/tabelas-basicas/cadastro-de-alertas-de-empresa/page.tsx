@@ -47,13 +47,21 @@ export default function CadastroAlertasEmpresa() {
                 Gerencie alertas e notificações para empresas
               </p>
             </div>
-            <button
-              onClick={() => router.push('/home/cadastros/estrutura-organizacional')}
-              className="bg-[#00A298] hover:bg-[#008A82] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
-            >
-              <span>←</span>
-              Voltar para Cadastros
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-2 rounded-lg transition-colors duration-200 flex items-center gap-1 text-sm"
+              >
+                🔄 Recarregar
+              </button>
+              <button
+                onClick={() => router.push('/home/cadastros/estrutura-organizacional')}
+                className="bg-[#00A298] hover:bg-[#008A82] text-white px-3 py-2 rounded-lg transition-colors duration-200 flex items-center gap-1 text-sm"
+              >
+                <span>←</span>
+                Voltar
+              </button>
+            </div>
           </div>
         </div>
 

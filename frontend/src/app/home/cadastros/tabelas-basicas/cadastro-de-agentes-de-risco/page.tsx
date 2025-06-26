@@ -77,6 +77,10 @@ export default function CadastroAgentesRisco() {
   const [showConfirmacaoInativacao, setShowConfirmacaoInativacao] = useState(false);
   const [agenteParaAcao, setAgenteParaAcao] = useState<AgenteRisco | null>(null);
   
+  // Estados para visualização
+  const [showViewAgenteModal, setShowViewAgenteModal] = useState(false);
+  const [agenteVisualizando, setAgenteVisualizando] = useState<AgenteRisco | null>(null);
+  
   // Estados dos campos do formulário
   const [formData, setFormData] = useState({
     risco: '',
@@ -138,6 +142,13 @@ export default function CadastroAgentesRisco() {
   const handleProcurar = () => {
     // A busca já é feita automaticamente via useEffect
     // Este método pode ser usado para ações adicionais se necessário
+  };
+
+  const carregarAgentesRisco = () => {
+    setTermoBusca('');
+    setSituacao('Ativo');
+    setAgentesRiscoFiltrados(mockAgentesRisco);
+    setPaginaAtual(1);
   };
 
   const handleNovoAgente = () => {
@@ -248,6 +259,16 @@ export default function CadastroAgentesRisco() {
   };
 
   // Funções para ações da tabela
+  const handleVisualizarAgente = (agente: AgenteRisco) => {
+    setAgenteVisualizando(agente);
+    setShowViewAgenteModal(true);
+  };
+
+  const handleFecharVisualizacao = () => {
+    setShowViewAgenteModal(false);
+    setAgenteVisualizando(null);
+  };
+
   const handleEditarAgente = (agente: AgenteRisco) => {
     setModoEdicao(true);
     setAgenteEditando(agente.id);
@@ -503,6 +524,13 @@ export default function CadastroAgentesRisco() {
                     className="bg-[#00A298] hover:bg-[#1D3C44] text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
                     NOVO AGENTE
+                  </button>
+                  
+                  <button 
+                    onClick={carregarAgentesRisco}
+                    className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                  >
+                    RECARREGAR
                   </button>
                 </div>
               </div>
@@ -929,30 +957,34 @@ export default function CadastroAgentesRisco() {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <div className="flex justify-center gap-2">
+                              <div className="flex space-x-2 justify-center">
+                                <button 
+                                  onClick={() => handleVisualizarAgente(agenteRisco)}
+                                  className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer"
+                                >
+                                  Visualizar
+                                </button>
                                 <button 
                                   onClick={() => handleEditarAgente(agenteRisco)}
-                                  className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-150 cursor-pointer"
+                                  className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer"
                                 >
                                   Editar
                                 </button>
-                                <span className="text-gray-300">|</span>
-                                <button 
-                                  onClick={() => handleExcluirAgente(agenteRisco)}
-                                  className="text-red-600 hover:text-red-800 font-medium text-sm transition-colors duration-150 cursor-pointer"
-                                >
-                                  Excluir
-                                </button>
-                                <span className="text-gray-300">|</span>
                                 <button 
                                   onClick={() => handleInativarAgente(agenteRisco)}
-                                  className={`font-medium text-sm transition-colors duration-150 cursor-pointer ${
+                                  className={`text-xs font-medium cursor-pointer ${
                                     agenteRisco.situacao === 'Ativo' 
                                       ? 'text-orange-600 hover:text-orange-800' 
                                       : 'text-green-600 hover:text-green-800'
                                   }`}
                                 >
                                   {agenteRisco.situacao === 'Ativo' ? 'Inativar' : 'Ativar'}
+                                </button>
+                                <button 
+                                  onClick={() => handleExcluirAgente(agenteRisco)}
+                                  className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer"
+                                >
+                                  Excluir
                                 </button>
                               </div>
                             </td>
@@ -1052,9 +1084,88 @@ export default function CadastroAgentesRisco() {
         </main>
       </div>
 
+      {/* Modal de Visualização */}
+      {showViewAgenteModal && agenteVisualizando && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-[#1D3C44] mb-6">Visualizar Agente de Risco</h3>
+              
+              <div className="space-y-6">
+                {/* Informações Básicas */}
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-3">Informações do Agente de Risco</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nome do Agente
+                      </label>
+                      <input
+                        type="text"
+                        value={agenteVisualizando.agente}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo de Risco
+                      </label>
+                      <input
+                        type="text"
+                        value={agenteVisualizando.risco}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Fator de Risco
+                      </label>
+                      <textarea
+                        value={agenteVisualizando.fatorRisco}
+                        readOnly
+                        rows={3}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Situação
+                      </label>
+                      <div className="flex items-center">
+                        <span className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${
+                          agenteVisualizando.situacao === 'Ativo' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {agenteVisualizando.situacao}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleFecharVisualizacao}
+                  className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                >
+                  FECHAR
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Confirmação de Exclusão */}
       {showConfirmacaoExclusao && agenteParaAcao && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -1092,7 +1203,7 @@ export default function CadastroAgentesRisco() {
 
       {/* Modal de Confirmação de Inativação/Ativação */}
       {showConfirmacaoInativacao && agenteParaAcao && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
               <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
