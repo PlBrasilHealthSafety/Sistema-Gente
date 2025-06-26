@@ -588,20 +588,6 @@ export default function CadastroCredenciados() {
                   onClick={() => router.push('/home')}
                   className="hover:text-[#00A298] cursor-pointer"
                 >
-                  Home
-                </button>
-                <span>/</span>
-                <button 
-                  onClick={() => router.push('/home/cadastros')}
-                  className="hover:text-[#00A298] cursor-pointer"
-                >
-                  Cadastros
-                </button>
-                <span>/</span>
-                <button 
-                  onClick={() => router.push('/home/cadastros/tabelas-basicas')}
-                  className="hover:text-[#00A298] cursor-pointer"
-                >
                   Tabelas Básicas
                 </button>
                 <span>/</span>
@@ -609,7 +595,7 @@ export default function CadastroCredenciados() {
               </div>
               
               <h1 className="text-3xl font-bold text-[#1D3C44] mb-2">
-                🏥 Consulta de Credenciados
+                🏥 Cadastro de Credenciados
               </h1>
               <p className="text-gray-600">
                 Cadastro e gerenciamento de profissionais e instituições credenciadas
@@ -693,7 +679,7 @@ export default function CadastroCredenciados() {
                 <div className="p-6 bg-gray-50 border-b border-gray-200">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-bold text-[#1D3C44]">
-                      {modoEdicao ? 'Editar Credenciado' : 'Novo Credenciado'}
+                      {modoEdicao ? 'Editar Credenciado' : 'Cadastro de Credenciado'}
                     </h3>
                     <div className="text-sm text-gray-500">
                       <span className="text-red-500">*</span> Campos obrigatórios
@@ -1157,43 +1143,43 @@ export default function CadastroCredenciados() {
 
               {/* Tabela de Credenciados - só mostra quando não está cadastrando */}
               {!showCadastroModal && (
-                <div className="p-6">
+                                  <div className="p-6">
                   <div className="border border-gray-200 rounded-lg">
                     <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-gray-100">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                           Nome do Credenciado
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                           CNPJ
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                           Localização
                         </th>
-                        <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">
                           Ações
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
+                    <tbody>
                       {credenciadosExibidos.length > 0 ? (
                         credenciadosExibidos.map((credenciado) => (
-                          <tr key={credenciado.id} className="hover:bg-gray-50 transition-colors duration-150">
-                            <td className="px-6 py-4">
-                              <div className="font-medium text-gray-700">{credenciado.nome}</div>
+                          <tr key={credenciado.id} className="border-b border-gray-200 hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm">
+                              <div className="font-medium text-gray-900">{credenciado.nome}</div>
                             </td>
-                            <td className="px-6 py-4">
-                              <div className="text-gray-700 font-mono text-sm">
+                            <td className="px-4 py-3 text-sm text-gray-900">
+                              <div className="font-mono">
                                 {formatarCNPJ(credenciado.cnpj)}
                               </div>
                             </td>
-                            <td className="px-6 py-4">
-                              <div className="text-gray-700">
+                            <td className="px-4 py-3 text-sm text-gray-900">
+                              <div>
                                 {credenciado.cidade}, {credenciado.estado}
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-center">
+                            <td className="px-4 py-3 text-sm">
                               <div className="flex space-x-2 justify-center">
                                 <button 
                                   onClick={() => handleVisualizarCredenciado(credenciado)}
@@ -1229,7 +1215,7 @@ export default function CadastroCredenciados() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center">
+                          <td colSpan={4} className="px-4 py-12 text-center">
                             <div className="text-gray-500">
                               <div className="mb-2">Nenhum credenciado encontrado</div>
                               <div className="text-sm">Ajuste os filtros ou cadastre um novo credenciado</div>
