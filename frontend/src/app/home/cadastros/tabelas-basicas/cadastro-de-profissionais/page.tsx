@@ -495,7 +495,7 @@ export default function CadastroProfissionaisPage() {
     return null;
   }
 
-    return (
+  return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-[#00A298]/15">
       {/* Notificação Toast */}
       {notification.show && (
@@ -1682,26 +1682,77 @@ export default function CadastroProfissionaisPage() {
             <div className="p-6">
               <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Editar Profissional</h3>
               
-              <div className="bg-gray-50 rounded-lg p-4">
+              {/* Dados Cadastrais */}
+              <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nome
+                    <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                      Nome <span className="text-red-500">*</span>
+                      <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
                     </label>
                     <input
                       type="text"
                       value={nomeProfissional}
                       onChange={(e) => setNomeProfissional(formatTexto(e.target.value))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                      placeholder="Digite o nome do profissional (apenas letras)"
+                      placeholder="Digite o nome do profissional"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Categoria
+                      Nacionalidade <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={nacionalidade}
+                      onChange={(e) => setNacionalidade(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
+                      <option value="">Selecione a nacionalidade</option>
+                      <option value="Brasileiro">Brasileiro</option>
+                      <option value="Estrangeiro">Estrangeiro</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CPF <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={cpf}
+                      onChange={(e) => {
+                        const formattedCPF = formatCPF(e.target.value);
+                        setCpf(formattedCPF);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="000.000.000-00"
+                      maxLength={14}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      NIS
+                    </label>
+                    <input
+                      type="text"
+                      value={nis}
+                      onChange={(e) => {
+                        const formattedNIS = e.target.value.replace(/\D/g, '').slice(0, 11);
+                        setNis(formattedNIS);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="00000000000"
+                      maxLength={11}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Categoria <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={categoria}
@@ -1721,15 +1772,16 @@ export default function CadastroProfissionaisPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Sigla Conselho
+                    <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                      Conselho <span className="text-red-500">*</span>
+                      <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
                     </label>
                     <select
                       value={siglaConselho}
                       onChange={(e) => setSiglaConselho(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
-                      <option value="">Selecione a sigla</option>
+                      <option value="">Selecione o conselho</option>
                       <option value="CRM">CRM</option>
                       <option value="COREN">COREN</option>
                       <option value="CREFITO">CREFITO</option>
@@ -1740,94 +1792,395 @@ export default function CadastroProfissionaisPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Número Conselho
+                    <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                      Reg. Conselho <span className="text-red-500">*</span>
+                      <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
                     </label>
                     <input
                       type="text"
-                      value={numeroConselho}
-                      onChange={(e) => setNumeroConselho(e.target.value)}
+                      value={regConselho}
+                      onChange={(e) => setRegConselho(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                       placeholder="Digite o número do conselho"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Profissional Externo
+                    <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                      UF <span className="text-red-500">*</span>
+                      <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
                     </label>
                     <select
-                      value={externo ? 'true' : 'false'}
-                      onChange={(e) => setExterno(e.target.value === 'true')}
+                      value={ufConselho}
+                      onChange={(e) => setUfConselho(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
                     >
-                      <option value="false">Não</option>
-                      <option value="true">Sim</option>
+                      <option value="">Selecione o estado</option>
+                      <option value="AC">AC</option>
+                      <option value="AL">AL</option>
+                      <option value="AP">AP</option>
+                      <option value="AM">AM</option>
+                      <option value="BA">BA</option>
+                      <option value="CE">CE</option>
+                      <option value="DF">DF</option>
+                      <option value="ES">ES</option>
+                      <option value="GO">GO</option>
+                      <option value="MA">MA</option>
+                      <option value="MT">MT</option>
+                      <option value="MS">MS</option>
+                      <option value="MG">MG</option>
+                      <option value="PA">PA</option>
+                      <option value="PB">PB</option>
+                      <option value="PR">PR</option>
+                      <option value="PE">PE</option>
+                      <option value="PI">PI</option>
+                      <option value="RJ">RJ</option>
+                      <option value="RN">RN</option>
+                      <option value="RS">RS</option>
+                      <option value="RO">RO</option>
+                      <option value="RR">RR</option>
+                      <option value="SC">SC</option>
+                      <option value="SP">SP</option>
+                      <option value="SE">SE</option>
+                      <option value="TO">TO</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ofensor
+                      Reg. MTE
                     </label>
                     <input
                       type="text"
-                      value={ofensor}
-                      onChange={(e) => setOfensor(e.target.value)}
+                      value={regMte}
+                      onChange={(e) => setRegMte(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                      placeholder="Digite o ofensor"
+                      placeholder="Digite o registro no MTE"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Informações de Contato */}
+              <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Informações de contato</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CEP <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={cep}
+                      onChange={(e) => handleCepChange(e.target.value)}
+                      maxLength={9}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="00000-000"
+                    />
+                    {loadingCep && <p className="text-xs text-blue-500 mt-1 flex items-center">
+                      <svg className="animate-spin h-3 w-3 mr-1" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Buscando CEP...
+                    </p>}
+                    {cepError && <p className="text-xs text-red-500 mt-1">{cepError}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo de logradouro <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={tipoLogradouro}
+                      onChange={(e) => setEndereco({ ...endereco, tipoLogradouro: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
+                      <option value="">Selecione o tipo</option>
+                      <option value="Rua">Rua</option>
+                      <option value="Avenida">Avenida</option>
+                      <option value="Praça">Praça</option>
+                      <option value="Travessa">Travessa</option>
+                      <option value="Alameda">Alameda</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Logradouro <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={logradouro}
+                      onChange={(e) => setEndereco({ ...endereco, logradouro: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Digite o nome da rua"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Clínica
+                      Número <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      value={clinica}
-                      onChange={(e) => setClinica(e.target.value)}
+                      value={numero}
+                      onChange={(e) => setEndereco({ ...endereco, numero: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                      placeholder="Digite a clínica"
+                      placeholder="Digite o número"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Complemento
+                    </label>
+                    <input
+                      type="text"
+                      value={complemento}
+                      onChange={(e) => setEndereco({ ...endereco, complemento: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Apto, bloco, etc."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      UF <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={ufEndereco}
+                      onChange={(e) => setEndereco({ ...endereco, uf: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
+                      <option value="">Selecione o estado</option>
+                      <option value="AC">AC</option>
+                      <option value="AL">AL</option>
+                      <option value="AP">AP</option>
+                      <option value="AM">AM</option>
+                      <option value="BA">BA</option>
+                      <option value="CE">CE</option>
+                      <option value="DF">DF</option>
+                      <option value="ES">ES</option>
+                      <option value="GO">GO</option>
+                      <option value="MA">MA</option>
+                      <option value="MT">MT</option>
+                      <option value="MS">MS</option>
+                      <option value="MG">MG</option>
+                      <option value="PA">PA</option>
+                      <option value="PB">PB</option>
+                      <option value="PR">PR</option>
+                      <option value="PE">PE</option>
+                      <option value="PI">PI</option>
+                      <option value="RJ">RJ</option>
+                      <option value="RN">RN</option>
+                      <option value="RS">RS</option>
+                      <option value="RO">RO</option>
+                      <option value="RR">RR</option>
+                      <option value="SC">SC</option>
+                      <option value="SP">SP</option>
+                      <option value="SE">SE</option>
+                      <option value="TO">TO</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cidade <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={cidade}
+                      onChange={(e) => setEndereco({ ...endereco, cidade: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Digite a cidade"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bairro <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={bairro}
+                      onChange={(e) => setEndereco({ ...endereco, bairro: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Digite o bairro"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      E-mail <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Digite o e-mail"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Telefone
+                    </label>
+                    <input
+                      type="text"
+                      value={telefone}
+                      onChange={(e) => {
+                        const onlyNumbers = e.target.value.replace(/\D/g, '');
+                        const limitedNumbers = onlyNumbers.slice(0, 10);
+                        
+                        let formattedPhone = limitedNumbers;
+                        if (limitedNumbers.length <= 2) {
+                          formattedPhone = limitedNumbers;
+                        } else if (limitedNumbers.length <= 6) {
+                          formattedPhone = limitedNumbers.replace(/(\d{2})(\d+)/, '($1) $2');
+                        } else {
+                          formattedPhone = limitedNumbers.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+                        }
+                        
+                        setTelefone(formattedPhone);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="(00) 0000-0000"
+                      maxLength={14}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      DDD <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={ddd}
+                      onChange={(e) => {
+                        const onlyNumbers = e.target.value.replace(/\D/g, '').slice(0, 2);
+                        setDdd(onlyNumbers);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="00"
+                      maxLength={2}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Celular <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={celular}
+                      onChange={(e) => {
+                        const onlyNumbers = e.target.value.replace(/\D/g, '');
+                        const limitedNumbers = onlyNumbers.slice(0, 11);
+                        
+                        let formattedCelular = limitedNumbers;
+                        if (limitedNumbers.length <= 2) {
+                          formattedCelular = limitedNumbers;
+                        } else if (limitedNumbers.length <= 7) {
+                          formattedCelular = limitedNumbers.replace(/(\d{2})(\d+)/, '($1) $2');
+                        } else {
+                          formattedCelular = limitedNumbers.replace(/(\d{2})(\d{5})(\d+)/, '($1) $2-$3');
+                        }
+                        
+                        setCelular(formattedCelular);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="(00) 90000-0000"
+                      maxLength={15}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Informações Adicionais */}
+              <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Informações adicionais</h4>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Observação
+                    </label>
+                    <textarea
+                      value={observacao}
+                      onChange={(e) => setObservacao(e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                      placeholder="Digite observações adicionais"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-6 mb-4">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="agendamentoHorarioEdit"
+                        checked={agendamentoHorario}
+                        onChange={(e) => setAgendamentoHorario(e.target.checked)}
+                        className="mr-2 w-4 h-4 text-[#00A298] focus:ring-[#00A298] border-gray-300 rounded"
+                      />
+                      <label htmlFor="agendamentoHorarioEdit" className="text-sm text-gray-700">
+                        Agendamentos para este profissional apenas com horário marcado
+                      </label>
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="profissionalExternoEdit"
+                        checked={profissionalExterno}
+                        onChange={(e) => setProfissionalExterno(e.target.checked)}
+                        className="mr-2 w-4 h-4 text-[#00A298] focus:ring-[#00A298] border-gray-300 rounded"
+                      />
+                      <label htmlFor="profissionalExternoEdit" className="text-sm text-gray-700">
+                        Profissional externo
+                      </label>
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Situação
                     </label>
-                                            <select
-                          value={situacao}
-                          onChange={(e) => setSituacao(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
-                        >
-                          <option value="ativo">Ativo</option>
-                          <option value="inativo">Inativo</option>
-                        </select>
+                    <select
+                      value={situacao}
+                      onChange={(e) => setSituacao(e.target.value)}
+                      className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A298] focus:border-transparent"
+                    >
+                      <option value="ativo">Ativo</option>
+                      <option value="inativo">Inativo</option>
+                    </select>
                   </div>
                 </div>
+              </div>
                 
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={handleSalvarEdicao}
-                    disabled={isSubmitting}
-                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'SALVANDO...' : 'SALVAR'}
-                  </button>
-                  <button
-                    onClick={handleLimpar}
-                    className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                  >
-                    LIMPAR
-                  </button>
-                  <button
-                    onClick={handleFecharEdicao}
-                    className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
-                  >
-                    RETORNAR
-                  </button>
-                </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSalvarEdicao}
+                  disabled={isSubmitting}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'SALVANDO...' : 'SALVAR'}
+                </button>
+                <button
+                  onClick={handleLimpar}
+                  className="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                >
+                  LIMPAR
+                </button>
+                <button
+                  onClick={handleFecharEdicao}
+                  className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
+                >
+                  RETORNAR
+                </button>
               </div>
             </div>
           </div>
@@ -1938,7 +2291,7 @@ export default function CadastroProfissionaisPage() {
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-gray-900">Confirmar Reativação</h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    Tem certeza que deseja reativar o profissional "{profissionalReativando.nome}"?
+                    Tem certeza que deseja reativar o profissional &quot;{profissionalReativando.nome}&quot;?
                   </p>
                 </div>
               </div>
