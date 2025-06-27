@@ -579,7 +579,7 @@ export default function CadastroProcedimentos() {
 
                             {/* Container de Cadastro de Procedimento */}
               {showCadastroModal && (
-                <div className="p-6 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                <div className="p-6 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 rounded-b-2xl">
                   <div className="mb-6">
                     <h3 className="text-xl font-bold text-[#1D3C44]">
                       {modoEdicao ? 'Editar Procedimento' : 'Novo Procedimento'}
