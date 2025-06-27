@@ -860,7 +860,7 @@ export default function CadastroProfissionaisPage() {
 
                     <div>
                         <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                          Sigla <span className="text-red-500">*</span>
+                          Conselho <span className="text-red-500">*</span>
                           <Image src="/logo_esocial.png" alt="eSocial" width={16} height={16} className="ml-1" title="eSocial" />
                       </label>
                       <select
@@ -875,7 +875,7 @@ export default function CadastroProfissionaisPage() {
                             errors.siglaConselho ? 'border-red-300 bg-red-50' : 'border-gray-300'
                           }`}
                         >
-                          <option value="">Selecione a sigla</option>
+                          <option value="">Selecione o conselho</option>
                           <option value="CRM">CRM</option>
                           <option value="COREN">COREN</option>
                           <option value="CREFITO">CREFITO</option>
@@ -1460,7 +1460,7 @@ export default function CadastroProfissionaisPage() {
                         <tr>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Categoria</th>
-                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Sigla Conselho</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Conselho</th>
                           <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Número Conselho</th>
                           <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Externo</th>
                           <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Situação</th>
