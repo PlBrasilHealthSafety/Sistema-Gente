@@ -87,9 +87,11 @@ export default function GruposPage() {
   const [showEditGroupModal, setShowEditGroupModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteDefinitivoModal, setShowDeleteDefinitivoModal] = useState(false);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [grupoEditando, setGrupoEditando] = useState<Grupo | null>(null);
   const [grupoExcluindo, setGrupoExcluindo] = useState<Grupo | null>(null);
   const [grupoExcluindoDefinitivo, setGrupoExcluindoDefinitivo] = useState<Grupo | null>(null);
+  const [grupoReativando, setGrupoReativando] = useState<Grupo | null>(null);
   const [showViewGroupModal, setShowViewGroupModal] = useState(false);
   const [grupoVisualizando, setGrupoVisualizando] = useState<Grupo | null>(null);
   const [showPontoFocalVisualizacao, setShowPontoFocalVisualizacao] = useState(false);
@@ -618,20 +620,27 @@ export default function GruposPage() {
   };
 
   // Função para reativar grupo
-  const handleReativarGrupo = async (grupo: Grupo) => {
+  const handleReativarGrupo = (grupo: Grupo) => {
+    setGrupoReativando(grupo);
+    setShowReactivateModal(true);
+  };
+
+  const handleConfirmarReativacao = async () => {
+    if (!grupoReativando) return;
+
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:3001/api/grupos/${grupo.id}`, {
+      const response = await fetch(`http://localhost:3001/api/grupos/${grupoReativando.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          nome: grupo.nome,
-          descricao: grupo.descricao,
+          nome: grupoReativando.nome,
+          descricao: grupoReativando.descricao,
           status: 'ativo'
         })
       });
@@ -648,7 +657,14 @@ export default function GruposPage() {
       showNotification('error', 'Erro ao reativar grupo. Tente novamente.');
     } finally {
       setIsSubmitting(false);
+      setShowReactivateModal(false);
+      setGrupoReativando(null);
     }
+  };
+
+  const handleCancelarReativacao = () => {
+    setShowReactivateModal(false);
+    setGrupoReativando(null);
   };
 
   // Função para inativar grupo (soft delete) - igual ao antigo handleExcluirGrupo
@@ -1032,7 +1048,7 @@ export default function GruposPage() {
                       onClick={carregarGrupos}
                       className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                     >
-                      RECARREGAR
+                      ATUALIZAR
                     </button>
                 </div>
               </div>
@@ -1042,13 +1058,23 @@ export default function GruposPage() {
                 <div className="p-6 bg-gray-50 border-b border-gray-200">
                   <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Cadastro de Grupos</h3>
                   
+                  {/* Legenda de campos obrigatórios */}
+                  <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center text-sm text-blue-800">
+                      <span className="text-red-500 mr-2 font-bold">*</span>
+                      <span className="font-medium">Campos obrigatórios</span>
+                      <span className="mx-2">•</span>
+                      <span className="text-blue-600">Preencha todos os campos marcados com asterisco para continuar</span>
+                    </div>
+                  </div>
+                  
                   <div className="bg-white rounded-lg p-4 shadow-sm">
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Nome
+                          Nome <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -1105,112 +1131,114 @@ export default function GruposPage() {
                         onClick={handleRetornar}
                         className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                       >
-                        RETORNAR
+                        VOLTAR
                       </button>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Tabela de resultados */}
-              <div className="p-6">
-                <div className="border border-gray-200 rounded-lg">
-                  <table className="w-full">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-1/2">Nome</th>
-                        {permissions.canViewSensitive && (
-                          <th className="px-11 py-3 text-center text-sm font-medium text-gray-700 w-100">Ponto Focal</th>
-                        )}
-                        <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-32">Situação</th>
-                        <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-48">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredGrupos && Array.isArray(filteredGrupos) && filteredGrupos.length > 0 ? (
-                        filteredGrupos.map((grupo) => (
-                          <tr key={grupo.id} className="border-b border-gray-200 hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm">
-                              <div>
-                                <div className="font-medium text-gray-900">{destacarTexto(grupo.nome, nomeBusca)}</div>
-                                {grupo.descricao && (
-                                  <div className="text-gray-500 text-xs mt-1">{destacarTexto(grupo.descricao, nomeBusca)}</div>
-                                )}
-
-                              </div>
-                            </td>
-                            {permissions.canViewSensitive && (
-                              <td className="px-12 py-3 text-center">
-                                <PontoFocalTooltip data={grupo} />
-                              </td>
-                            )}
-                            <td className="px-12 py-3 text-sm text-center">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                grupo.status === 'ativo' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {grupo.status}
-                              </span>
-                            </td>
-                            <td className="px-12 py-3 text-sm">
-              <div className="flex space-x-2 justify-center">
-                <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarGrupo(grupo)}>
-                  Visualizar
-                </button>
-                {permissions.grupos.canEdit && (
-                  <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarGrupo(grupo)}>
-                    Editar
-                  </button>
-                )}
-                {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando o grupo está inativo */}
-                {(user?.role === 'admin' || user?.role === 'super_admin') && grupo.status === 'inativo' && (
-                  <button 
-                    className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
-                    onClick={() => handleReativarGrupo(grupo)}
-                  >
-                    Reativar
-                  </button>
-                )}
-                {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando o grupo está ativo */}
-                {(user?.role === 'admin' || user?.role === 'super_admin') && grupo.status === 'ativo' && (
-                  <button 
-                    className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
-                    onClick={() => handleInativarGrupo(grupo)}
-                  >
-                    Inativar
-                  </button>
-                )}
-                {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
-                {user?.role === 'super_admin' && (
-                  <button 
-                    className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
-                    onClick={() => handleExcluirDefinitivo(grupo)}
-                  >
-                    Excluir
-                  </button>
-                )}
-              </div>
-            </td>
-                          </tr>
-                        ))
-                      ) : (
+              {/* Tabela de resultados - só mostra quando não está no modo de cadastro */}
+              {!showNewGroupModal && (
+                <div className="p-6">
+                  <div className="border border-gray-200 rounded-lg">
+                    <table className="w-full">
+                      <thead className="bg-gray-100">
                         <tr>
-                          <td 
-                            colSpan={
-                              3 + 
-                              (permissions.canViewSensitive ? 1 : 0)
-                            } 
-                            className="px-4 py-8 text-center text-gray-500"
-                          >
-                            {nomeBusca ? 'Nenhum grupo encontrado com o nome pesquisado' : 'Não existem dados para mostrar'}
-                          </td>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-1/2">Nome</th>
+                          {permissions.canViewSensitive && (
+                            <th className="px-11 py-3 text-center text-sm font-medium text-gray-700 w-100">Ponto Focal</th>
+                          )}
+                          <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-32">Situação</th>
+                          <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-48">Ações</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {filteredGrupos && Array.isArray(filteredGrupos) && filteredGrupos.length > 0 ? (
+                          filteredGrupos.map((grupo) => (
+                            <tr key={grupo.id} className="border-b border-gray-200 hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm">
+                                <div>
+                                  <div className="font-medium text-gray-900">{destacarTexto(grupo.nome, nomeBusca)}</div>
+                                  {grupo.descricao && (
+                                    <div className="text-gray-500 text-xs mt-1">{destacarTexto(grupo.descricao, nomeBusca)}</div>
+                                  )}
+
+                                </div>
+                              </td>
+                              {permissions.canViewSensitive && (
+                                <td className="px-12 py-3 text-center">
+                                  <PontoFocalTooltip data={grupo} />
+                                </td>
+                              )}
+                              <td className="px-12 py-3 text-sm text-center">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  grupo.status === 'ativo' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {grupo.status}
+                                </span>
+                              </td>
+                              <td className="px-12 py-3 text-sm">
+                <div className="flex space-x-2 justify-center">
+                  <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarGrupo(grupo)}>
+                    Visualizar
+                  </button>
+                  {permissions.grupos.canEdit && (
+                    <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarGrupo(grupo)}>
+                      Editar
+                    </button>
+                  )}
+                  {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando o grupo está inativo */}
+                  {(user?.role === 'admin' || user?.role === 'super_admin') && grupo.status === 'inativo' && (
+                    <button 
+                      className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
+                      onClick={() => handleReativarGrupo(grupo)}
+                    >
+                      Reativar
+                    </button>
+                  )}
+                  {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando o grupo está ativo */}
+                  {(user?.role === 'admin' || user?.role === 'super_admin') && grupo.status === 'ativo' && (
+                    <button 
+                      className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
+                      onClick={() => handleInativarGrupo(grupo)}
+                    >
+                      Inativar
+                    </button>
+                  )}
+                  {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
+                  {user?.role === 'super_admin' && (
+                    <button 
+                      className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
+                      onClick={() => handleExcluirDefinitivo(grupo)}
+                    >
+                      Excluir
+                    </button>
+                  )}
                 </div>
-              </div>
+              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td 
+                              colSpan={
+                                3 + 
+                                (permissions.canViewSensitive ? 1 : 0)
+                              } 
+                              className="px-4 py-8 text-center text-gray-500"
+                            >
+                              {nomeBusca ? 'Nenhum grupo encontrado com o nome pesquisado' : 'Não existem dados para mostrar'}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </main>
@@ -1288,7 +1316,7 @@ export default function GruposPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nome
+                      Nome <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1433,6 +1461,51 @@ export default function GruposPage() {
                   className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Excluindo...' : 'Sim, Excluir Definitivamente'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Reativação */}
+      {showReactivateModal && grupoReativando && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Reativação</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja reativar o grupo "{grupoReativando.nome}"?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-green-800">
+                  <strong>Informação:</strong> O grupo será marcado como ativo e voltará a aparecer nos seletores e relatórios.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleCancelarReativacao}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarReativacao}
+                  disabled={isSubmitting}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Reativando...' : 'Sim, Reativar'}
                 </button>
               </div>
             </div>

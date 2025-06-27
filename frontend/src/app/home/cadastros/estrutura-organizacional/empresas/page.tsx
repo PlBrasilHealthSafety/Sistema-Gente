@@ -61,10 +61,12 @@ export default function EmpresasPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showExclusaoDefinitivaModal, setShowExclusaoDefinitivaModal] = useState(false);
   const [showViewCompanyModal, setShowViewCompanyModal] = useState(false);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null);
   const [empresaExcluindo, setEmpresaExcluindo] = useState<Empresa | null>(null);
   const [empresaExcluindoDefinitivo, setEmpresaExcluindoDefinitivo] = useState<Empresa | null>(null);
   const [empresaVisualizando, setEmpresaVisualizando] = useState<Empresa | null>(null);
+  const [empresaReativando, setEmpresaReativando] = useState<Empresa | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Estados para múltiplos pontos focais
@@ -516,19 +518,26 @@ export default function EmpresasPage() {
   };
 
   // Handler para reativar empresa
-  const handleReativarEmpresa = async (empresa: Empresa) => {
+  const handleReativarEmpresa = (empresa: Empresa) => {
+    setEmpresaReativando(empresa);
+    setShowReactivateModal(true);
+  };
+
+  const handleConfirmarReativacao = async () => {
+    if (!empresaReativando) return;
+
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:3001/api/empresas/${empresa.id}`, {
+      const response = await fetch(`http://localhost:3001/api/empresas/${empresaReativando.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          ...empresa,
+          ...empresaReativando,
           status: 'ativo'
         })
       });
@@ -545,7 +554,14 @@ export default function EmpresasPage() {
       showNotification('error', 'Erro ao reativar empresa. Tente novamente.');
     } finally {
       setIsSubmitting(false);
+      setShowReactivateModal(false);
+      setEmpresaReativando(null);
     }
+  };
+
+  const handleCancelarReativacao = () => {
+    setShowReactivateModal(false);
+    setEmpresaReativando(null);
   };
 
   const handleConfirmarExclusao = async () => {
@@ -1512,7 +1528,7 @@ export default function EmpresasPage() {
                       </div>
 
                       {/* Botões de ação */}
-                      <div className="flex gap-3 pt-4 border-t border-gray-200">
+                      <div className="flex gap-3 mt-6">
                         {permissions.empresas.canCreate && (
                           <button 
                             onClick={handleIncluir}
@@ -1532,7 +1548,7 @@ export default function EmpresasPage() {
                           onClick={handleRetornar}
                           className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                         >
-                          RETORNAR
+                          VOLTAR
                         </button>
                       </div>
                     </div>
@@ -1985,7 +2001,7 @@ export default function EmpresasPage() {
                     onClick={handleFecharEdicao}
                     className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
-                    RETORNAR
+                    VOLTAR
                   </button>
                 </div>
               </div>
@@ -2012,6 +2028,51 @@ export default function EmpresasPage() {
           onConfirmar={handleConfirmarExclusaoDefinitiva}
           onCancelar={handleCancelarExclusaoDefinitiva}
         />
+      )}
+
+      {/* Modal de Confirmação de Reativação */}
+      {showReactivateModal && empresaReativando && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Reativação</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja reativar a empresa "{empresaReativando.nome_fantasia || empresaReativando.razao_social}"?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-green-800">
+                  <strong>Informação:</strong> A empresa será marcada como ativa e voltará a aparecer nos seletores e relatórios.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleCancelarReativacao}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarReativacao}
+                  disabled={isSubmitting}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Reativando...' : 'Sim, Reativar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

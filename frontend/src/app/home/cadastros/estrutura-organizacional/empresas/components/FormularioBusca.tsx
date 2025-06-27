@@ -193,7 +193,7 @@ export default function FormularioBusca({
             onClick={onRecarregar}
             className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer text-xs"
           >
-            RECARREGAR
+            ATUALIZAR
           </button>
         </div>
       </div>

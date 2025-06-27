@@ -82,9 +82,11 @@ export default function RegioesPage() {
   const [showEditRegionModal, setShowEditRegionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteDefinitivoModal, setShowDeleteDefinitivoModal] = useState(false);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [regiaoEditando, setRegiaoEditando] = useState<Regiao | null>(null);
   const [regiaoExcluindo, setRegiaoExcluindo] = useState<Regiao | null>(null);
   const [regiaoExcluindoDefinitivo, setRegiaoExcluindoDefinitivo] = useState<Regiao | null>(null);
+  const [regiaoReativando, setRegiaoReativando] = useState<Regiao | null>(null);
   const [showViewRegionModal, setShowViewRegionModal] = useState(false);
   const [regiaoVisualizando, setRegiaoVisualizando] = useState<Regiao | null>(null);
   
@@ -595,23 +597,30 @@ export default function RegioesPage() {
   };
 
   // Função para reativar região
-  const handleReativarRegiao = async (regiao: Regiao) => {
+  const handleReativarRegiao = (regiao: Regiao) => {
+    setRegiaoReativando(regiao);
+    setShowReactivateModal(true);
+  };
+
+  const handleConfirmarReativacao = async () => {
+    if (!regiaoReativando) return;
+
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:3001/api/regioes/${regiao.id}`, {
+      const response = await fetch(`http://localhost:3001/api/regioes/${regiaoReativando.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          nome: regiao.nome,
-          descricao: regiao.descricao,
-          uf: regiao.uf,
-          cidade: regiao.cidade,
-          grupo_id: regiao.grupo_id,
+          nome: regiaoReativando.nome,
+          descricao: regiaoReativando.descricao,
+          uf: regiaoReativando.uf,
+          cidade: regiaoReativando.cidade,
+          grupo_id: regiaoReativando.grupo_id,
           status: 'ativo'
         })
       });
@@ -628,7 +637,14 @@ export default function RegioesPage() {
       showNotification('error', 'Erro ao reativar região. Tente novamente.');
     } finally {
       setIsSubmitting(false);
+      setShowReactivateModal(false);
+      setRegiaoReativando(null);
     }
+  };
+
+  const handleCancelarReativacao = () => {
+    setShowReactivateModal(false);
+    setRegiaoReativando(null);
   };
 
   // Função para buscar cidades por UF usando API do IBGE
@@ -984,7 +1000,7 @@ export default function RegioesPage() {
                     onClick={carregarRegioes}
                     className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                   >
-                    RECARREGAR
+                    ATUALIZAR
                   </button>
                 </div>
               </div>
@@ -994,13 +1010,23 @@ export default function RegioesPage() {
                 <div className="p-6 bg-gray-50 border-b border-gray-200">
                   <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Cadastro de Regiões</h3>
                   
+                  {/* Legenda de campos obrigatórios */}
+                  <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center text-sm text-blue-800">
+                      <span className="text-red-500 mr-2 font-bold">*</span>
+                      <span className="font-medium">Campos obrigatórios</span>
+                      <span className="mx-2">•</span>
+                      <span className="text-blue-600">Preencha todos os campos marcados com asterisco para continuar</span>
+                    </div>
+                  </div>
+                  
                   <div className="bg-white rounded-lg p-4 shadow-sm">
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Nome
+                          Nome <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -1013,7 +1039,7 @@ export default function RegioesPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Grupo
+                          Grupo <span className="text-red-500">*</span>
                         </label>
                         <select 
                           value={grupoSelecionado}
@@ -1029,7 +1055,7 @@ export default function RegioesPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          UF (Estado)
+                          UF (Estado) <span className="text-red-500">*</span>
                         </label>
                         <select 
                           value={ufRegiao}
@@ -1045,7 +1071,7 @@ export default function RegioesPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Cidade 
+                          Cidade <span className="text-red-500">*</span>
                         </label>
                         <select
                           value={cidadeRegiao}
@@ -1112,110 +1138,112 @@ export default function RegioesPage() {
                         onClick={handleRetornar}
                         className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg text-sm transition-all duration-200 transform hover:scale-102 shadow-md hover:shadow-lg cursor-pointer"
                       >
-                        RETORNAR
+                        VOLTAR
                       </button>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Tabela de resultados */}
-              <div className="p-6">
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-1/2">Nome</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-32">Grupo</th>
-                        <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-32">Situação</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-48">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredRegioes.length > 0 ? (
-                        filteredRegioes.map((regiao) => (
-                          <tr key={regiao.id} className="border-b border-gray-200 hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm">
-                              <div>
-                                <div className="font-medium text-gray-900">{regiao.nome}</div>
-                                {regiao.descricao && (
-                                  <div className="text-gray-500 text-xs mt-1">{regiao.descricao}</div>
-                                )}
-                                <div className="text-blue-600 text-xs mt-1">
-                                  📍 {regiao.uf}{regiao.cidade ? ` - ${regiao.cidade}` : ''}
+              {/* Tabela de resultados - só mostra quando não está no modo de cadastro */}
+              {!showNewRegionModal && (
+                <div className="p-6">
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-1/2">Nome</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-32">Grupo</th>
+                          <th className="px-12 py-3 text-center text-sm font-medium text-gray-700 w-32">Situação</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-48">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRegioes.length > 0 ? (
+                          filteredRegioes.map((regiao) => (
+                            <tr key={regiao.id} className="border-b border-gray-200 hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm">
+                                <div>
+                                  <div className="font-medium text-gray-900">{regiao.nome}</div>
+                                  {regiao.descricao && (
+                                    <div className="text-gray-500 text-xs mt-1">{regiao.descricao}</div>
+                                  )}
+                                  <div className="text-blue-600 text-xs mt-1">
+                                    📍 {regiao.uf}{regiao.cidade ? ` - ${regiao.cidade}` : ''}
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-sm text-center text-gray-500">
-                              {regiao.grupo_id ? 
-                                grupos.find(g => g.id === regiao.grupo_id)?.nome || 'Grupo não encontrado'
-                                : '-'
-                              }
-                            </td>
-                            <td className="px-12 py-3 text-sm text-center">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                regiao.status === 'ativo' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {regiao.status}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex space-x-2 justify-center">
-                                <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarRegiao(regiao)}>
-                                  Visualizar
-                                </button>
-                                {permissions.regioes.canEdit && (
-                                  <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarRegiao(regiao)}>
-                                    Editar
+                              </td>
+                              <td className="px-4 py-3 text-sm text-center text-gray-500">
+                                {regiao.grupo_id ? 
+                                  grupos.find(g => g.id === regiao.grupo_id)?.nome || 'Grupo não encontrado'
+                                  : '-'
+                                }
+                              </td>
+                              <td className="px-12 py-3 text-sm text-center">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  regiao.status === 'ativo' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {regiao.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                <div className="flex space-x-2 justify-center">
+                                  <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarRegiao(regiao)}>
+                                    Visualizar
                                   </button>
-                                )}
-                                {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando a região está inativa */}
-                                {(user?.role === 'admin' || user?.role === 'super_admin') && regiao.status === 'inativo' && (
-                                  <button 
-                                    className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
-                                    onClick={() => handleReativarRegiao(regiao)}
-                                  >
-                                    Reativar
-                                  </button>
-                                )}
-                                {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando a região está ativa */}
-                                {(user?.role === 'admin' || user?.role === 'super_admin') && regiao.status === 'ativo' && (
-                                  <button 
-                                    className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
-                                    onClick={() => handleInativarRegiao(regiao)}
-                                  >
-                                    Inativar
-                                  </button>
-                                )}
-                                {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
-                                {user?.role === 'super_admin' && (
-                                  <button 
-                                    className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
-                                    onClick={() => handleExcluirDefinitivo(regiao)}
-                                  >
-                                    Excluir
-                                  </button>
-                                )}
-                              </div>
+                                  {permissions.regioes.canEdit && (
+                                    <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarRegiao(regiao)}>
+                                      Editar
+                                    </button>
+                                  )}
+                                  {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando a região está inativa */}
+                                  {(user?.role === 'admin' || user?.role === 'super_admin') && regiao.status === 'inativo' && (
+                                    <button 
+                                      className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
+                                      onClick={() => handleReativarRegiao(regiao)}
+                                    >
+                                      Reativar
+                                    </button>
+                                  )}
+                                  {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando a região está ativa */}
+                                  {(user?.role === 'admin' || user?.role === 'super_admin') && regiao.status === 'ativo' && (
+                                    <button 
+                                      className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer" 
+                                      onClick={() => handleInativarRegiao(regiao)}
+                                    >
+                                      Inativar
+                                    </button>
+                                  )}
+                                  {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
+                                  {user?.role === 'super_admin' && (
+                                    <button 
+                                      className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer" 
+                                      onClick={() => handleExcluirDefinitivo(regiao)}
+                                    >
+                                      Excluir
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td 
+                              colSpan={4} 
+                              className="px-4 py-8 text-center text-gray-500"
+                            >
+                              {nomeBusca ? 'Nenhuma região encontrada com o nome pesquisado' : 'Não existem dados para mostrar'}
                             </td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td 
-                            colSpan={4} 
-                            className="px-4 py-8 text-center text-gray-500"
-                          >
-                            {nomeBusca ? 'Nenhuma região encontrada com o nome pesquisado' : 'Não existem dados para mostrar'}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </main>
@@ -1323,7 +1351,7 @@ export default function RegioesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nome
+                      Nome <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1336,7 +1364,7 @@ export default function RegioesPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Grupo
+                      Grupo <span className="text-red-500">*</span>
                     </label>
                     <select 
                       value={grupoSelecionado}
@@ -1352,7 +1380,7 @@ export default function RegioesPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      UF (Estado)
+                      UF (Estado) <span className="text-red-500">*</span>
                     </label>
                     <select 
                       value={ufRegiao}
@@ -1368,7 +1396,7 @@ export default function RegioesPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cidade (Opcional)
+                      Cidade <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={cidadeRegiao}
@@ -1525,6 +1553,51 @@ export default function RegioesPage() {
                   className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Excluindo...' : 'Sim, Excluir Definitivamente'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Reativação */}
+      {showReactivateModal && regiaoReativando && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Reativação</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja reativar a região "{regiaoReativando.nome}"?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-green-800">
+                  <strong>Informação:</strong> A região será marcada como ativa e voltará a aparecer nos seletores e relatórios.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleCancelarReativacao}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarReativacao}
+                  disabled={isSubmitting}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Reativando...' : 'Sim, Reativar'}
                 </button>
               </div>
             </div>
