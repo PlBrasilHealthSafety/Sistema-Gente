@@ -456,7 +456,7 @@ export default function CadastroEspecialidades() {
 
               {/* Container de Cadastro de Especialidade */}
               {showCadastroModal && (
-                <div className="p-6 bg-gray-50 border-b border-gray-200">
+                <div className="p-6 bg-gray-50 border-b border-gray-200 rounded-b-2xl">
                   <h3 className="text-lg font-bold text-[#1D3C44] mb-4">
                     {modoEdicao ? 'Editar Especialidade' : 'Cadastro de Especialidades'}
                   </h3>
@@ -529,7 +529,7 @@ export default function CadastroEspecialidades() {
 
               {/* Tabela de Especialidades - só mostra quando não está cadastrando */}
               {!showCadastroModal && (
-                <div className="p-6">
+                <div className="p-6 rounded-b-2xl">
                   <div className="border border-gray-200 rounded-lg">
                     <table className="w-full">
                       <thead className="bg-gray-100">
