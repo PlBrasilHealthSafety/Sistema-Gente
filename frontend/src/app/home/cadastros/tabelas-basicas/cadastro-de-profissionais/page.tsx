@@ -150,10 +150,12 @@ export default function CadastroProfissionaisPage() {
   const [showEditProfissionalModal, setShowEditProfissionalModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteDefinitivoModal, setShowDeleteDefinitivoModal] = useState(false);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [profissionalVisualizando, setProfissionalVisualizando] = useState<Profissional | null>(null);
   const [profissionalEditando, setProfissionalEditando] = useState<Profissional | null>(null);
   const [profissionalExcluindo, setProfissionalExcluindo] = useState<Profissional | null>(null);
   const [profissionalExcluindoDefinitivo, setProfissionalExcluindoDefinitivo] = useState<Profissional | null>(null);
+  const [profissionalReativando, setProfissionalReativando] = useState<Profissional | null>(null);
 
   // Estados para grupos e regiões (compatibilidade)
   const [, setGrupos] = useState<Grupo[]>([]);
@@ -398,18 +400,32 @@ export default function CadastroProfissionaisPage() {
     setProfissionalExcluindoDefinitivo(null);
   };
 
-  const handleReativarProfissional = async (profissional: Profissional) => {
+  const handleReativarProfissional = (profissional: Profissional) => {
+    setProfissionalReativando(profissional);
+    setShowReactivateModal(true);
+  };
+
+  const handleConfirmarReativacao = async () => {
+    if (!profissionalReativando) return;
+
     setIsSubmitting(true);
     try {
-      const result = await atualizarProfissional(profissional.id, { status: 'ativo' });
+      const result = await atualizarProfissional(profissionalReativando.id, { status: 'ativo' });
       
       if (result.success) {
-      showNotification('success', 'Profissional reativado com sucesso!');
+        showNotification('success', 'Profissional reativado com sucesso!');
         await carregarProfissionais();
       }
     } finally {
       setIsSubmitting(false);
+      setShowReactivateModal(false);
+      setProfissionalReativando(null);
     }
+  };
+
+  const handleCancelarReativacao = () => {
+    setShowReactivateModal(false);
+    setProfissionalReativando(null);
   };
 
   // Efeitos
@@ -1436,100 +1452,102 @@ export default function CadastroProfissionaisPage() {
               )}
 
               {/* Tabela de resultados */}
-              <div className="p-6">
-                <div className="border border-gray-200 rounded-lg">
-                  <table className="w-full">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Categoria</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Sigla Conselho</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Número Conselho</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Externo</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Situação</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {profissionaisFiltrados && Array.isArray(profissionaisFiltrados) && profissionaisFiltrados.length > 0 ? (
-                        profissionaisFiltrados.map((profissional) => (
-                        <tr key={profissional.id} className="border-b border-gray-200 hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm">
-                              <div className="font-medium text-gray-900">{destacarTexto(profissional.nome, nomeBusca)}</div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{profissional.categoria}</td>
-                          <td className="px-4 py-3 text-sm text-center text-gray-900">{profissional.sigla_conselho}</td>
-                          <td className="px-4 py-3 text-sm text-center text-gray-900">{profissional.numero_conselho}</td>
-                          <td className="px-4 py-3 text-sm text-center">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              profissional.externo 
-                                ? 'bg-yellow-100 text-yellow-800' 
-                                : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {profissional.externo ? 'Sim' : 'Não'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                (profissional.situacao || profissional.status) === 'ativo' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                                {(profissional.situacao || profissional.status) === 'ativo' ? 'Ativo' : 'Inativo'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex space-x-2 justify-center">
-                                <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarProfissional(profissional)}>
-                                Visualizar
-                              </button>
-                                {permissions.profissionais?.canEdit && (
-                                  <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarProfissional(profissional)}>
-                                    Editar
+              {!showNewProfissionalModal && (
+                <div className="p-6">
+                  <div className="border border-gray-200 rounded-lg">
+                    <table className="w-full">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Nome</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Categoria</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Sigla Conselho</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Número Conselho</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Externo</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Situação</th>
+                          <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {profissionaisFiltrados && Array.isArray(profissionaisFiltrados) && profissionaisFiltrados.length > 0 ? (
+                          profissionaisFiltrados.map((profissional) => (
+                          <tr key={profissional.id} className="border-b border-gray-200 hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm">
+                                <div className="font-medium text-gray-900">{destacarTexto(profissional.nome, nomeBusca)}</div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{profissional.categoria}</td>
+                            <td className="px-4 py-3 text-sm text-center text-gray-900">{profissional.sigla_conselho}</td>
+                            <td className="px-4 py-3 text-sm text-center text-gray-900">{profissional.numero_conselho}</td>
+                            <td className="px-4 py-3 text-sm text-center">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                profissional.externo 
+                                  ? 'bg-yellow-100 text-yellow-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {profissional.externo ? 'Sim' : 'Não'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-center">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  (profissional.situacao || profissional.status) === 'ativo' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                  {(profissional.situacao || profissional.status) === 'ativo' ? 'Ativo' : 'Inativo'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <div className="flex space-x-2 justify-center">
+                                  <button className="text-green-600 hover:text-green-800 text-xs font-medium cursor-pointer" onClick={() => handleVisualizarProfissional(profissional)}>
+                                  Visualizar
+                                </button>
+                                  {permissions.profissionais?.canEdit && (
+                                    <button className="text-blue-600 hover:text-blue-800 text-xs font-medium cursor-pointer" onClick={() => handleEditarProfissional(profissional)}>
+                                      Editar
+                                    </button>
+                                  )}
+                                  {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando o profissional está inativo */}
+                                  {(user?.role === 'admin' || user?.role === 'super_admin') && (profissional.situacao || profissional.status) === 'inativo' && (
+                                  <button 
+                                      className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
+                                      onClick={() => handleReativarProfissional(profissional)}
+                                  >
+                                      Reativar
                                   </button>
                                 )}
-                                {/* Botão Reativar - apenas para ADMIN e SUPER_ADMIN quando o profissional está inativo */}
-                                {(user?.role === 'admin' || user?.role === 'super_admin') && (profissional.situacao || profissional.status) === 'inativo' && (
-                                <button 
-                                    className="text-emerald-600 hover:text-emerald-800 text-xs font-medium cursor-pointer" 
-                                    onClick={() => handleReativarProfissional(profissional)}
-                                >
-                                    Reativar
-                                </button>
-                              )}
-                                {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando o profissional está ativo */}
-                                {(user?.role === 'admin' || user?.role === 'super_admin') && (profissional.situacao || profissional.status) === 'ativo' && (
-                                    <button 
-                                      className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer"
-                                    onClick={() => handleInativarProfissional(profissional)}
-                                    >
-                                      Inativar
-                                    </button>
+                                  {/* Botão Inativar - apenas para ADMIN e SUPER_ADMIN quando o profissional está ativo */}
+                                  {(user?.role === 'admin' || user?.role === 'super_admin') && (profissional.situacao || profissional.status) === 'ativo' && (
+                                      <button 
+                                        className="text-orange-600 hover:text-orange-800 text-xs font-medium cursor-pointer"
+                                      onClick={() => handleInativarProfissional(profissional)}
+                                      >
+                                        Inativar
+                                      </button>
+                                  )}
+                                  {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
+                                  {user?.role === 'super_admin' && (
+                                  <button 
+                                    className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer"
+                                      onClick={() => handleExcluirDefinitivo(profissional)}
+                                  >
+                                    Excluir
+                                  </button>
                                 )}
-                                {/* Botão Excluir (físico) - apenas para SUPER_ADMIN */}
-                                {user?.role === 'super_admin' && (
-                                <button 
-                                  className="text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer"
-                                    onClick={() => handleExcluirDefinitivo(profissional)}
-                                >
-                                  Excluir
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                            Não existem dados para mostrar
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                              </div>
+                            </td>
+                          </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                              Não existem dados para mostrar
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </main>
@@ -1899,6 +1917,51 @@ export default function CadastroProfissionaisPage() {
                   className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Excluindo...' : 'Sim, Excluir Definitivamente'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Reativação */}
+      {showReactivateModal && profissionalReativando && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Reativação</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja reativar o profissional "{profissionalReativando.nome}"?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-green-800">
+                  <strong>Informação:</strong> O profissional será marcado como ativo e voltará a aparecer nos seletores e relatórios.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelarReativacao}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarReativacao}
+                  disabled={isSubmitting}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Reativando...' : 'Sim, Reativar'}
                 </button>
               </div>
             </div>

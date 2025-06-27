@@ -82,9 +82,11 @@ export default function RegioesPage() {
   const [showEditRegionModal, setShowEditRegionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeleteDefinitivoModal, setShowDeleteDefinitivoModal] = useState(false);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [regiaoEditando, setRegiaoEditando] = useState<Regiao | null>(null);
   const [regiaoExcluindo, setRegiaoExcluindo] = useState<Regiao | null>(null);
   const [regiaoExcluindoDefinitivo, setRegiaoExcluindoDefinitivo] = useState<Regiao | null>(null);
+  const [regiaoReativando, setRegiaoReativando] = useState<Regiao | null>(null);
   const [showViewRegionModal, setShowViewRegionModal] = useState(false);
   const [regiaoVisualizando, setRegiaoVisualizando] = useState<Regiao | null>(null);
   
@@ -595,23 +597,30 @@ export default function RegioesPage() {
   };
 
   // Função para reativar região
-  const handleReativarRegiao = async (regiao: Regiao) => {
+  const handleReativarRegiao = (regiao: Regiao) => {
+    setRegiaoReativando(regiao);
+    setShowReactivateModal(true);
+  };
+
+  const handleConfirmarReativacao = async () => {
+    if (!regiaoReativando) return;
+
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:3001/api/regioes/${regiao.id}`, {
+      const response = await fetch(`http://localhost:3001/api/regioes/${regiaoReativando.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          nome: regiao.nome,
-          descricao: regiao.descricao,
-          uf: regiao.uf,
-          cidade: regiao.cidade,
-          grupo_id: regiao.grupo_id,
+          nome: regiaoReativando.nome,
+          descricao: regiaoReativando.descricao,
+          uf: regiaoReativando.uf,
+          cidade: regiaoReativando.cidade,
+          grupo_id: regiaoReativando.grupo_id,
           status: 'ativo'
         })
       });
@@ -628,7 +637,14 @@ export default function RegioesPage() {
       showNotification('error', 'Erro ao reativar região. Tente novamente.');
     } finally {
       setIsSubmitting(false);
+      setShowReactivateModal(false);
+      setRegiaoReativando(null);
     }
+  };
+
+  const handleCancelarReativacao = () => {
+    setShowReactivateModal(false);
+    setRegiaoReativando(null);
   };
 
   // Função para buscar cidades por UF usando API do IBGE
@@ -994,13 +1010,23 @@ export default function RegioesPage() {
                 <div className="p-6 bg-gray-50 border-b border-gray-200">
                   <h3 className="text-lg font-bold text-[#1D3C44] mb-4">Cadastro de Regiões</h3>
                   
+                  {/* Legenda de campos obrigatórios */}
+                  <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center text-sm text-blue-800">
+                      <span className="text-red-500 mr-2 font-bold">*</span>
+                      <span className="font-medium">Campos obrigatórios</span>
+                      <span className="mx-2">•</span>
+                      <span className="text-blue-600">Preencha todos os campos marcados com asterisco para continuar</span>
+                    </div>
+                  </div>
+                  
                   <div className="bg-white rounded-lg p-4 shadow-sm">
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Dados cadastrais</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Nome
+                          Nome <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -1013,7 +1039,7 @@ export default function RegioesPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Grupo
+                          Grupo <span className="text-red-500">*</span>
                         </label>
                         <select 
                           value={grupoSelecionado}
@@ -1029,7 +1055,7 @@ export default function RegioesPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          UF (Estado)
+                          UF (Estado) <span className="text-red-500">*</span>
                         </label>
                         <select 
                           value={ufRegiao}
@@ -1045,7 +1071,7 @@ export default function RegioesPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Cidade 
+                          Cidade <span className="text-red-500">*</span>
                         </label>
                         <select
                           value={cidadeRegiao}
@@ -1325,7 +1351,7 @@ export default function RegioesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nome
+                      Nome <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1338,7 +1364,7 @@ export default function RegioesPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Grupo
+                      Grupo <span className="text-red-500">*</span>
                     </label>
                     <select 
                       value={grupoSelecionado}
@@ -1354,7 +1380,7 @@ export default function RegioesPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      UF (Estado)
+                      UF (Estado) <span className="text-red-500">*</span>
                     </label>
                     <select 
                       value={ufRegiao}
@@ -1370,7 +1396,7 @@ export default function RegioesPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cidade (Opcional)
+                      Cidade <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={cidadeRegiao}
@@ -1527,6 +1553,51 @@ export default function RegioesPage() {
                   className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Excluindo...' : 'Sim, Excluir Definitivamente'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Reativação */}
+      {showReactivateModal && regiaoReativando && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Confirmar Reativação</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tem certeza que deseja reativar a região "{regiaoReativando.nome}"?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-green-800">
+                  <strong>Informação:</strong> A região será marcada como ativa e voltará a aparecer nos seletores e relatórios.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleCancelarReativacao}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarReativacao}
+                  disabled={isSubmitting}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Reativando...' : 'Sim, Reativar'}
                 </button>
               </div>
             </div>
